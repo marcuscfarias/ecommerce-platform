@@ -482,4 +482,4 @@ $RECYCLE.BIN/
 *.swp
 
 # Claude code files
-.claude/*
+.claude/
