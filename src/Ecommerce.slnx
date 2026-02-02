@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/Common/">
+    <Project Path="Common/Ecommerce.Common.Application/Ecommerce.Common.Application.csproj" />
+    <Project Path="Common/Ecommerce.Common.Domain/Ecommerce.Common.Domain.csproj" />
+    <Project Path="Common/Ecommerce.Common.Infrastructure/Ecommerce.Common.Infrastructure.csproj" />
+    <Project Path="Common/Ecommerce.Common.IntegrationTests/Ecommerce.Common.IntegrationTests.csproj" />
+    <Project Path="Common/Ecommerce.Common.UnitTests/Ecommerce.Common.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
   </Folder>
