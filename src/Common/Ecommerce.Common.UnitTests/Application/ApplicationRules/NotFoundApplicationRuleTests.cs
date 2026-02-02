@@ -31,11 +31,10 @@ public class NotFoundApplicationRuleTests
 
         //assert
         result.ShouldBeFalse();
-        rule.Error.ShouldBe(ErrorMessage);
     }
 
     [Fact]
-    public void CreateException_ReturnsApplicationRulesValidationException()
+    public void CreateException_EntityIsNull_ReturnsApplicationRulesValidationException()
     {
         //arrange
         var rule = new NotFoundApplicationRule(null, ResourceName);

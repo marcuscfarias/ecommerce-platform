@@ -1,5 +1,4 @@
 ﻿using Ecommerce.Common.Domain.BusinessRules;
-using Ecommerce.Common.Domain.BusinessRules.Rules;
 
 namespace Ecommerce.Common.UnitTests.Domain.BusinessRules;
 
@@ -13,5 +12,5 @@ internal sealed class FakeBusinessRule : IBusinessRule
     public bool IsMet() => _someNumber > 10;
 
     public string Error => "Fake business businessRule was not met";
-    public Exception CreateException(string errorMessage) => new BusinessRulesValidationException(errorMessage);
+    public Exception CreateException(string errorMessage) => new Exception(errorMessage);
 }

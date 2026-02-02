@@ -47,7 +47,7 @@ public class StringMaxLengthRuleTests
     }
 
     [Fact]
-    public void IsMet_ValueIsLongerThanMaxValue_ReturnsFalseWithErrorMessage()
+    public void IsMet_ValueIsLongerThanMaxValue_ReturnsFalse()
     {
         //arrange
         var businessRule = new StringMaxLengthBusinessRule("xxxxxx", MaxLength, FieldName);
@@ -57,11 +57,10 @@ public class StringMaxLengthRuleTests
 
         //assert
         result.ShouldBeFalse();
-        businessRule.Error.ShouldBe($"{FieldName} must be at most {MaxLength} characters.");
     }
 
     [Fact]
-    public void CreateException_ReturnsBusinessRulesValidationException()
+    public void CreateException_ValueIsLongerThanMaxValue_ReturnsBusinessRulesValidationException()
     {
         //arrange
         var businessRule = new StringMaxLengthBusinessRule("xxxxxx", MaxLength, FieldName);

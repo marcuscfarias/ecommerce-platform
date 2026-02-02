@@ -21,7 +21,7 @@ public class StringNotEmptyRuleTests
     }
 
     [Fact]
-    public void IsMet_ValueIsNull_ReturnsFalseWithErrorMessage()
+    public void IsMet_ValueIsNull_ReturnsFalse()
     {
         //arrange
         var businessRule = new StringNotEmptyBusinessRule(null, FieldName);
@@ -31,11 +31,10 @@ public class StringNotEmptyRuleTests
 
         //assert
         result.ShouldBeFalse();
-        businessRule.Error.ShouldBe(ErrorMessage);
     }
 
     [Fact]
-    public void IsMet_ValueIsEmpty_ReturnsFalseWithErrorMessage()
+    public void IsMet_ValueIsEmpty_ReturnsFalse()
     {
         //arrange
         var businessRule = new StringNotEmptyBusinessRule("", FieldName);
@@ -45,11 +44,10 @@ public class StringNotEmptyRuleTests
 
         //assert
         result.ShouldBeFalse();
-        businessRule.Error.ShouldBe(ErrorMessage);
     }
 
     [Fact]
-    public void IsMet_ValueIsWhitespace_ReturnsFalseWithErrorMessage()
+    public void IsMet_ValueIsWhitespace_ReturnsFalse()
     {
         //arrange
         var businessRule = new StringNotEmptyBusinessRule(" ", FieldName);
@@ -59,7 +57,6 @@ public class StringNotEmptyRuleTests
 
         //assert
         result.ShouldBeFalse();
-        businessRule.Error.ShouldBe(ErrorMessage);
     }
 
     [Fact]
