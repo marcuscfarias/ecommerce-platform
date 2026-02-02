@@ -1,7 +1,6 @@
 ﻿using Ecommerce.Common.Domain.BusinessRules.Rules;
-using Shouldly;
 
-namespace Ecommerce.Common.UnitTests.Domain.BusinessRules;
+namespace Ecommerce.Common.UnitTests.Domain.BusinessRules.Rules;
 
 public class StringMaxLengthRuleTests
 {
