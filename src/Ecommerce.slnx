@@ -1,4 +1,12 @@
 <Solution>
+  <Folder Name="/Catalog/">
+    <Project Path="Catalog/Ecommerce.Catalog.API/Ecommerce.Catalog.API.csproj" />
+    <Project Path="Catalog/Ecommerce.Catalog.Application/Ecommerce.Catalog.Application.csproj" />
+    <Project Path="Catalog/Ecommerce.Catalog.Domain/Ecommerce.Catalog.Domain.csproj" />
+    <Project Path="Catalog/Ecommerce.Catalog.Infrastructure/Ecommerce.Catalog.Infrastructure.csproj" />
+    <Project Path="Catalog/Ecommerce.Catalog.IntegrationTests/Ecommerce.Catalog.IntegrationTests.csproj" />
+    <Project Path="Catalog/Ecommerce.Catalog.UnitTests/Ecommerce.Catalog.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Common/">
     <Project Path="Common/Ecommerce.Common.Application/Ecommerce.Common.Application.csproj" />
     <Project Path="Common/Ecommerce.Common.Domain/Ecommerce.Common.Domain.csproj" />
