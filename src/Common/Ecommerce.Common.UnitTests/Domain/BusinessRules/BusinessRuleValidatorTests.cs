@@ -1,4 +1,5 @@
 ﻿using Ecommerce.Common.Domain.BusinessRules;
+using Ecommerce.Common.Domain.BusinessRules.Rules;
 
 namespace Ecommerce.Common.UnitTests.Domain.BusinessRules;
 
@@ -8,23 +9,23 @@ public class BusinessRuleValidatorTests
     public void Validate_RuleIsMet_DoesNotThrow()
     {
         //arrange
-        var rule = new FakeBusinessRule(11);
+        var businessRule = new FakeBusinessRule(11);
 
         //act & assert
-        Should.NotThrow(() => BusinessRuleValidator.Validate(rule));
+        Should.NotThrow(() => BusinessRuleValidator.Validate(businessRule));
     }
 
     [Fact]
     public void Validate_RuleIsNotMet_ThrowsBusinessRuleValidationExceptionWithErrorMessage()
     {
         //arrange
-        var rule = new FakeBusinessRule(10);
+        var businessRule = new FakeBusinessRule(10);
 
         //act
-        var exception = Should.Throw<BusinessRuleValidationException>(
-            () => BusinessRuleValidator.Validate(rule));
+        var exception = Should.Throw<BusinessRulesValidationException>(
+            () => BusinessRuleValidator.Validate(businessRule));
 
         //assert
-        exception.Message.ShouldBe(rule.Error);
+        exception.Message.ShouldBe(businessRule.Error);
     }
 }

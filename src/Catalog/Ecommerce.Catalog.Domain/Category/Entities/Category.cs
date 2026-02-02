@@ -8,8 +8,8 @@ public class Category : BaseEntity
 {
     public Category(string name)
     {
-        BusinessRuleValidator.Validate(new StringNotEmptyRule(name, nameof(Name)));
-        BusinessRuleValidator.Validate(new StringMaxLengthRule(name, CategoryConstants.NameMaxLength, nameof(Name)));
+        BusinessRuleValidator.Validate(new StringNotEmptyBusinessRule(name, nameof(Name)));
+        BusinessRuleValidator.Validate(new StringMaxLengthBusinessRule(name, CategoryConstants.NameMaxLength, nameof(Name)));
 
         Name = name;
     }

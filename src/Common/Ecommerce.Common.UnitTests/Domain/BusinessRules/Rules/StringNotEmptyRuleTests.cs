@@ -11,10 +11,10 @@ public class StringNotEmptyRuleTests
     public void IsMet_ValueHasContent_ReturnsTrue()
     {
         //arrange
-        var rule = new StringNotEmptyRule("valid", FieldName);
+        var businessRule = new StringNotEmptyBusinessRule("valid", FieldName);
 
         //act
-        var result = rule.IsMet();
+        var result = businessRule.IsMet();
 
         //assert
         result.ShouldBeTrue();
@@ -24,41 +24,55 @@ public class StringNotEmptyRuleTests
     public void IsMet_ValueIsNull_ReturnsFalseWithErrorMessage()
     {
         //arrange
-        var rule = new StringNotEmptyRule(null, FieldName);
+        var businessRule = new StringNotEmptyBusinessRule(null, FieldName);
 
         //act
-        var result = rule.IsMet();
+        var result = businessRule.IsMet();
 
         //assert
         result.ShouldBeFalse();
-        rule.Error.ShouldBe(ErrorMessage);
+        businessRule.Error.ShouldBe(ErrorMessage);
     }
 
     [Fact]
     public void IsMet_ValueIsEmpty_ReturnsFalseWithErrorMessage()
     {
         //arrange
-        var rule = new StringNotEmptyRule("", FieldName);
+        var businessRule = new StringNotEmptyBusinessRule("", FieldName);
 
         //act
-        var result = rule.IsMet();
+        var result = businessRule.IsMet();
 
         //assert
         result.ShouldBeFalse();
-        rule.Error.ShouldBe(ErrorMessage);
+        businessRule.Error.ShouldBe(ErrorMessage);
     }
 
     [Fact]
     public void IsMet_ValueIsWhitespace_ReturnsFalseWithErrorMessage()
     {
         //arrange
-        var rule = new StringNotEmptyRule(" ", FieldName);
+        var businessRule = new StringNotEmptyBusinessRule(" ", FieldName);
 
         //act
-        var result = rule.IsMet();
+        var result = businessRule.IsMet();
 
         //assert
         result.ShouldBeFalse();
-        rule.Error.ShouldBe(ErrorMessage);
+        businessRule.Error.ShouldBe(ErrorMessage);
+    }
+
+    [Fact]
+    public void CreateException_ReturnsBusinessRulesValidationException()
+    {
+        //arrange
+        var businessRule = new StringNotEmptyBusinessRule(null, FieldName);
+
+        //act
+        var exception = businessRule.CreateException(businessRule.Error);
+
+        //assert
+        exception.ShouldBeOfType<BusinessRulesValidationException>();
+        exception.Message.ShouldBe(ErrorMessage);
     }
 }

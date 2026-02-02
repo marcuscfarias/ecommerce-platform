@@ -2,11 +2,11 @@
 
 public static class BusinessRuleValidator
 {
-    public static void Validate(IBusinessRule rule)
+    public static void Validate(IBusinessRule businessRule)
     {
-        if (!rule.IsMet())
+        if (!businessRule.IsMet())
         {
-            throw new BusinessRuleValidationException(rule.Error);
+            throw businessRule.CreateException(businessRule.Error);
         }
     }
 }
