@@ -1,6 +1,6 @@
 namespace Ecommerce.Common.Domain.BusinessRules.Rules;
 
-public class StringMaxLengthBusinessRule(string? value, int maxLength, string fieldName) : IBusinessRule
+public sealed class StringMaxLengthBusinessRule(string? value, int maxLength, string fieldName) : IBusinessRule
 {
     //if there's a value, check its length.
     public bool IsMet() => value is null || value.Length <= maxLength;
