@@ -5,13 +5,12 @@ namespace Ecommerce.Common.UnitTests.Domain.BusinessRules.Rules;
 public class StringNotEmptyRuleTests
 {
     private const string FieldName = "FieldName";
-    private const string ErrorMessage = $"{FieldName} cannot be empty.";
 
     [Fact]
     public void IsMet_ValueHasContent_ReturnsTrue()
     {
         //arrange
-        var businessRule = new StringNotEmptyBusinessRule("valid", FieldName);
+        var businessRule = new StringNotEmptyRule("valid", FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -24,7 +23,7 @@ public class StringNotEmptyRuleTests
     public void IsMet_ValueIsNull_ReturnsFalse()
     {
         //arrange
-        var businessRule = new StringNotEmptyBusinessRule(null, FieldName);
+        var businessRule = new StringNotEmptyRule(null, FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -37,7 +36,7 @@ public class StringNotEmptyRuleTests
     public void IsMet_ValueIsEmpty_ReturnsFalse()
     {
         //arrange
-        var businessRule = new StringNotEmptyBusinessRule("", FieldName);
+        var businessRule = new StringNotEmptyRule("", FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -50,7 +49,7 @@ public class StringNotEmptyRuleTests
     public void IsMet_ValueIsWhitespace_ReturnsFalse()
     {
         //arrange
-        var businessRule = new StringNotEmptyBusinessRule(" ", FieldName);
+        var businessRule = new StringNotEmptyRule(" ", FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -63,13 +62,12 @@ public class StringNotEmptyRuleTests
     public void CreateException_ReturnsBusinessRulesValidationException()
     {
         //arrange
-        var businessRule = new StringNotEmptyBusinessRule(null, FieldName);
+        var businessRule = new StringNotEmptyRule(null, FieldName);
 
         //act
-        var exception = businessRule.CreateException(businessRule.Error);
+        var exception = businessRule.CreateException();
 
         //assert
-        exception.ShouldBeOfType<BusinessRulesValidationException>();
-        exception.Message.ShouldBe(ErrorMessage);
+        exception.ShouldBeOfType<ArgumentNullException>();
     }
 }

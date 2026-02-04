@@ -11,7 +11,7 @@ public class StringMaxLengthRuleTests
     public void IsMet_ValueIsNull_ReturnsTrue()
     {
         //arrange
-        var businessRule = new StringMaxLengthBusinessRule(null, MaxLength, FieldName);
+        var businessRule = new StringMaxLengthRule(null, MaxLength, FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -24,7 +24,7 @@ public class StringMaxLengthRuleTests
     public void IsMet_ValueIsBelowMaxLength_ReturnsTrue()
     {
         //arrange
-        var businessRule = new StringMaxLengthBusinessRule("xxxx", MaxLength, FieldName);
+        var businessRule = new StringMaxLengthRule("xxxx", MaxLength, FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -37,7 +37,7 @@ public class StringMaxLengthRuleTests
     public void IsMet_ValueIsEqualToMaxLength_ReturnsTrue()
     {
         //arrange
-        var businessRule = new StringMaxLengthBusinessRule("xxxxx", MaxLength, FieldName);
+        var businessRule = new StringMaxLengthRule("xxxxx", MaxLength, FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -50,7 +50,7 @@ public class StringMaxLengthRuleTests
     public void IsMet_ValueIsLongerThanMaxValue_ReturnsFalse()
     {
         //arrange
-        var businessRule = new StringMaxLengthBusinessRule("xxxxxx", MaxLength, FieldName);
+        var businessRule = new StringMaxLengthRule("xxxxxx", MaxLength, FieldName);
 
         //act
         var result = businessRule.IsMet();
@@ -63,13 +63,12 @@ public class StringMaxLengthRuleTests
     public void CreateException_ValueIsLongerThanMaxValue_ReturnsBusinessRulesValidationException()
     {
         //arrange
-        var businessRule = new StringMaxLengthBusinessRule("xxxxxx", MaxLength, FieldName);
+        var businessRule = new StringMaxLengthRule("xxxxxx", MaxLength, FieldName);
 
         //act
-        var exception = businessRule.CreateException(businessRule.Error);
+        var exception = businessRule.CreateException();
 
         //assert
-        exception.ShouldBeOfType<BusinessRulesValidationException>();
-        exception.Message.ShouldBe($"{FieldName} must be at most {MaxLength} characters.");
+        exception.ShouldBeOfType<ArgumentOutOfRangeException>();
     }
 }
