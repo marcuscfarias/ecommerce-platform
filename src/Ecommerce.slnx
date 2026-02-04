@@ -8,6 +8,7 @@
     <Project Path="Catalog/Ecommerce.Catalog.UnitTests/Ecommerce.Catalog.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Common/">
+    <Project Path="Common/Ecommerce.Common.API/Ecommerce.Common.API.csproj" />
     <Project Path="Common/Ecommerce.Common.Application/Ecommerce.Common.Application.csproj" />
     <Project Path="Common/Ecommerce.Common.Domain/Ecommerce.Common.Domain.csproj" />
     <Project Path="Common/Ecommerce.Common.Infrastructure/Ecommerce.Common.Infrastructure.csproj" />
