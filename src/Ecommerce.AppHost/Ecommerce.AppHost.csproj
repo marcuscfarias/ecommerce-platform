@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.12.24" />
     </ItemGroup>
 
@@ -21,8 +21,9 @@
       </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Controllers\" />
+<ItemGroup>
+      <ProjectReference Include="..\Catalog\Ecommerce.Catalog.Api\Ecommerce.Catalog.Api.csproj" />
+      <ProjectReference Include="..\Ecommerce.Shared\Ecommerce.Shared.csproj" />
     </ItemGroup>
 
 </Project>

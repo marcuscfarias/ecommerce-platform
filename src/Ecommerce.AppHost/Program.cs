@@ -1,6 +1,6 @@
 using Scalar.AspNetCore;
 
-namespace Ecommerce.API;
+namespace Ecommerce.AppHost;
 
 public class Program
 {

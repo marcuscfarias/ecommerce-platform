@@ -74,7 +74,7 @@
 | **Validation via FluentValidation** | Declarative request validation integrated as a MediatR pipeline behavior. Runs automatically before every handler. |
 | **Base Entity** | Abstract `Entity` class with `Id (Guid)`. All domain entities inherit from it. |
 | **DbContext per Module** | Each module has its own DbContext with a dedicated PostgreSQL schema. No cross-module table access. |
-| **Module DI Registration** | Each module exposes `AddXxxApplication()` and `AddXxxInfrastructure()` extension methods for clean composition in `Program.cs`. |
+| **Module DI Registration** | Each module has an Api project that exposes `Add{ModuleName}Module(IServiceCollection, IConfiguration)` and `Map{ModuleName}Endpoints(IEndpointRouteBuilder)` extension methods. The host calls these in `Program.cs`. |
 
 ---
 
@@ -88,29 +88,24 @@ Modules never reference each other directly. Shared interfaces (e.g., `ICatalogQ
 
 ```
 src/
-├── Ecommerce.Api/                                    # Entry point, endpoints, middleware
-│   ├── Program.cs                                    # Composition root
-│   ├── Middleware/                                    # Global exception handling
-│   └── Endpoints/                                    # Minimal API endpoint groups per module
+├── Ecommerce.AppHost/                                # Host — composition root
+│   ├── Program.cs                                    # Registers modules, middleware, pipeline
+│   └── Middleware/                                    # Global exception handling
 │
-├── Ecommerce.Shared/                             # Cross-cutting code shared by all modules
-│ 	├── Abstractions/                             # Entity base, Result<T>
-│ 	├── Behaviors/                                # MediatR pipeline behaviors
-│ 	└── Contracts/                                # Cross-module interfaces
+├── Ecommerce.Shared/                                 # Cross-cutting code shared by all modules
+│   ├── Domain/                                       # Entity base, Result<T>
+│   ├── Application/                                  # MediatR pipeline behaviors
+│   ├── Infrastructure/                               # Shared infrastructure utilities
+│   └── Contracts/                                    # Cross-module interfaces
 │
-├──	{ModuleName}/
-│   ├── Ecommerce.{ModuleName}.Domain/            # Entities, value objects, enums
-│   ├── Ecommerce.{ModuleName}.Application/       # Commands, queries, handlers, DTOs, validators
-│   └── Ecommerce.{ModuleName}.Infrastructure/    # DbContext, repositories, external API clients
+├── {ModuleName}/
+│   ├── Ecommerce.{ModuleName}.Api/                   # Endpoints, module DI registration, route paths
+│   ├── Ecommerce.{ModuleName}.Domain/                # Entities, value objects, enums
+│   ├── Ecommerce.{ModuleName}.Application/           # Commands, queries, handlers, DTOs, validators
+│   ├── Ecommerce.{ModuleName}.Infrastructure/        # DbContext, repositories, external API clients
+│   ├── Ecommerce.{ModuleName}.UnitTests/             # Layer subfolders: Domain/, Application/
+│   └── Ecommerce.{ModuleName}.IntegrationTests/      # Layer subfolders: Infrastructure/
 │
 ├── Ecommerce.slnx                                    # Solution file
 └── compose.yaml                                      # Docker Compose: PostgreSQL + API
-
-tests/
-├── Ecommerce.Tests.Shared/                       # Base fixtures, factories, helpers
-│
-└── Modules/
-    └── {ModuleName}/
-        ├── Ecommerce.{ModuleName}.UnitTests/
-        └── Ecommerce.{ModuleName}.IntegrationTests/
 ```
