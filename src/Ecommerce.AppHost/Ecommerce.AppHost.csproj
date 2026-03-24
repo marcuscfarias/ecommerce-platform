@@ -22,7 +22,7 @@
     </ItemGroup>
 
 <ItemGroup>
-      <ProjectReference Include="..\Catalog\Ecommerce.Catalog.Api\Ecommerce.Catalog.Api.csproj" />
+      <ProjectReference Include="..\Ecommerce.Catalog\Ecommerce.Catalog.Api\Ecommerce.Catalog.Api.csproj" />
       <ProjectReference Include="..\Ecommerce.Shared\Ecommerce.Shared.csproj" />
     </ItemGroup>
 
