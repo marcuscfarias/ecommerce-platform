@@ -1,4 +1,6 @@
-namespace Ecommerce.Shared.Domain;
+using Ecommerce.Shared.Domain.Entities;
+
+namespace Ecommerce.Shared.Domain.Repositories;
 
 public interface IRepository<T> where T : Entity
 {

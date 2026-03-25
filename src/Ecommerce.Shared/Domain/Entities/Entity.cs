@@ -1,4 +1,4 @@
-namespace Ecommerce.Shared.Domain;
+namespace Ecommerce.Shared.Domain.Entities;
 
 public abstract class Entity
 {
