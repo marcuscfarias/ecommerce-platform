@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ecommerce.Catalog.Application\Ecommerce.Catalog.Application.csproj" />
-    <ProjectReference Include="..\..\Ecommerce.Shared\Ecommerce.Shared.csproj" />
+    <ProjectReference Include="..\..\Ecommerce.Shared\Ecommerce.Shared.Infrastructure\Ecommerce.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

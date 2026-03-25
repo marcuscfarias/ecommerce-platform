@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ecommerce.Catalog.Domain\Ecommerce.Catalog.Domain.csproj" />
-    <ProjectReference Include="..\..\Ecommerce.Shared\Ecommerce.Shared.csproj" />
+    <ProjectReference Include="..\..\Ecommerce.Shared\Ecommerce.Shared.Domain\Ecommerce.Shared.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
