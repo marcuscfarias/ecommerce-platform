@@ -483,3 +483,4 @@ $RECYCLE.BIN/
 
 # Claude code files
 .claude/
+.specs/
