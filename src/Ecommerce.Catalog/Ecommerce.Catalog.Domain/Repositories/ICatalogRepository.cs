@@ -5,4 +5,5 @@ namespace Ecommerce.Catalog.Domain.Repositories;
 
 public interface ICatalogRepository : IRepository<Category>
 {
+    Task<bool> ExistsAsync(string name, CancellationToken ct = default);
 }
