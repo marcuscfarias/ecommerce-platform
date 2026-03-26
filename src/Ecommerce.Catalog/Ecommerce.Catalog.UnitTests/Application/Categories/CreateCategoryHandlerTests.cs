@@ -26,7 +26,7 @@ public class CreateCategoryHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await _repository.Received(1).AddAsync(
+        await _repository.Received(1).Add(
             Arg.Is<Category>(c => c.Name == command.Name 
                                   && c.Description == command.Description),
             Arg.Any<CancellationToken>());
@@ -45,7 +45,7 @@ public class CreateCategoryHandlerTests
 
         // Assert
         await act.ShouldThrowAsync<BusinessRuleValidationException>();
-        await _repository.DidNotReceive().AddAsync(Arg.Any<Category>(), Arg.Any<CancellationToken>());
+        await _repository.DidNotReceive().Add(Arg.Any<Category>(), Arg.Any<CancellationToken>());
         await _repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

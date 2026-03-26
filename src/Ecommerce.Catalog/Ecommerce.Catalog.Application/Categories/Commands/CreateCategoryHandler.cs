@@ -15,7 +15,7 @@ internal sealed class CreateCategoryHandler(ICatalogRepository repository) : IRe
 
         var category = new Category(command.Name, command.Description);
 
-        await repository.AddAsync(category, cancellationToken);
+        await repository.Add(category, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
         return category.Id;
