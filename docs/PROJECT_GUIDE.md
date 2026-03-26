@@ -58,7 +58,6 @@
 |---|---|
 | **xUnit** | Test framework |
 | **NSubstitute** | Mocking |
-| **Verify** | Snapshot testing |
 | **Bogus** | Test data generation |
 | **Shouldly** | Assertions |
 | **Testcontainers** | PostgreSQL container for integration tests |
