@@ -1,3 +1,5 @@
+using Ecommerce.Catalog.Api;
+using Ecommerce.Shared.API;
 using Scalar.AspNetCore;
 
 namespace Ecommerce.AppHost;
@@ -8,15 +10,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-
-        builder.Services.AddControllers();
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+        builder.Services.AddApiModule();
+        builder.Services.AddCatalogModule(builder.Configuration);
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
@@ -24,10 +23,9 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
         app.UseAuthorization();
-
-
+        app.UseApiModule();
+        app.UseCatalogModule();
         app.MapControllers();
 
         app.Run();
