@@ -25,7 +25,7 @@ public class Program
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.UseApiModule();
-        app.UseCatalogModule();
+        app.UseCatalogModule(applyMigrations: app.Environment.IsDevelopment());
         app.MapControllers();
 
         app.Run();

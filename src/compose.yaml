@@ -1,7 +1,28 @@
-﻿services:
+services:
   ecommerce:
     image: ecommerce
     build:
       context: .
-      dockerfile: Ecommerce/Dockerfile
+      dockerfile: Ecommerce.AppHost/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__CatalogDb=Host=postgres;Port=5432;Database=ecommerce;Username=postgres;Password=postgres
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      postgres:
+        condition: service_healthy
 
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
