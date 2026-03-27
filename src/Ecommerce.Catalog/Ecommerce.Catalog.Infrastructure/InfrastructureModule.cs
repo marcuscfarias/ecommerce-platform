@@ -28,8 +28,11 @@ public static class InfrastructureModule
         return services;
     }
 
-    public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app)
+    public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app, bool applyMigrations = false)
     {
+        if (!applyMigrations)
+            return app;
+
         using var scope = app.ApplicationServices.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
         context.Database.Migrate();
