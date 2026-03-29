@@ -1,8 +1,8 @@
 using Testcontainers.PostgreSql;
 
-namespace Ecommerce.Shared.IntegrationTests;
+namespace Ecommerce.Shared.IntegrationTests.Database;
 
-public class PostgreSqlFixture : IAsyncLifetime
+public class DatabaseContainerFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17")
         .WithDatabase("ecommerce")
