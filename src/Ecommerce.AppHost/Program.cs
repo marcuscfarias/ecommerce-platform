@@ -4,7 +4,7 @@ using Scalar.AspNetCore;
 
 namespace Ecommerce.AppHost;
 
-public class Program
+public static class Program
 {
     public static void Main(string[] args)
     {
