@@ -19,6 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="System.Net" />
+    <Using Include="System.Net.Http.Json" />
     <Using Include="Xunit" />
   </ItemGroup>
 
