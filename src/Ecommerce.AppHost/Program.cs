@@ -4,7 +4,7 @@ using Scalar.AspNetCore;
 
 namespace Ecommerce.AppHost;
 
-public static class Program
+internal static class Program
 {
     public static void Main(string[] args)
     {
@@ -30,4 +30,8 @@ public static class Program
 
         app.Run();
     }
+}
+
+public interface IApiMarker
+{
 }
