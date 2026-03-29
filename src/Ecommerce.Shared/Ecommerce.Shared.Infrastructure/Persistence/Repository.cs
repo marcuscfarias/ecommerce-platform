@@ -16,22 +16,19 @@ public abstract class Repository<T, TContext>(TContext context) : IRepository<T>
     public async Task<T?> GetByIdAsNoTrackingAsync(int id, CancellationToken ct = default) =>
         await Context.Set<T>().AsNoTracking().SingleOrDefaultAsync(e => e.Id == id, ct);
 
-    public Task Add(T entity, CancellationToken ct = default)
+    public void Add(T entity)
     {
         Context.Set<T>().Add(entity);
-        return Task.CompletedTask;
     }
 
-    public Task Update(T entity, CancellationToken ct = default)
+    public void Update(T entity)
     {
         Context.Set<T>().Update(entity);
-        return Task.CompletedTask;
     }
 
-    public Task Remove(T entity, CancellationToken ct = default)
+    public void Remove(T entity)
     {
         Context.Set<T>().Remove(entity);
-        return Task.CompletedTask;
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default) =>
