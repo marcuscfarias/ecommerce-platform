@@ -5,7 +5,7 @@ namespace Ecommerce.Catalog.Api.Categories;
 
 [ApiController]
 [Route("api/categories")]
-internal sealed class CategoriesController(ICatalogModule module) : ControllerBase
+public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
