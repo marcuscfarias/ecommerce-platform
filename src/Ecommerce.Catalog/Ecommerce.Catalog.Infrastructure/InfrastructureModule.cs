@@ -14,13 +14,14 @@ public static class InfrastructureModule
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("CatalogDb")
-                               ?? throw new InvalidOperationException(
-                                   "Connection string 'CatalogDb' is not configured.");
-
-        services.AddDbContext<CatalogDbContext>(options =>
+        services.AddDbContext<CatalogDbContext>((sp, options) =>
+        {
+            var connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString("CatalogDb")
+                                   ?? throw new InvalidOperationException(
+                                       "Connection string 'CatalogDb' is not configured.");
             options.UseNpgsql(connectionString,
-                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", CatalogDbContext.Schema)));
+                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", CatalogDbContext.Schema));
+        });
 
         services.AddMediationModule();
 
