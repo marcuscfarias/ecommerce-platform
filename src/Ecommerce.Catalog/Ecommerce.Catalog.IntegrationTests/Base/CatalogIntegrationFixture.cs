@@ -1,24 +1,21 @@
+using Ecommerce.Shared.IntegrationTests.Database;
 using Npgsql;
 using Respawn;
-using Ecommerce.Shared.IntegrationTests.Database;
 
-namespace Ecommerce.Catalog.IntegrationTests;
+namespace Ecommerce.Catalog.IntegrationTests.Base;
 
 public sealed class CatalogIntegrationFixture : IAsyncLifetime
 {
-    private readonly DatabaseContainerFixture _containerFixture;
+    private readonly DatabaseContainerFixture _containerFixture = new();
     private Respawner _respawner = null!;
 
-    public CatalogWebApplicationFactory Factory { get; private set; } = null!;
+    private CatalogWebApplicationFactory Factory { get; set; } = null!;
     public HttpClient Client { get; private set; } = null!;
-
-    public CatalogIntegrationFixture(DatabaseContainerFixture containerFixture)
-    {
-        _containerFixture = containerFixture;
-    }
 
     public async Task InitializeAsync()
     {
+        await _containerFixture.InitializeAsync();
+
         Factory = new CatalogWebApplicationFactory(_containerFixture);
 
         // CreateClient triggers WebApplicationFactory startup, which applies EF migrations.
@@ -46,5 +43,6 @@ public sealed class CatalogIntegrationFixture : IAsyncLifetime
     {
         Client.Dispose();
         await Factory.DisposeAsync();
+        await _containerFixture.DisposeAsync();
     }
 }

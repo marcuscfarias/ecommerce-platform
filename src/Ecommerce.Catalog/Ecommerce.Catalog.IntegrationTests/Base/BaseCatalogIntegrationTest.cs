@@ -1,4 +1,4 @@
-namespace Ecommerce.Catalog.IntegrationTests;
+namespace Ecommerce.Catalog.IntegrationTests.Base;
 
 [Collection(nameof(CatalogTestCollection))]
 public abstract class BaseCatalogIntegrationTest
