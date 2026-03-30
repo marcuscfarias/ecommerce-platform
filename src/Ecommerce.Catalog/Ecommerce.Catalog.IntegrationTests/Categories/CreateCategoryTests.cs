@@ -1,3 +1,5 @@
+using Ecommerce.Catalog.IntegrationTests.Base;
+
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
 public sealed class CreateCategoryTests(CatalogIntegrationFixture fixture)
@@ -8,43 +10,48 @@ public sealed class CreateCategoryTests(CatalogIntegrationFixture fixture)
     [Fact]
     public async Task Post_WhenRequestIsValid_Returns201WithLocationHeader()
     {
-        await ResetDatabaseAsync();
+        // Arrange
+        var request = new { name = "Electronics", description = "Electronic devices and accessories" };
 
-        var response = await Client.PostAsJsonAsync(Endpoint, new
-        {
-            name = "Electronics",
-            description = "Electronic devices and accessories"
-        });
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
 
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         response.Headers.Location.ShouldNotBeNull();
         response.Headers.Location.ToString().ShouldContain("/api/categories");
+
+        await ResetDatabaseAsync();
     }
 
     [Fact]
     public async Task Post_WhenDescriptionIsNull_Returns201()
     {
-        await ResetDatabaseAsync();
+        // Arrange
+        var request = new { name = "Books", description = (string?)null };
 
-        var response = await Client.PostAsJsonAsync(Endpoint, new
-        {
-            name = "Books",
-            description = (string?)null
-        });
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
 
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        await ResetDatabaseAsync();
     }
 
     [Fact]
     public async Task Post_WhenNameAlreadyExists_Returns409()
     {
-        await ResetDatabaseAsync();
-
+        // Arrange
         await Client.PostAsJsonAsync(Endpoint, new { name = "Clothing", description = (string?)null });
 
+        // Act
         var response = await Client.PostAsJsonAsync(Endpoint, new { name = "Clothing", description = (string?)null });
 
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+
+        await ResetDatabaseAsync();
     }
 
     [Theory]
@@ -52,8 +59,15 @@ public sealed class CreateCategoryTests(CatalogIntegrationFixture fixture)
     [InlineData("ab")]
     public async Task Post_WhenNameIsInvalid_Returns400(string name)
     {
-        var response = await Client.PostAsJsonAsync(Endpoint, new { name, description = (string?)null });
+        // Arrange
+        var request = new { name, description = (string?)null };
 
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
+
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        await ResetDatabaseAsync();
     }
 }
