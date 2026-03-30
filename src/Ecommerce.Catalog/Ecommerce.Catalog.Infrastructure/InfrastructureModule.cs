@@ -15,10 +15,12 @@ public static class InfrastructureModule
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("CatalogDb")
-            ?? throw new InvalidOperationException("Connection string 'CatalogDb' is not configured.");
+                               ?? throw new InvalidOperationException(
+                                   "Connection string 'CatalogDb' is not configured.");
 
         services.AddDbContext<CatalogDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionString,
+                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", CatalogDbContext.Schema)));
 
         services.AddMediationModule();
 

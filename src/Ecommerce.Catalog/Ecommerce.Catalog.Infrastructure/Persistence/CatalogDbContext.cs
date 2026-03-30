@@ -6,11 +6,13 @@ namespace Ecommerce.Catalog.Infrastructure.Persistence;
 
 internal sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbContext(options)
 {
+    internal const string Schema = "catalog";
+
     public DbSet<Category> Categories { get; init; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("catalog");
+        modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 }

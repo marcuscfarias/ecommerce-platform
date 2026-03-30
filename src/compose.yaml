@@ -1,5 +1,6 @@
 services:
-  ecommerce:
+  ecommerce-api:
+    container_name: ecommerce-api
     image: ecommerce
     build:
       context: .
@@ -7,22 +8,28 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__CatalogDb=Host=postgres;Port=5432;Database=ecommerce;Username=postgres;Password=postgres
+      - ConnectionStrings__CatalogDb=${CATALOG_DB_CONNECTION_STRING}
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
-      postgres:
+      ecommerce-db:
         condition: service_healthy
 
-  postgres:
+  ecommerce-db:
+    container_name: ecommerce-db
     image: postgres:17
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
+    volumes:
+      - ecommerce-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+volumes:
+  ecommerce-db-data:
