@@ -25,6 +25,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 
     [HttpGet]
     [EndpointDescription("Returns all categories.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<GetCategoriesResponse>>> GetAllAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
@@ -32,6 +33,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 
     [HttpGet("{id:int}")]
     [EndpointDescription("Returns a category by its ID.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetCategoryByIdResponse>> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
