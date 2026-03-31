@@ -13,7 +13,10 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 {
     [HttpPost]
     [EndpointDescription("Creates a new category.")]
-    public async Task<IActionResult> CreateAsync(
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<CreateCategoryResponse>> CreateAsync(
         [FromBody] CreateCategoryRequest request,
         CancellationToken cancellationToken)
     {
@@ -22,14 +25,15 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 
     [HttpGet]
     [EndpointDescription("Returns all categories.")]
-    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<GetCategoriesResponse>>> GetAllAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
     [HttpGet("{id:int}")]
     [EndpointDescription("Returns a category by its ID.")]
-    public async Task<IActionResult> GetByIdAsync(int id, CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<GetCategoryByIdResponse>> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
