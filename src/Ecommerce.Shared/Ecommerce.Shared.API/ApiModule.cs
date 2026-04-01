@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Ecommerce.Shared.API.Exceptions;
 using FluentValidation.AspNetCore;
+using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,8 @@ public static class ApiModule
         services.AddProblemDetails();
         services.AddControllers();
         services.AddFluentValidationAutoValidation();
+        services.AddFluentValidationRulesToOpenApi();
+        
         services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;

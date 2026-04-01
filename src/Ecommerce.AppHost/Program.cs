@@ -1,5 +1,6 @@
 using Ecommerce.Catalog.Api;
 using Ecommerce.Shared.API;
+using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Scalar.AspNetCore;
 
 namespace Ecommerce.AppHost;
@@ -10,9 +11,12 @@ internal static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddOpenApi();
         builder.Services.AddApiModule();
         builder.Services.AddCatalogModule(builder.Configuration);
+        builder.Services.AddOpenApi(options =>
+        {
+            options.AddFluentValidationRules();
+        });
 
         var app = builder.Build();
 

@@ -1,4 +1,5 @@
 using Ecommerce.Catalog.Infrastructure;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ public static class CatalogModule
     public static IServiceCollection AddCatalogModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers().AddApplicationPart(typeof(CatalogModule).Assembly);
+        services.AddValidatorsFromAssembly(typeof(CatalogModule).Assembly, includeInternalTypes: true);
         services.AddInfrastructure(configuration);
         return services;
     }
