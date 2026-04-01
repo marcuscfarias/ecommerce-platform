@@ -16,10 +16,17 @@ internal sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .IsRequired()
             .HasMaxLength(CategoryConsts.NameMaxLength);
 
+        builder.Property(c => c.Slug)
+            .IsRequired()
+            .HasMaxLength(CategoryConsts.SlugMaxLength);
+
         builder.Property(c => c.Description)
             .HasMaxLength(CategoryConsts.DescriptionMaxLength);
 
         builder.HasIndex(c => c.Name)
+            .IsUnique();
+
+        builder.HasIndex(c => c.Slug)
             .IsUnique();
     }
 }

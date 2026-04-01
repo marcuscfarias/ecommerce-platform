@@ -13,7 +13,7 @@ internal sealed class CreateCategoryHandler(ICatalogRepository repository) : IRe
         if (exists)
             throw new BusinessRuleValidationException(CategoryConsts.NameDuplicateError);
 
-        var category = new Category(command.Name, command.Description);
+        var category = new Category(command.Name, command.Slug, command.Description);
 
         repository.Add(category);
         await repository.SaveChangesAsync(cancellationToken);

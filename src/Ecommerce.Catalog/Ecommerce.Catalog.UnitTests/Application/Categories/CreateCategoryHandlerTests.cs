@@ -19,7 +19,7 @@ public class CreateCategoryHandlerTests
     public async Task Handle_WhenNameIsUnique_ShouldAddCategoryAndSaveChanges()
     {
         // Arrange
-        var command = new CreateCategoryCommand("Electronics", "Electronic devices");
+        var command = new CreateCategoryCommand("Electronics", "electronics", "Electronic devices");
         _repository.ExistsAsync(command.Name, Arg.Any<CancellationToken>()).Returns(false);
 
         // Act
@@ -28,6 +28,7 @@ public class CreateCategoryHandlerTests
         // Assert
         _repository.Received(1).Add(
             Arg.Is<Category>(c => c.Name == command.Name
+                                  && c.Slug == command.Slug
                                   && c.Description == command.Description));
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
@@ -36,7 +37,7 @@ public class CreateCategoryHandlerTests
     public async Task Handle_WhenNameAlreadyExists_ShouldThrowBusinessRuleValidationException()
     {
         // Arrange
-        var command = new CreateCategoryCommand("Electronics", null);
+        var command = new CreateCategoryCommand("Electronics", "electronics", null);
         _repository.ExistsAsync(command.Name, Arg.Any<CancellationToken>()).Returns(true);
 
         // Act
