@@ -2,6 +2,7 @@ using Ecommerce.Catalog.Api.Categories.CreateCategory;
 using Ecommerce.Catalog.Api.Categories.GetCategories;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
 using Ecommerce.Catalog.Application;
+using Ecommerce.Catalog.Application.Categories.CreateCategory;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +21,10 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
         [FromBody] CreateCategoryRequest request,
         CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var command = new CreateCategoryCommand(request.Name, request.Slug, request.Description);
+        var id = await module.ExecuteCommandAsync(command, cancellationToken);
+        var response = new CreateCategoryResponse(id, request.Name, request.Slug, request.Description);
+        return CreatedAtAction(nameof(GetByIdAsync), new { id }, response);
     }
 
     [HttpGet]
