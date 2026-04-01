@@ -3,7 +3,7 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Shared.Domain.BusinessRules;
 using MediatR;
 
-namespace Ecommerce.Catalog.Application.Categories.Commands;
+namespace Ecommerce.Catalog.Application.Categories.CreateCategory;
 
 internal sealed class CreateCategoryHandler(ICatalogRepository repository) : IRequestHandler<CreateCategoryCommand, int>
 {

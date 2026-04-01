@@ -1,4 +1,4 @@
-using Ecommerce.Catalog.Application.Categories.Commands;
+using Ecommerce.Catalog.Application.Categories.CreateCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Shared.Domain.BusinessRules;
