@@ -3,10 +3,11 @@ using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Shared.API.Exceptions;
 
-public sealed class GlobalExceptionHandler : IExceptionHandler
+public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
@@ -16,6 +17,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             ValidationException ex             => (StatusCodes.Status400BadRequest, "Validation Failed", ex.Message),
             _                                  => (StatusCodes.Status500InternalServerError, "Internal Server Error", "An unexpected error occurred.")
         };
+
+        if (status == StatusCodes.Status500InternalServerError)
+            logger.LogError(exception, "Unhandled exception caught by GlobalExceptionHandler");
 
         context.Response.StatusCode = status;
         await context.Response.WriteAsJsonAsync(new ProblemDetails
