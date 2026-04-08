@@ -1,0 +1,20 @@
+@host = http://localhost:8080
+
+### Create Category
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "Electronics",
+  "slug": "electronics",
+  "description": "Electronic devices and accessories"
+}
+
+### Create Category (without description)
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "Books",
+  "slug": "books"
+}
