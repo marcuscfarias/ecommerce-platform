@@ -9,7 +9,7 @@ services:
       - "8080:8080"
       - "8081:8081"
     environment:
-      - ConnectionStrings__CatalogDb=${CATALOG_DB_CONNECTION_STRING}
+      - ConnectionStrings__EcommerceDb=${ECOMMERCE_DB_CONNECTION_STRING}
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       ecommerce-db:

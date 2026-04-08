@@ -3,6 +3,7 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Infrastructure.Mediation;
 using Ecommerce.Catalog.Infrastructure.Persistence;
 using Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
+using Ecommerce.Shared.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,14 +15,7 @@ public static class InfrastructureModule
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<CatalogDbContext>((sp, options) =>
-        {
-            var connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString("CatalogDb")
-                                   ?? throw new InvalidOperationException(
-                                       "Connection string 'CatalogDb' is not configured.");
-            options.UseNpgsql(connectionString,
-                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", CatalogDbContext.Schema));
-        });
+        services.AddModuleDbContext<CatalogDbContext>(CatalogDbContext.Schema);
 
         services.AddMediationModule();
 
