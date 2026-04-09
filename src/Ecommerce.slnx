@@ -2,5 +2,21 @@
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
   </Folder>
-  <Project Path="Ecommerce/Ecommerce.csproj" />
+  <Folder Name="/Ecommerce.Catalog/">
+    <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.Api/Ecommerce.Catalog.Api.csproj" />
+    <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.Application/Ecommerce.Catalog.Application.csproj" />
+    <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.Domain/Ecommerce.Catalog.Domain.csproj" />
+    <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.Infrastructure/Ecommerce.Catalog.Infrastructure.csproj" />
+    <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.IntegrationTests/Ecommerce.Catalog.IntegrationTests.csproj" />
+    <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.UnitTests/Ecommerce.Catalog.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Ecommerce.Shared/">
+    <Project Path="Ecommerce.Shared/Ecommerce.Shared.Domain/Ecommerce.Shared.Domain.csproj" />
+    <Project Path="Ecommerce.Shared/Ecommerce.Shared.Application/Ecommerce.Shared.Application.csproj" />
+    <Project Path="Ecommerce.Shared/Ecommerce.Shared.Infrastructure/Ecommerce.Shared.Infrastructure.csproj" />
+    <Project Path="Ecommerce.Shared/Ecommerce.Shared.API/Ecommerce.Shared.API.csproj" />
+    <Project Path="Ecommerce.Shared/Ecommerce.Shared.UnitTests/Ecommerce.Shared.UnitTests.csproj" />
+    <Project Path="Ecommerce.Shared/Ecommerce.Shared.IntegrationTests/Ecommerce.Shared.IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="Ecommerce.AppHost/Ecommerce.AppHost.csproj" />
 </Solution>

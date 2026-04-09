@@ -1,0 +1,5 @@
+@host = http://localhost:8080
+
+### Get Category by ID
+GET {{host}}/api/v1/categories/1
+Accept: application/json
