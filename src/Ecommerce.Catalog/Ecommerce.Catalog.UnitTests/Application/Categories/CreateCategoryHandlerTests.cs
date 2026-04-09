@@ -1,7 +1,7 @@
 using Ecommerce.Catalog.Application.Categories.CreateCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Domain.BusinessRules;
+using Ecommerce.Shared.Application.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories;
 
@@ -34,7 +34,7 @@ public class CreateCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenNameAlreadyExists_ShouldThrowBusinessRuleValidationException()
+    public async Task Handle_WhenNameAlreadyExists_ShouldThrowResourceAlreadyExistsException()
     {
         // Arrange
         var command = new CreateCategoryCommand("Electronics", "electronics", null);
@@ -44,7 +44,7 @@ public class CreateCategoryHandlerTests
         var act = () => _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.ShouldThrowAsync<BusinessRuleValidationException>();
+        await act.ShouldThrowAsync<ResourceAlreadyExistsException>();
         _repository.DidNotReceive().Add(Arg.Any<Category>());
         await _repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }

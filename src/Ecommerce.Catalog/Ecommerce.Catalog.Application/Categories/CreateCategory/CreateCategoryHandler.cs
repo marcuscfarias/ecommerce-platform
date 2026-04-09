@@ -10,8 +10,7 @@ internal sealed class CreateCategoryHandler(ICatalogRepository repository) : IRe
     public async Task<int> Handle(CreateCategoryCommand command, CancellationToken cancellationToken)
     {
         var exists = await repository.ExistsAsync(command.Name, cancellationToken);
-        if (exists)
-            throw new BusinessRuleValidationException(CategoryConsts.NameDuplicateError);
+        BusinessRule.Validate(new CategoryMustBeUniqueRule(exists));
 
         var category = new Category(command.Name, command.Slug, command.Description);
 
