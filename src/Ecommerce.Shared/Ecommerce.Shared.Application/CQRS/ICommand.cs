@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Ecommerce.Shared.Application.Commands;
+namespace Ecommerce.Shared.Application.CQRS;
 
 public interface ICommand : IRequest
 {

@@ -1,5 +1,4 @@
-using Ecommerce.Shared.Application.Commands;
-using Ecommerce.Shared.Application.Queries;
+using Ecommerce.Shared.Application.CQRS;
 
 namespace Ecommerce.Shared.Application;
 

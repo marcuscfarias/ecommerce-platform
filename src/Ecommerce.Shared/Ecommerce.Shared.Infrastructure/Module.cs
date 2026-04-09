@@ -1,6 +1,5 @@
 using Ecommerce.Shared.Application;
-using Ecommerce.Shared.Application.Commands;
-using Ecommerce.Shared.Application.Queries;
+using Ecommerce.Shared.Application.CQRS;
 using MediatR;
 
 namespace Ecommerce.Shared.Infrastructure;
