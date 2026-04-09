@@ -11,23 +11,23 @@ public class BusinessRuleValidatorTests
         var rule = new FakeBusinessRule(someNumber: 11);
 
         // Act
-        var act = () => BusinessRuleValidator.Validate(rule);
+        var act = () => BusinessRule.Validate(rule);
 
         // Assert
         act.ShouldNotThrow();
     }
 
     [Fact]
-    public void Validate_RuleIsNotMet_ShouldThrowBusinessRuleValidationException()
+    public void Validate_RuleIsNotMet_ShouldThrowFromCreateException()
     {
         // Arrange
         var rule = new FakeBusinessRule(someNumber: 5);
 
         // Act
-        var act = () => BusinessRuleValidator.Validate(rule);
+        var act = () => BusinessRule.Validate(rule);
 
         // Assert
-        act.ShouldThrow<BusinessRuleValidationException>();
+        act.ShouldThrow<InvalidOperationException>();
     }
 
     [Fact]
@@ -37,25 +37,11 @@ public class BusinessRuleValidatorTests
         var rule = new FakeBusinessRule(someNumber: 5);
 
         // Act
-        var exception = Should.Throw<BusinessRuleValidationException>(
-            () => BusinessRuleValidator.Validate(rule));
+        var exception = Should.Throw<InvalidOperationException>(
+            () => BusinessRule.Validate(rule));
 
         // Assert
-        exception.Message.ShouldBe(rule.Error);
-    }
-
-    [Fact]
-    public void Validate_RuleIsNotMet_ExceptionShouldBeInvalidOperationException()
-    {
-        // Arrange
-        var rule = new FakeBusinessRule(someNumber: 0);
-
-        // Act
-        var exception = Should.Throw<BusinessRuleValidationException>(
-            () => BusinessRuleValidator.Validate(rule));
-
-        // Assert
-        exception.ShouldBeAssignableTo<InvalidOperationException>();
+        exception.Message.ShouldBe("Fake business rule was not met");
     }
 
     [Fact]
@@ -65,22 +51,22 @@ public class BusinessRuleValidatorTests
         var rule = new FakeBusinessRule(someNumber: 11);
 
         // Act
-        var act = () => BusinessRuleValidator.Validate(rule);
+        var act = () => BusinessRule.Validate(rule);
 
         // Assert
         act.ShouldNotThrow();
     }
 
     [Fact]
-    public void Validate_RuleIsNotMetAtBoundary_ShouldThrowBusinessRuleValidationException()
+    public void Validate_RuleIsNotMetAtBoundary_ShouldThrow()
     {
         // Arrange
         var rule = new FakeBusinessRule(someNumber: 10);
 
         // Act
-        var act = () => BusinessRuleValidator.Validate(rule);
+        var act = () => BusinessRule.Validate(rule);
 
         // Assert
-        act.ShouldThrow<BusinessRuleValidationException>();
+        act.ShouldThrow<InvalidOperationException>();
     }
 }

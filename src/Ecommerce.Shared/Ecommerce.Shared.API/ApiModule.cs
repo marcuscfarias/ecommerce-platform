@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using Ecommerce.Shared.API.Exceptions;
-using FluentValidation.AspNetCore;
+using Ecommerce.Shared.API.Filters;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,15 +12,22 @@ public static class ApiModule
     public static IServiceCollection AddApiModule(this IServiceCollection services)
     {
         services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
-        services.AddControllers();
-        services.AddFluentValidationAutoValidation();
+        services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
+            {
+                context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+                context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+                context.ProblemDetails.Extensions["timestamp"] = DateTimeOffset.UtcNow;
+            };
+        });
+        services.AddControllers(options => options.Filters.Add<RequestValidationFilter>());
         services.AddFluentValidationRulesToOpenApi();
-        
         services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
         });
+
         return services;
     }
 

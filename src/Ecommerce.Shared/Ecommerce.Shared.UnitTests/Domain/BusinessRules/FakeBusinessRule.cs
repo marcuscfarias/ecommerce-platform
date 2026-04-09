@@ -2,14 +2,10 @@ using Ecommerce.Shared.Domain.BusinessRules;
 
 namespace Ecommerce.Shared.UnitTests.Domain.BusinessRules;
 
-internal sealed class FakeBusinessRule : IBusinessRule
+internal sealed class FakeBusinessRule(int someNumber) : IBusinessRule
 {
-    private readonly int _someNumber;
+    public bool IsMet() => someNumber > 10;
 
-    internal FakeBusinessRule(int someNumber) =>
-        _someNumber = someNumber;
-
-    public bool IsMet() => _someNumber > 10;
-
-    public string Error => "Fake business rule was not met";
+    public Exception CreateException() =>
+        new InvalidOperationException("Fake business rule was not met");
 }
