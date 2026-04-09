@@ -1,5 +1,6 @@
 using Ecommerce.Catalog.Api.Categories.CreateCategory;
 using Ecommerce.Catalog.Application;
+using Ecommerce.Shared.API.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,8 +13,8 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [HttpPost]
     [EndpointDescription("Creates a new category.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(
         [FromBody] CreateCategoryRequest request,
         CancellationToken cancellationToken)
@@ -25,7 +26,8 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [HttpGet("{id:int}")]
     [EndpointDescription("Returns a category by its ID.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
