@@ -20,6 +20,7 @@ internal sealed class CreateCategoryRequestValidator : AbstractValidator<CreateC
 
         RuleFor(x => x.Description)
             .MinimumLength(10)
-            .MaximumLength(100);
+            .MaximumLength(100)
+            .When(x => x.Description is not null);
     }
 }

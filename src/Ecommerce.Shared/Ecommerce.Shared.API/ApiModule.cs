@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Ecommerce.Shared.API.Exceptions;
 using Ecommerce.Shared.API.Filters;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
+using MicroElements.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +23,11 @@ public static class ApiModule
             };
         });
         services.AddControllers(options => options.Filters.Add<RequestValidationFilter>());
-        services.AddFluentValidationRulesToOpenApi();
+        services.AddFluentValidationRulesToOpenApi(options =>
+        {
+            options.ConditionalRules = ConditionalRulesMode.Include;
+        });
+        
         services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
