@@ -11,21 +11,13 @@ public sealed class GlobalExceptionHandler(
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
-        if (exception is IAppException appException)
-        {
-            return await ProblemDetailsWriter.WriteAsync(
-                context,
-                problemDetailsService,
-                appException.StatusCode,
-                appException.ErrorMessage);
-        }
+        var (status, detail) = exception is IAppException appException
+            ? (appException.StatusCode, appException.ErrorMessage)
+            : (StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
 
-        logger.LogError(exception, "Unhandled exception caught by GlobalExceptionHandler");
+        if (exception is not IAppException)
+            logger.LogError(exception, "Unhandled exception caught by GlobalExceptionHandler");
 
-        return await ProblemDetailsWriter.WriteAsync(
-            context,
-            problemDetailsService,
-            StatusCodes.Status500InternalServerError,
-            "An unexpected error occurred.");
+        return await ProblemDetailsWriter.WriteAsync(context, problemDetailsService, status, detail);
     }
 }
