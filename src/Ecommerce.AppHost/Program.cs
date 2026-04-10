@@ -1,4 +1,5 @@
 using Ecommerce.AppHost.Modules;
+using Ecommerce.AppHost.Scalar;
 using Ecommerce.Shared.API;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Scalar.AspNetCore;
@@ -16,6 +17,7 @@ internal static class Program
         builder.Services.AddOpenApi(options =>
         {
             options.AddFluentValidationRules();
+            options.AddDocumentTransformer<RemoveRequiredFromResponseTransformer>();
         });
 
         var app = builder.Build();
@@ -23,7 +25,15 @@ internal static class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference();
+            app.MapScalarApiReference( options =>
+                {
+                    options.WithTitle("Ecommerce API Documentation");
+                    options.DotNetFlag = true;
+                    options.HideModels = true;
+                    options.HideClientButton = true;
+                    options.DefaultOpenAllTags = false;
+                }
+            );
         }
 
         app.UseHttpsRedirection();
