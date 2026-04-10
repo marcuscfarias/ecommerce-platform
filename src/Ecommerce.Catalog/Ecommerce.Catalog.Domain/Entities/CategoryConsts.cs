@@ -10,4 +10,5 @@ public static class CategoryConsts
 
     public const string NameDuplicateError = "A category with this name already exists.";
     public const string NotFoundError = "Category not found.";
+    public const string SlugDuplicateError = "A category with this slug already exists.";
 }
