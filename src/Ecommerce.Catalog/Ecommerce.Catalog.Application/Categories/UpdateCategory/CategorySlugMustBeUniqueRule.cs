@@ -6,7 +6,7 @@ namespace Ecommerce.Catalog.Application.Categories.UpdateCategory;
 
 public class CategorySlugMustBeUniqueRule(bool exists) : IBusinessRule
 {
-    public bool IsMet() => !exists;
+    public bool IsMet() => exists is false;
 
     public Exception CreateException() =>
         new ResourceAlreadyExistsException(CategoryConsts.SlugDuplicateError);
