@@ -2,11 +2,11 @@ using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Shared.Application.Exceptions;
 using Ecommerce.Shared.Domain.BusinessRules;
 
-namespace Ecommerce.Catalog.Application.Categories.CreateCategory;
+namespace Ecommerce.Catalog.Application.Categories.Rules;
 
-public class CategoryMustBeUniqueRule(bool exists) : IBusinessRule
+public class CategoryNameMustBeUniqueRule(bool exists) : IBusinessRule
 {
-    public bool IsMet() => !exists;
+    public bool IsMet() => exists is not true;
 
     public Exception CreateException() =>
         new ResourceAlreadyExistsException(CategoryConsts.NameDuplicateError);

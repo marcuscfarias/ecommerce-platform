@@ -16,11 +16,12 @@ public class CreateCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenNameIsUnique_ShouldAddCategoryAndSaveChanges()
+    public async Task Handle_WhenNameAndSlugAreUnique_ShouldAddCategoryAndSaveChanges()
     {
         // Arrange
         var command = new CreateCategoryCommand("Electronics", "electronics", "Electronic devices");
-        _repository.ExistsAsync(command.Name, Arg.Any<CancellationToken>()).Returns(false);
+        _repository.CheckUniquenessAsync(command.Name, command.Slug, Arg.Any<CancellationToken>())
+            .Returns((false, false));
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -38,7 +39,25 @@ public class CreateCategoryHandlerTests
     {
         // Arrange
         var command = new CreateCategoryCommand("Electronics", "electronics", null);
-        _repository.ExistsAsync(command.Name, Arg.Any<CancellationToken>()).Returns(true);
+        _repository.CheckUniquenessAsync(command.Name, command.Slug, Arg.Any<CancellationToken>())
+            .Returns((true, false));
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<ResourceAlreadyExistsException>();
+        _repository.DidNotReceive().Add(Arg.Any<Category>());
+        await _repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenSlugAlreadyExists_ShouldThrowResourceAlreadyExistsException()
+    {
+        // Arrange
+        var command = new CreateCategoryCommand("Electronics", "electronics", null);
+        _repository.CheckUniquenessAsync(command.Name, command.Slug, Arg.Any<CancellationToken>())
+            .Returns((false, true));
 
         // Act
         var act = () => _handler.Handle(command, CancellationToken.None);

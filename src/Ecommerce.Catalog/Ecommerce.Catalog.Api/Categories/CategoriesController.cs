@@ -1,5 +1,6 @@
 using Ecommerce.Catalog.Api.Categories.CreateCategory;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
+using Ecommerce.Catalog.Api.Categories.UpdateCategory;
 using Ecommerce.Catalog.Application;
 using Ecommerce.Catalog.Application.Categories.GetCategoryById;
 using Ecommerce.Shared.API.Exceptions;
@@ -34,5 +35,20 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     {
         var result = await module.ExecuteQueryAsync(new GetCategoryByIdQuery(id), cancellationToken);
         return Ok(GetCategoryByIdResponse.FromResult(result));
+    }
+
+    [HttpPut("{id:int}")]
+    [EndpointDescription("Updates an existing category.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(
+        [FromRoute] int id,
+        [FromBody] UpdateCategoryRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
     }
 }
