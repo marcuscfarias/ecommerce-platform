@@ -1,4 +1,4 @@
-using Ecommerce.Catalog.Application.Categories.GetCategoryById;
+using Ecommerce.Catalog.Application.Categories.Rules;
 using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Shared.Domain.BusinessRules;
 using MediatR;
