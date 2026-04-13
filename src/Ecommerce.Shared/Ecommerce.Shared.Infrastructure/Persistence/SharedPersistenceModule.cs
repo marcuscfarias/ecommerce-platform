@@ -1,3 +1,4 @@
+using Ecommerce.Shared.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,20 @@ namespace Ecommerce.Shared.Infrastructure.Persistence;
 public static class SharedPersistenceModule
 {
     private const string ConnectionStringName = "EcommerceDb";
+
+    public static IServiceCollection AddSharedInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var section = configuration.GetSection("Pagination");
+
+        if (!section.Exists() || section.Get<PaginationSettings>() is not { PageSize: > 0 })
+            throw new InvalidOperationException(
+                "Pagination settings are missing or invalid. Ensure 'Pagination:PageSize' is configured with a value greater than 0.");
+
+        services.Configure<PaginationSettings>(section);
+        return services;
+    }
 
     public static IServiceCollection AddModuleDbContext<TContext>(
         this IServiceCollection services,
