@@ -1,9 +1,9 @@
 using Ecommerce.Catalog.Api.Categories.CreateCategory;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
+using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Api.Categories.UpdateCategory;
 using Ecommerce.Catalog.Application;
 using Ecommerce.Catalog.Application.Categories.GetCategoryById;
-using Ecommerce.Shared.API.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +13,18 @@ namespace Ecommerce.Catalog.Api.Categories;
 [Route("api/v1/categories")]
 public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 {
+    [HttpGet]
+    [EndpointDescription("Returns a paginated list of categories.")]
+    [ProducesResponseType<ListCategoriesResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> List(
+        [FromQuery] ListCategoriesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteQueryAsync(request.ToQuery(), cancellationToken);
+        return Ok(ListCategoriesResponse.FromResult(result));
+    }
+
     [HttpPost]
     [EndpointDescription("Creates a new category.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
