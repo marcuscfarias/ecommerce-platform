@@ -1,10 +1,12 @@
 using Ecommerce.Shared.Domain.Entities;
+using Ecommerce.Shared.Domain.Models;
 
 namespace Ecommerce.Shared.Domain.Repositories;
 
 public interface IRepository<T> where T : Entity
 {
     Task<T?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<PagedResult<T>> GetAllAsync(int page, CancellationToken ct = default);
     void Add(T entity);
     void Update(T entity);
     void Remove(T entity);

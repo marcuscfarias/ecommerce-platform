@@ -25,12 +25,27 @@ public class RemoveRequiredFromResponseTransformer : IOpenApiDocumentTransformer
 
                     foreach (var mediaType in content.Values)
                     {
-                        mediaType.Schema?.Required?.Clear();
+                        ClearRequiredRecursively(mediaType.Schema);
                     }
                 }
             }
         }
 
         return Task.CompletedTask;
+    }
+
+    private static void ClearRequiredRecursively(IOpenApiSchema? schema)
+    {
+        if (schema is null) return;
+
+        schema.Required?.Clear();
+
+        if (schema.Properties is not null)
+        {
+            foreach (var property in schema.Properties.Values)
+                ClearRequiredRecursively(property);
+        }
+
+        ClearRequiredRecursively(schema.Items);
     }
 }

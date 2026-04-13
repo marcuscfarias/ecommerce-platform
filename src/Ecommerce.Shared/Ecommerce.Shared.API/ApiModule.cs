@@ -22,7 +22,10 @@ public static class ApiModule
                 context.ProblemDetails.Extensions["timestamp"] = DateTimeOffset.UtcNow;
             };
         });
-        services.AddControllers(options => options.Filters.Add<RequestValidationFilter>());
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<RequestValidationFilter>();
+        });
         services.AddFluentValidationRulesToOpenApi(options =>
         {
             options.ConditionalRules = ConditionalRulesMode.Include;
