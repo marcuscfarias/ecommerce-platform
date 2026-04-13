@@ -1,12 +1,16 @@
+using System.Linq.Expressions;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
+using Ecommerce.Shared.Domain.Models;
 using Ecommerce.Shared.Infrastructure.Persistence;
+using Ecommerce.Shared.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
 
-internal sealed class CategoryRepository(CatalogDbContext context)
-    : Repository<Category, CatalogDbContext>(context), ICatalogRepository
+internal sealed class CategoryRepository(CatalogDbContext context, IOptions<PaginationSettings> paginationSettings)
+    : Repository<Category, CatalogDbContext>(context, paginationSettings), ICatalogRepository
 {
     public async Task<(bool NameExists, bool SlugExists)> CheckUniquenessAsync(
         string name, string slug, CancellationToken ct = default)
@@ -28,5 +32,14 @@ internal sealed class CategoryRepository(CatalogDbContext context)
             .ToListAsync(ct);
 
         return (matches.Any(c => c.Name == name), matches.Any(c => c.Slug == slug));
+    }
+
+    public Task<PagedResult<Category>> GetAllAsync(int page, bool? isActive = true, CancellationToken ct = default)
+    {
+        Expression<Func<Category, bool>>? filter = isActive.HasValue
+            ? c => c.IsActive == isActive.Value
+            : null;
+
+        return GetAllAsync(page, filter, ct);
     }
 }
