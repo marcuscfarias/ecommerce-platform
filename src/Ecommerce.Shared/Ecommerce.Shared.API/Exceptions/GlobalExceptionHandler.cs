@@ -12,7 +12,7 @@ public sealed class GlobalExceptionHandler(
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
         var (status, detail) = exception is IAppException appException
-            ? (appException.StatusCode, appException.ErrorMessage)
+            ? (appException.StatusCode, exception.Message)
             : (StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
 
         if (exception is not IAppException)

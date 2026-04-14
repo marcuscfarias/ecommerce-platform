@@ -5,5 +5,4 @@ namespace Ecommerce.Shared.Application.Exceptions;
 public class ResourceAlreadyExistsException(string message) : Exception(message), IAppException
 {
     public int StatusCode => 409;
-    public string ErrorMessage => Message;
 }
