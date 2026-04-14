@@ -1,3 +1,5 @@
+using Ecommerce.Shared.Domain.Exceptions;
+
 namespace Ecommerce.Shared.Domain.BusinessRules;
 
 public static class BusinessRule
