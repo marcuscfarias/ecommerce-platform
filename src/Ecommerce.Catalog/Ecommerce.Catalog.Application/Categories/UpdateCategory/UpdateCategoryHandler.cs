@@ -1,5 +1,6 @@
 using Ecommerce.Catalog.Application.Categories.Rules;
 using Ecommerce.Catalog.Domain.Repositories;
+using Ecommerce.Shared.Application.Exceptions;
 using Ecommerce.Shared.Domain.BusinessRules;
 using MediatR;
 
@@ -10,15 +11,15 @@ internal sealed class UpdateCategoryHandler(ICatalogRepository repository)
 {
     public async Task Handle(UpdateCategoryCommand command, CancellationToken cancellationToken)
     {
-        var category = await repository.GetByIdAsync(command.Id, cancellationToken);
-        BusinessRule.Validate(new CategoryMustExistRule(category));
+        var category = await repository.GetByIdAsync(command.Id, cancellationToken) ??
+                       throw new ResourceNotFoundException("Category", command.Id);
 
         var (nameExists, slugExists) = await repository.CheckUniquenessAsync(
             command.Name, command.Slug, command.Id, cancellationToken);
         BusinessRule.Validate(new CategoryNameMustBeUniqueRule(nameExists));
         BusinessRule.Validate(new CategorySlugMustBeUniqueRule(slugExists));
 
-        category!.Update(command.Name, command.Slug, command.Description, command.IsActive);
+        category.Update(command.Name, command.Slug, command.Description, command.IsActive);
         repository.Update(category);
         await repository.SaveChangesAsync(cancellationToken);
     }
