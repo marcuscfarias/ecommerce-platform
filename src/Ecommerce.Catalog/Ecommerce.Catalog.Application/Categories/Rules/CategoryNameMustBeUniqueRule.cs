@@ -1,5 +1,3 @@
-using Ecommerce.Catalog.Domain.Entities;
-using Ecommerce.Shared.Application.Exceptions;
 using Ecommerce.Shared.Domain.BusinessRules;
 
 namespace Ecommerce.Catalog.Application.Categories.Rules;
@@ -7,7 +5,5 @@ namespace Ecommerce.Catalog.Application.Categories.Rules;
 public class CategoryNameMustBeUniqueRule(bool exists) : IBusinessRule
 {
     public bool IsMet() => exists is not true;
-
-    public Exception CreateException() =>
-        new ResourceAlreadyExistsException(CategoryConsts.NameDuplicateError);
+    public string ErrorMessage => "A category with this name already exists.";
 }
