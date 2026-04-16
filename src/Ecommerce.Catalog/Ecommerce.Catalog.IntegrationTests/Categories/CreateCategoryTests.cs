@@ -47,21 +47,6 @@ public sealed class CreateCategoryTests(CatalogIntegrationFixture fixture)
         await ResetDatabaseAsync();
     }
 
-    [Fact]
-    public async Task Post_WhenNameAlreadyExists_Returns409()
-    {
-        // Arrange
-        await Client.PostAsJsonAsync(Endpoint, new { name = "Clothing", slug = "clothing", description = (string?)null });
-
-        // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, new { name = "Clothing", slug = "clothing-2", description = (string?)null });
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-
-        await ResetDatabaseAsync();
-    }
-
     [Theory]
     [InlineData("")]
     [InlineData("ab")]

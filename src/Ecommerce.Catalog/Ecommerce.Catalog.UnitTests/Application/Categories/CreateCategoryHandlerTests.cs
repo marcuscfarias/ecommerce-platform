@@ -17,12 +17,12 @@ public class CreateCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenNameAndSlugAreUnique_ShouldAddCategoryAndSaveChanges()
+    public async Task Handle_WhenSlugIsUnique_ShouldAddCategoryAndSaveChanges()
     {
         // Arrange
         var command = new CreateCategoryCommand("Electronics", "electronics", "Electronic devices");
-        _repository.CheckUniquenessAsync(command.Name, command.Slug, Arg.Any<CancellationToken>())
-            .Returns((false, false));
+        _repository.CheckSlugExistsAsync(command.Slug, Arg.Any<CancellationToken>())
+            .Returns(false);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -36,29 +36,12 @@ public class CreateCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenNameAlreadyExists_ShouldThrowBusinessRuleValidationException()
-    {
-        // Arrange
-        var command = new CreateCategoryCommand("Electronics", "electronics", null);
-        _repository.CheckUniquenessAsync(command.Name, command.Slug, Arg.Any<CancellationToken>())
-            .Returns((true, false));
-
-        // Act
-        var act = () => _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        await act.ShouldThrowAsync<BusinessRuleValidationException>();
-        _repository.DidNotReceive().Add(Arg.Any<Category>());
-        await _repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task Handle_WhenSlugAlreadyExists_ShouldThrowBusinessRuleValidationException()
     {
         // Arrange
         var command = new CreateCategoryCommand("Electronics", "electronics", null);
-        _repository.CheckUniquenessAsync(command.Name, command.Slug, Arg.Any<CancellationToken>())
-            .Returns((false, true));
+        _repository.CheckSlugExistsAsync(command.Slug, Arg.Any<CancellationToken>())
+            .Returns(true);
 
         // Act
         var act = () => _handler.Handle(command, CancellationToken.None);

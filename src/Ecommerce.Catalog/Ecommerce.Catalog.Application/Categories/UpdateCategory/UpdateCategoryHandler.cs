@@ -14,9 +14,7 @@ internal sealed class UpdateCategoryHandler(ICatalogRepository repository)
         var category = await repository.GetByIdAsync(command.Id, cancellationToken) ??
                        throw new ResourceNotFoundException("Category", command.Id);
 
-        var (nameExists, slugExists) = await repository.CheckUniquenessAsync(
-            command.Name, command.Slug, command.Id, cancellationToken);
-        BusinessRule.Validate(new CategoryNameMustBeUniqueRule(nameExists));
+        var slugExists = await repository.CheckSlugExistsAsync(command.Slug, command.Id, cancellationToken);
         BusinessRule.Validate(new CategorySlugMustBeUniqueRule(slugExists));
 
         category.Update(command.Name, command.Slug, command.Description, command.IsActive);
