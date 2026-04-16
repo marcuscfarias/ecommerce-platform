@@ -8,7 +8,11 @@ internal sealed class CatalogDbContextFactory : IDesignTimeDbContextFactory<Cata
 {
     public CatalogDbContext CreateDbContext(string[] args)
     {
+        var appHostPath = Path.GetFullPath(
+            Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "Ecommerce.AppHost"));
+
         var configuration = new ConfigurationBuilder()
+            .SetBasePath(appHostPath)
             .AddJsonFile("appsettings.Development.json")
             .Build();
 
