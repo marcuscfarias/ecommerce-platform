@@ -1,34 +1,45 @@
 using Ecommerce.Catalog.Application.Categories.Rules;
-using Ecommerce.Shared.Domain.BusinessRules;
-using Ecommerce.Shared.Domain.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.Rules;
 
 public class CategorySlugMustBeUniqueRuleTests
 {
     [Fact]
-    public void IsMet_WhenSlugDoesNotExist_ShouldNotThrow()
+    public void IsMet_WhenSlugDoesNotExist_ShouldReturnTrue()
     {
         // Arrange
         var rule = new CategorySlugMustBeUniqueRule(exists: false);
 
         // Act
-        var act = () => BusinessRule.Validate(rule);
+        var result = rule.IsMet();
 
         // Assert
-        act.ShouldNotThrow();
+        result.ShouldBeTrue();
     }
 
     [Fact]
-    public void IsMet_WhenSlugAlreadyExists_ShouldThrowBusinessRuleValidationException()
+    public void IsMet_WhenSlugAlreadyExists_ShouldReturnFalse()
     {
         // Arrange
         var rule = new CategorySlugMustBeUniqueRule(exists: true);
 
         // Act
-        var act = () => BusinessRule.Validate(rule);
+        var result = rule.IsMet();
 
         // Assert
-        act.ShouldThrow<BusinessRuleValidationException>();
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ErrorMessage_ShouldReturnExpectedMessage()
+    {
+        // Arrange
+        var rule = new CategorySlugMustBeUniqueRule(exists: false);
+
+        // Act
+        var message = rule.ErrorMessage;
+
+        // Assert
+        message.ShouldBe("A category with this slug already exists.");
     }
 }
