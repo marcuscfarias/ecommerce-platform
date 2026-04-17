@@ -3,7 +3,7 @@ using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Shared.Application.Exceptions;
 
-namespace Ecommerce.Catalog.UnitTests.Application.Categories;
+namespace Ecommerce.Catalog.UnitTests.Application.Categories.GetCategoryById;
 
 public class GetCategoryByIdHandlerTests
 {

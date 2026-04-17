@@ -4,7 +4,7 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Shared.Domain.BusinessRules;
 using Ecommerce.Shared.Domain.Exceptions;
 
-namespace Ecommerce.Catalog.UnitTests.Application.Categories;
+namespace Ecommerce.Catalog.UnitTests.Application.Categories.CreateCategory;
 
 public class CreateCategoryHandlerTests
 {

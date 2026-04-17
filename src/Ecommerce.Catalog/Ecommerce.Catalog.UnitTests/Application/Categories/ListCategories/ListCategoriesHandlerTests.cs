@@ -3,7 +3,7 @@ using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Shared.Domain.Models;
 
-namespace Ecommerce.Catalog.UnitTests.Application.Categories;
+namespace Ecommerce.Catalog.UnitTests.Application.Categories.ListCategories;
 
 public class ListCategoriesHandlerTests
 {
@@ -20,17 +20,17 @@ public class ListCategoriesHandlerTests
     {
         // Arrange
         var query = new ListCategoriesQuery(1, true);
-        
+
         var categories = new List<Category>
         {
             new("Electronics", "electronics", "Electronic devices"),
             new("Books", "books", null, false)
         };
-        
+
         var pagedResult = new PagedResult<Category>(categories, Page: 1, TotalCount: 2, TotalPages: 1);
         _repository.GetAllAsync(query.PageNumber, query.IsActive, Arg.Any<CancellationToken>())
             .Returns(pagedResult);
-        
+
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -69,5 +69,4 @@ public class ListCategoriesHandlerTests
         result.TotalCount.ShouldBe(0);
         result.TotalPages.ShouldBe(0);
     }
-
 }
