@@ -1,3 +1,4 @@
+using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
@@ -62,10 +63,11 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         await ResetDatabaseAsync();
 
         // Arrange
-        var existing = new { name = "Electronics", slug = "electronics", description = (string?)null };
-        var firstResponse = await Client.PostAsJsonAsync(Endpoint, existing);
-        firstResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
-
+        await SeedAsync(db =>
+        {
+            db.Categories.Add(new Category("Electronics", "electronics", null));
+            return Task.CompletedTask;
+        });
         var duplicate = new { name = "Other Name", slug = "electronics", description = (string?)null };
 
         // Act

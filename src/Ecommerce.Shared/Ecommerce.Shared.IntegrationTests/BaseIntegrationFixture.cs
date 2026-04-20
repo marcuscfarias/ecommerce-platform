@@ -1,4 +1,6 @@
 using Ecommerce.Shared.IntegrationTests.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.Shared.IntegrationTests;
 
@@ -27,6 +29,15 @@ public abstract class BaseIntegrationFixture<TFactory> : IAsyncLifetime
     }
 
     public Task ResetDatabaseAsync() => _resetter.ResetAsync();
+
+    public async Task SeedAsync<TDbContext>(Func<TDbContext, Task> seed)
+        where TDbContext : DbContext
+    {
+        using var scope = Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        await seed(db);
+        await db.SaveChangesAsync();
+    }
 
     public async Task DisposeAsync()
     {
