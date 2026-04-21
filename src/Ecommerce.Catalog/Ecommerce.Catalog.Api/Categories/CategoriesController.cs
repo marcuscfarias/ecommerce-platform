@@ -1,4 +1,5 @@
 using Ecommerce.Catalog.Api.Categories.CreateCategory;
+using Ecommerce.Catalog.Api.Categories.DeleteCategory;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
 using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Api.Categories.UpdateCategory;
@@ -60,6 +61,16 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [EndpointDescription("Deletes a category by its ID.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(new DeleteCategoryRequest().ToCommand(id), cancellationToken);
         return NoContent();
     }
 }
