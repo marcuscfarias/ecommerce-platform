@@ -12,26 +12,14 @@ namespace Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
 internal sealed class CategoryRepository(CatalogDbContext context, IOptions<PaginationSettings> paginationSettings)
     : Repository<Category, CatalogDbContext>(context, paginationSettings), ICatalogRepository
 {
-    public async Task<(bool NameExists, bool SlugExists)> CheckUniquenessAsync(
-        string name, string slug, CancellationToken ct = default)
+    public async Task<bool> CheckSlugExistsAsync(string slug, CancellationToken ct = default)
     {
-        var matches = await Context.Categories
-            .Where(c => c.Name == name || c.Slug == slug)
-            .Select(c => new { c.Name, c.Slug })
-            .ToListAsync(ct);
-
-        return (matches.Any(c => c.Name == name), matches.Any(c => c.Slug == slug));
+        return await Context.Categories.AnyAsync(c => c.Slug == slug, ct);
     }
 
-    public async Task<(bool NameExists, bool SlugExists)> CheckUniquenessAsync(
-        string name, string slug, int excludeId, CancellationToken ct = default)
+    public async Task<bool> CheckSlugExistsAsync(string slug, int excludeId, CancellationToken ct = default)
     {
-        var matches = await Context.Categories
-            .Where(c => (c.Name == name || c.Slug == slug) && c.Id != excludeId)
-            .Select(c => new { c.Name, c.Slug })
-            .ToListAsync(ct);
-
-        return (matches.Any(c => c.Name == name), matches.Any(c => c.Slug == slug));
+        return await Context.Categories.AnyAsync(c => c.Slug == slug && c.Id != excludeId, ct);
     }
 
     public Task<PagedResult<Category>> GetAllAsync(int page, bool? isActive = true, CancellationToken ct = default)

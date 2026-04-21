@@ -49,13 +49,76 @@ namespace Ecommerce.Catalog.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.HasIndex("Slug")
                         .IsUnique();
 
                     b.ToTable("Categories", "catalog");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Electronic devices and gadgets",
+                            IsActive = true,
+                            Name = "Electronics",
+                            Slug = "electronics"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Apparel and fashion items",
+                            IsActive = true,
+                            Name = "Clothing",
+                            Slug = "clothing"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Home decor and garden supplies",
+                            IsActive = true,
+                            Name = "Home & Garden",
+                            Slug = "home-garden"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Sports equipment and outdoor gear",
+                            IsActive = true,
+                            Name = "Sports & Outdoors",
+                            Slug = "sports-outdoors"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Books, e-books, and audiobooks",
+                            IsActive = true,
+                            Name = "Books",
+                            Slug = "books"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Health, beauty, and personal care products",
+                            IsActive = true,
+                            Name = "Health & Beauty",
+                            Slug = "health-beauty"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Toys, games, and entertainment",
+                            IsActive = true,
+                            Name = "Toys & Games",
+                            Slug = "toys-games"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Description = "Food, drinks, and grocery items",
+                            IsActive = true,
+                            Name = "Food & Beverages",
+                            Slug = "food-beverages"
+                        });
                 });
 #pragma warning restore 612, 618
         }
