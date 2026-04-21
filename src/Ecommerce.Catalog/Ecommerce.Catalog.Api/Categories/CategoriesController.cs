@@ -3,7 +3,6 @@ using Ecommerce.Catalog.Api.Categories.GetCategoryById;
 using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Api.Categories.UpdateCategory;
 using Ecommerce.Catalog.Application;
-using Ecommerce.Catalog.Application.Categories.GetCategoryById;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,7 +44,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var result = await module.ExecuteQueryAsync(new GetCategoryByIdQuery(id), cancellationToken);
+        var result = await module.ExecuteQueryAsync(new GetCategoryByIdRequest().ToQuery(id), cancellationToken);
         return Ok(GetCategoryByIdResponse.FromResult(result));
     }
 
