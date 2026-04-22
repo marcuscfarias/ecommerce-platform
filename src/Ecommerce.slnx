@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
+    <File Path="compose.override.yaml" />
+    <File Path="compose.prod.yaml" />
+    <File Path=".env.example" />
   </Folder>
   <Folder Name="/Ecommerce.Catalog/">
     <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.Api/Ecommerce.Catalog.Api.csproj" />
