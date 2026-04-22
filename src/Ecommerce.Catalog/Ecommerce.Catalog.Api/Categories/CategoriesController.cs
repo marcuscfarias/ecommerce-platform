@@ -1,9 +1,9 @@
 using Ecommerce.Catalog.Api.Categories.CreateCategory;
+using Ecommerce.Catalog.Api.Categories.DeleteCategory;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
 using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Api.Categories.UpdateCategory;
 using Ecommerce.Catalog.Application;
-using Ecommerce.Catalog.Application.Categories.GetCategoryById;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,7 +45,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var result = await module.ExecuteQueryAsync(new GetCategoryByIdQuery(id), cancellationToken);
+        var result = await module.ExecuteQueryAsync(new GetCategoryByIdRequest().ToQuery(id), cancellationToken);
         return Ok(GetCategoryByIdResponse.FromResult(result));
     }
 
@@ -61,6 +61,16 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [EndpointDescription("Deletes a category by its ID.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(new DeleteCategoryRequest().ToCommand(id), cancellationToken);
         return NoContent();
     }
 }
