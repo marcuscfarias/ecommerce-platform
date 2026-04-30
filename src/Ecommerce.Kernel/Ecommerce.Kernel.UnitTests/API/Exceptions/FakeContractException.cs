@@ -2,8 +2,8 @@ using Ecommerce.Kernel.Domain.Exceptions;
 
 namespace Ecommerce.Kernel.UnitTests.API.Exceptions;
 
-internal sealed class FakeAppException(int statusCode, string message)
-    : Exception(message), IAppException
+internal sealed class FakeContractException(int statusCode, string message)
+    : Exception(message), IExceptionContract
 {
     public int StatusCode => statusCode;
 }

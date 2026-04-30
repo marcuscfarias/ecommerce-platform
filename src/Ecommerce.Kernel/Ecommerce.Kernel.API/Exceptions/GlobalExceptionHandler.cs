@@ -11,11 +11,11 @@ public sealed class GlobalExceptionHandler(
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var (status, detail) = exception is IAppException appException
+        var (status, detail) = exception is IExceptionContract appException
             ? (appException.StatusCode, exception.Message)
             : (StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
 
-        if (exception is not IAppException)
+        if (exception is not IExceptionContract)
             logger.LogError(exception, "Unhandled exception caught by GlobalExceptionHandler");
 
         return await ProblemDetailsWriter.WriteAsync(httpContext, problemDetailsService, status, detail);

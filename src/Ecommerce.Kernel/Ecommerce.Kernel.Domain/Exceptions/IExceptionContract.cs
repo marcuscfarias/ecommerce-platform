@@ -1,6 +1,6 @@
 namespace Ecommerce.Kernel.Domain.Exceptions;
 
-public interface IAppException
+public interface IExceptionContract
 {
     int StatusCode { get; }
 }

@@ -68,7 +68,7 @@ public class GlobalExceptionHandlerTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var exception = new FakeAppException(StatusCodes.Status409Conflict, "some rule violated");
+        var exception = new FakeContractException(StatusCodes.Status409Conflict, "some rule violated");
 
         // Act
         await _sut.TryHandleAsync(context, exception, CancellationToken.None);
@@ -83,7 +83,7 @@ public class GlobalExceptionHandlerTests
         // Arrange
         var context = new DefaultHttpContext();
         int statusCode =  StatusCodes.Status409Conflict;
-        var exception = new FakeAppException(statusCode, "some rule violated");
+        var exception = new FakeContractException(statusCode, "some rule violated");
 
         // Act
         await _sut.TryHandleAsync(context, exception, CancellationToken.None);
@@ -98,7 +98,7 @@ public class GlobalExceptionHandlerTests
         // Arrange
         var context = new DefaultHttpContext();
         int statusCode  =  StatusCodes.Status409Conflict;
-        var exception = new FakeAppException(statusCode, "some rule violated");
+        var exception = new FakeContractException(statusCode, "some rule violated");
         ProblemDetailsContext? capturedContext = null;
 
         _problemDetailsService
