@@ -1,0 +1,64 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,xml,csproj,props,targets,slnx}]
+indent_size = 2
+
+[*.cs]
+# Nullability não inicializada é bug latente, deve quebrar o build.
+dotnet_diagnostic.CS8618.severity = error
+
+# CA2007 (ConfigureAwait): relevante em libs, ruidoso em apps ASP.NET.
+# Mantemos como sugestão; promovemos a warning só onde fizer sentido.
+dotnet_diagnostic.CA2007.severity = none
+
+# CA1822 (pode ser estático): pega métodos que escondem dependência de instância inexistente.
+# Suprimido em request DTOs vazios mais abaixo (padrão ToCommand/ToQuery do projeto).
+dotnet_diagnostic.CA1822.severity = warning
+
+# CA2227 (coleções públicas devem ser read-only): atrapalha DTOs/Records de request/response.
+dotnet_diagnostic.CA2227.severity = none
+
+# CA1716 (namespace conflita com keyword reservada): regra de interop cross-language
+# (ex.: 'Shared' é keyword em VB.NET). Irrelevante em app interno C#-only.
+dotnet_diagnostic.CA1716.severity = none
+
+# CA1711 (tipo não deve terminar em 'Exception'): conflita com o padrão IAppException
+# adotado no projeto, onde o sufixo é intencional para sinalizar contrato de exceção.
+dotnet_diagnostic.CA1711.severity = none
+
+# RCS1194 (Implement exception constructors): força os 3 construtores padrão. Exceções
+# de domínio aqui têm semântica fixa (recebem ID/contexto), não precisam do conjunto completo.
+dotnet_diagnostic.RCS1194.severity = none
+
+# CA1848 (use LoggerMessage delegates): otimização de alocação relevante só em hot paths.
+# A cerimônia de declarar delegates não compensa fora de loops de alta frequência.
+dotnet_diagnostic.CA1848.severity = none
+
+[**/*Request.cs]
+# Mappers ToCommand/ToQuery em requests sem campos não acessam estado, mas a forma
+# instance-method é parte do padrão arquitetural (controllers nunca constroem Command
+# inline). Manter CA1822 ativo aqui só geraria suppressões espalhadas.
+dotnet_diagnostic.CA1822.severity = none
+
+[**/*Tests/**.cs]
+# Underscores em nomes de teste são convenção (Method_State_Should).
+dotnet_diagnostic.CA1707.severity = none
+# Métodos de teste públicos não precisam de XML doc.
+dotnet_diagnostic.CS1591.severity = none
+# Tests de handler de exceção genérico precisam lançar System.Exception por design.
+dotnet_diagnostic.CA2201.severity = none
+# Fixtures usam IAsyncLifetime (xUnit) que cobre o lifecycle; CA1001 não reconhece esse contrato.
+dotnet_diagnostic.CA1001.severity = none
+
+[**/Migrations/**.cs]
+# Migrations são geradas pela CLI do EF Core; não editamos manualmente.
+# Aplicar regras de estilo/perf aqui só geraria churn a cada nova migration.
+generated_code = true
