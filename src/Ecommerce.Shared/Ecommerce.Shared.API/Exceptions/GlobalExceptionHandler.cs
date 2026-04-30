@@ -9,7 +9,7 @@ public sealed class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,
     ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         var (status, detail) = exception is IAppException appException
             ? (appException.StatusCode, exception.Message)
@@ -18,6 +18,6 @@ public sealed class GlobalExceptionHandler(
         if (exception is not IAppException)
             logger.LogError(exception, "Unhandled exception caught by GlobalExceptionHandler");
 
-        return await ProblemDetailsWriter.WriteAsync(context, problemDetailsService, status, detail);
+        return await ProblemDetailsWriter.WriteAsync(httpContext, problemDetailsService, status, detail);
     }
 }
