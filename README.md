@@ -33,9 +33,12 @@
 | Id |           Description            |      Status      |
 |:--:|:--------------------------------:|:----------------:|
 | 1  |       Category Management        |     🟢 Done      |
-| 2  |                CI                |  🟡 In progress  |
-| 3  | Authentication and Authorization |     🔴 To do     |
+| 2  |      CI/CD (Github Actions)      |  🟡 In progress  |
+| 3  |  Authentication & Authorization  |     🔴 To do     |
 | 4  |        Product Management        |     🔴 To do     |
+| 5  |         Azure Deployment         |     🔴 To do     |
+| 6  |      Dev & Prod Environment      |     🔴 To do     |
+| 7  | (kept empty for future addition) |     🔴 To do     |
 
 </div>
 
