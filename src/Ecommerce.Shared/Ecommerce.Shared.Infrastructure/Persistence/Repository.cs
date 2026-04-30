@@ -13,7 +13,7 @@ public abstract class Repository<T, TContext>(TContext context, IOptions<Paginat
     where T : Entity
     where TContext : DbContext
 {
-    protected readonly TContext Context = context;
+    protected TContext Context { get; } = context;
     private readonly int _pageSize = paginationSettings.Value.PageSize;
 
     public async Task<T?> GetByIdAsync(int id, CancellationToken ct = default) =>
