@@ -3,7 +3,7 @@
     <File Path="compose.yaml" />
     <File Path="compose.override.yaml" />
     <File Path="compose.prod.yaml" />
-    <File Path="../.editorconfig" />
+    <File Path=".editorconfig" />
     <File Path=".env.example" />
     <File Path="Directory.Build.props" />
   </Folder>
