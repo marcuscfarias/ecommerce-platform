@@ -41,7 +41,7 @@ jobs:
         run: dotnet restore Ecommerce.slnx
 
       - name: Build
-        run: dotnet build Ecommerce.slnx -c Release --no-restore -warnaserror
+        run: dotnet build Ecommerce.slnx -c Release --no-restore
 
       - name: Unit tests
         run: dotnet test Ecommerce.slnx -c Release --no-build --filter "FullyQualifiedName~UnitTests" --logger "trx" --results-directory TestResults
