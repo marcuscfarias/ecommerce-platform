@@ -2,14 +2,14 @@
 
 namespace Ecommerce.Kernel.UnitTests.Domain.Exceptions;
 
-public class BusinessRuleValidationExceptionFormatTests
+public class BusinessRuleValidationExceptionTests
 {
     //MethodName_StateUnderTest_ExpectedBehavior
     [Fact]
     public void Construct_StatusCode_ShouldReturn409()
     {
         //arrange
-        var ex = new BusinessRuleValidationExceptionFormat("any message");
+        var ex = new BusinessRuleValidationException("any message");
         
         //act
         

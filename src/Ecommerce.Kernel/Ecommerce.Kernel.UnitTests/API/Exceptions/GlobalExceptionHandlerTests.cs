@@ -20,7 +20,7 @@ public class GlobalExceptionHandlerTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var exception = new Exception("something broke");
+        var exception = new InvalidOperationException("something broke");
 
         // Act
         await _sut.TryHandleAsync(context, exception, CancellationToken.None);
@@ -34,7 +34,7 @@ public class GlobalExceptionHandlerTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var exception = new Exception("sensitive internal detail");
+        var exception = new InvalidOperationException("sensitive internal detail");
         ProblemDetailsContext? capturedContext = null;
 
         _problemDetailsService

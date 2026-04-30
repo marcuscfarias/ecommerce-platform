@@ -2,13 +2,13 @@
 
 namespace Ecommerce.Kernel.UnitTests.Application.Exceptions;
 
-public class ResourceNotFoundExceptionFormatTests
+public class ResourceNotFoundExceptionTests
 {
     [Fact]
     public void Construct_StatusCode_ShouldReturn404()
     {
         //arrange 
-        var ex = new ResourceNotFoundExceptionFormat("Entity", 1);
+        var ex = new ResourceNotFoundException("Entity", 1);
         
         //act
         
@@ -22,7 +22,7 @@ public class ResourceNotFoundExceptionFormatTests
         //arrange
         string entity = "Entity";
         int id = 1;
-        var ex = new ResourceNotFoundExceptionFormat(entity, id);
+        var ex = new ResourceNotFoundException(entity, id);
         
         //act
         
