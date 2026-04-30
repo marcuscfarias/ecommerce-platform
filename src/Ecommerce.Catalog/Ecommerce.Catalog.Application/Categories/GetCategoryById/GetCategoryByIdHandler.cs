@@ -1,5 +1,5 @@
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Application.Exceptions;
+using Ecommerce.Kernel.Application.Exceptions;
 using MediatR;
 
 namespace Ecommerce.Catalog.Application.Categories.GetCategoryById;

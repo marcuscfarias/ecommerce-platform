@@ -1,7 +1,7 @@
 using Ecommerce.Catalog.Application.Categories.ListCategories;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Domain.Models;
+using Ecommerce.Kernel.Domain.Models;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.ListCategories;
 

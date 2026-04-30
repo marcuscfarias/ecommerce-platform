@@ -1,6 +1,6 @@
 ﻿using Ecommerce.Catalog.Domain.Entities;
-using Ecommerce.Shared.Domain.Models;
-using Ecommerce.Shared.Domain.Repositories;
+using Ecommerce.Kernel.Domain.Models;
+using Ecommerce.Kernel.Domain.Repositories;
 
 namespace Ecommerce.Catalog.Domain.Repositories;
 

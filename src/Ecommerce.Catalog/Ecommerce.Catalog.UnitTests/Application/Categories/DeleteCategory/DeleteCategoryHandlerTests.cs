@@ -1,7 +1,7 @@
 using Ecommerce.Catalog.Application.Categories.DeleteCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Application.Exceptions;
+using Ecommerce.Kernel.Application.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.DeleteCategory;
 

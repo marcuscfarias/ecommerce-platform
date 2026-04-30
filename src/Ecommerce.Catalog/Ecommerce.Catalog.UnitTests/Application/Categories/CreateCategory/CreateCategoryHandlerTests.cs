@@ -1,8 +1,8 @@
 using Ecommerce.Catalog.Application.Categories.CreateCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Domain.BusinessRules;
-using Ecommerce.Shared.Domain.Exceptions;
+using Ecommerce.Kernel.Domain.BusinessRules;
+using Ecommerce.Kernel.Domain.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.CreateCategory;
 

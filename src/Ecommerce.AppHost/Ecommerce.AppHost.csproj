@@ -24,7 +24,7 @@
 
 <ItemGroup>
       <ProjectReference Include="..\Ecommerce.Catalog\Ecommerce.Catalog.Api\Ecommerce.Catalog.Api.csproj" />
-      <ProjectReference Include="..\Ecommerce.Shared\Ecommerce.Shared.API\Ecommerce.Shared.API.csproj" />
+      <ProjectReference Include="..\Ecommerce.Kernel\Ecommerce.Kernel.API\Ecommerce.Kernel.API.csproj" />
     </ItemGroup>
 
 </Project>

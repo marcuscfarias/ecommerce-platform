@@ -1,5 +1,5 @@
 using Ecommerce.Catalog.Application;
-using Ecommerce.Shared.Infrastructure.Mediator;
+using Ecommerce.Kernel.Infrastructure.Mediator;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.Catalog.Infrastructure.Mediation;

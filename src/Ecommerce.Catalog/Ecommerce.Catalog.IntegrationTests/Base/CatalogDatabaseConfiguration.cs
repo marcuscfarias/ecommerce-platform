@@ -1,4 +1,4 @@
-using Ecommerce.Shared.IntegrationTests.Database;
+using Ecommerce.Kernel.IntegrationTests.Database;
 
 namespace Ecommerce.Catalog.IntegrationTests.Base;
 

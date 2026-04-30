@@ -91,7 +91,7 @@ src/
 │   ├── Program.cs                                    # Registers modules, middleware, pipeline
 │   └── Middleware/                                    # Global exception handling
 │
-├── Ecommerce.Shared/                                 # Cross-cutting code shared by all modules
+├── Ecommerce.Kernel/                                 # Cross-cutting code shared by all modules
 │   ├── Domain/                                       # Entity base, Result<T>
 │   ├── Application/                                  # MediatR pipeline behaviors
 │   ├── Infrastructure/                               # Shared infrastructure utilities

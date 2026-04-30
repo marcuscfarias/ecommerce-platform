@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Domain.Models;
-using Ecommerce.Shared.Infrastructure.Persistence;
-using Ecommerce.Shared.Infrastructure.Settings;
+using Ecommerce.Kernel.Domain.Models;
+using Ecommerce.Kernel.Infrastructure.Persistence;
+using Ecommerce.Kernel.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
