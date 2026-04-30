@@ -4,5 +4,5 @@ namespace Ecommerce.Catalog.Api.Categories.GetCategoryById;
 
 public sealed record GetCategoryByIdRequest
 {
-    internal GetCategoryByIdQuery ToQuery(int id) => new(id);
+    internal static GetCategoryByIdQuery ToQuery(int id) => new(id);
 }

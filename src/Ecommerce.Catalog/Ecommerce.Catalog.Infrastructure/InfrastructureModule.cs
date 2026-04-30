@@ -3,7 +3,7 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Infrastructure.Mediation;
 using Ecommerce.Catalog.Infrastructure.Persistence;
 using Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
-using Ecommerce.Shared.Infrastructure.Persistence;
+using Ecommerce.Kernel.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

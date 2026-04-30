@@ -1,8 +1,8 @@
 using Ecommerce.Catalog.Application.Categories.UpdateCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Application.Exceptions;
-using Ecommerce.Shared.Domain.Exceptions;
+using Ecommerce.Kernel.Application.Exceptions;
+using Ecommerce.Kernel.Domain.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.UpdateCategory;
 

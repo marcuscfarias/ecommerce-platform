@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -13,7 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ecommerce.Catalog.Application\Ecommerce.Catalog.Application.csproj" />
     <ProjectReference Include="..\Ecommerce.Catalog.Infrastructure\Ecommerce.Catalog.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Ecommerce.Shared\Ecommerce.Shared.API\Ecommerce.Shared.API.csproj" />
+    <ProjectReference Include="..\..\Ecommerce.Kernel\Ecommerce.Kernel.API\Ecommerce.Kernel.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>

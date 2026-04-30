@@ -1,7 +1,7 @@
 using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
-using Ecommerce.Shared.API;
-using Ecommerce.Shared.Infrastructure.Persistence;
+using Ecommerce.Kernel.API;
+using Ecommerce.Kernel.Infrastructure.Persistence;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Scalar.AspNetCore;
 
@@ -13,7 +13,7 @@ internal static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddSharedInfrastructure(builder.Configuration);
+        builder.Services.AddKernelInfrastructure(builder.Configuration);
         builder.Services.AddApiModule();
         builder.Services.AddModules(builder.Configuration);
         builder.Services.AddOpenApi(options =>

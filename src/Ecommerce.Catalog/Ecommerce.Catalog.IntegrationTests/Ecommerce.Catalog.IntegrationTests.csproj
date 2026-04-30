@@ -1,12 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.5" />
@@ -25,7 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ecommerce.Catalog.Infrastructure\Ecommerce.Catalog.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Ecommerce.AppHost\Ecommerce.AppHost.csproj" />
-    <ProjectReference Include="..\..\Ecommerce.Shared\Ecommerce.Shared.IntegrationTests\Ecommerce.Shared.IntegrationTests.csproj" />
+    <ProjectReference Include="..\..\Ecommerce.Kernel\Ecommerce.Kernel.IntegrationTests\Ecommerce.Kernel.IntegrationTests.csproj" />
   </ItemGroup>
 
 </Project>

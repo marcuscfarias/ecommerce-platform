@@ -1,6 +1,12 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
+    <File Path="compose.override.yaml" />
+    <File Path="compose.prod.yaml" />
+    <File Path="../README.md" />
+    <File Path=".editorconfig" />
+    <File Path=".env.example" />
+    <File Path="Directory.Build.props" />
   </Folder>
   <Folder Name="/Ecommerce.Catalog/">
     <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.Api/Ecommerce.Catalog.Api.csproj" />
@@ -10,13 +16,13 @@
     <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.IntegrationTests/Ecommerce.Catalog.IntegrationTests.csproj" />
     <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.UnitTests/Ecommerce.Catalog.UnitTests.csproj" />
   </Folder>
-  <Folder Name="/Ecommerce.Shared/">
-    <Project Path="Ecommerce.Shared/Ecommerce.Shared.Domain/Ecommerce.Shared.Domain.csproj" />
-    <Project Path="Ecommerce.Shared/Ecommerce.Shared.Application/Ecommerce.Shared.Application.csproj" />
-    <Project Path="Ecommerce.Shared/Ecommerce.Shared.Infrastructure/Ecommerce.Shared.Infrastructure.csproj" />
-    <Project Path="Ecommerce.Shared/Ecommerce.Shared.API/Ecommerce.Shared.API.csproj" />
-    <Project Path="Ecommerce.Shared/Ecommerce.Shared.UnitTests/Ecommerce.Shared.UnitTests.csproj" />
-    <Project Path="Ecommerce.Shared/Ecommerce.Shared.IntegrationTests/Ecommerce.Shared.IntegrationTests.csproj" />
+  <Folder Name="/Ecommerce.Kernel/">
+    <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Domain/Ecommerce.Kernel.Domain.csproj" />
+    <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Application/Ecommerce.Kernel.Application.csproj" />
+    <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Infrastructure/Ecommerce.Kernel.Infrastructure.csproj" />
+    <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.API/Ecommerce.Kernel.API.csproj" />
+    <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.UnitTests/Ecommerce.Kernel.UnitTests.csproj" />
+    <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.IntegrationTests/Ecommerce.Kernel.IntegrationTests.csproj" />
   </Folder>
   <Project Path="Ecommerce.AppHost/Ecommerce.AppHost.csproj" />
 </Solution>

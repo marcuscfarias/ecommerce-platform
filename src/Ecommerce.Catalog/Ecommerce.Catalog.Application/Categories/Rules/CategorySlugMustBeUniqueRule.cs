@@ -1,4 +1,4 @@
-using Ecommerce.Shared.Domain.BusinessRules;
+using Ecommerce.Kernel.Domain.BusinessRules;
 
 namespace Ecommerce.Catalog.Application.Categories.Rules;
 

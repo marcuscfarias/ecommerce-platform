@@ -1,4 +1,4 @@
-using Ecommerce.Shared.Application.CQRS;
+using Ecommerce.Kernel.Application.CQRS;
 
 namespace Ecommerce.Catalog.Application.Categories.ListCategories;
 

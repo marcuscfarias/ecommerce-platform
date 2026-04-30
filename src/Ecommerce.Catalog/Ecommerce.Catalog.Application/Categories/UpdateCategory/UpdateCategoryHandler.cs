@@ -1,7 +1,7 @@
 using Ecommerce.Catalog.Application.Categories.Rules;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Shared.Application.Exceptions;
-using Ecommerce.Shared.Domain.BusinessRules;
+using Ecommerce.Kernel.Application.Exceptions;
+using Ecommerce.Kernel.Domain.BusinessRules;
 using MediatR;
 
 namespace Ecommerce.Catalog.Application.Categories.UpdateCategory;

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ecommerce.Kernel.Application\Ecommerce.Kernel.Application.csproj" />
+    <ProjectReference Include="..\Ecommerce.Kernel.Infrastructure\Ecommerce.Kernel.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="MicroElements.AspNetCore.OpenApi.FluentValidation" Version="7.1.5-beta" />
+  </ItemGroup>
+
+</Project>
