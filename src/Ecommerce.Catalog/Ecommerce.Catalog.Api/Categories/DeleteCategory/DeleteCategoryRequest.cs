@@ -4,5 +4,5 @@ namespace Ecommerce.Catalog.Api.Categories.DeleteCategory;
 
 public sealed record DeleteCategoryRequest
 {
-    internal DeleteCategoryCommand ToCommand(int id) => new(id);
+    internal static DeleteCategoryCommand ToCommand(int id) => new(id);
 }

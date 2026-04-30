@@ -45,7 +45,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var result = await module.ExecuteQueryAsync(new GetCategoryByIdRequest().ToQuery(id), cancellationToken);
+        var result = await module.ExecuteQueryAsync(GetCategoryByIdRequest.ToQuery(id), cancellationToken);
         return Ok(GetCategoryByIdResponse.FromResult(result));
     }
 
@@ -70,7 +70,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
-        await module.ExecuteCommandAsync(new DeleteCategoryRequest().ToCommand(id), cancellationToken);
+        await module.ExecuteCommandAsync(DeleteCategoryRequest.ToCommand(id), cancellationToken);
         return NoContent();
     }
 }
