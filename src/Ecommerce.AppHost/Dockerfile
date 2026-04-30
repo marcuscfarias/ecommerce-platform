@@ -8,6 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
+COPY ["Directory.Build.props", "./"]
 COPY ["Ecommerce.AppHost/Ecommerce.AppHost.csproj", "Ecommerce.AppHost/"]
 COPY ["Ecommerce.Catalog/Ecommerce.Catalog.Api/Ecommerce.Catalog.Api.csproj", "Ecommerce.Catalog/Ecommerce.Catalog.Api/"]
 COPY ["Ecommerce.Catalog/Ecommerce.Catalog.Application/Ecommerce.Catalog.Application.csproj", "Ecommerce.Catalog/Ecommerce.Catalog.Application/"]
