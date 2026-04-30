@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Ecommerce.Kernel.Infrastructure;
 
-public class Module(ISender mediator) : IModule
+public class MediatorBackedModule(ISender mediator) : IModule
 {
     public async Task ExecuteCommandAsync(ICommand command, CancellationToken cancellationToken = default) =>
         await mediator.Send(command, cancellationToken);
