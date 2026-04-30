@@ -4,4 +4,4 @@ using MediatR;
 
 namespace Ecommerce.Catalog.Infrastructure;
 
-internal sealed class CatalogModule(ISender sender) : MediatorBackedModule(sender), ICatalogModule { }
+internal sealed class CatalogModule(ISender sender) : MediatorModuleBase(sender), ICatalogModule { }
