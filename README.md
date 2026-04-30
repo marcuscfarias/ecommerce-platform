@@ -28,12 +28,16 @@
 
 ## 3. Functionalities
 
-| Id | Description                      | Status           |
-|----|----------------------------------|------------------|
-| 1  | Category Management              | 🟢 Done          |
-| 2  | CI                               | 🟡 In progress   |
-| 3  | Authentication and Authorization | 🔴 To do         |
-| 4  | Product Management               | 🔴 To do         |
+<div align="center">
+
+| Id |           Description            |      Status      |
+|:--:|:--------------------------------:|:----------------:|
+| 1  |       Category Management        |     🟢 Done      |
+| 2  |                CI                |  🟡 In progress  |
+| 3  | Authentication and Authorization |     🔴 To do     |
+| 4  |        Product Management        |     🔴 To do     |
+
+</div>
 
 ## 4. Getting started
 
