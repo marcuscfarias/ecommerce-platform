@@ -8,67 +8,34 @@
   <a href="https://github.com/marcuscfarias/ecommerce-platform/stargazers"><img alt="total number of times the repo has been starred" src="https://img.shields.io/github/stars/marcuscfarias/ecommerce-platform?color=blueviolet&label=Stars&style=for-the-badge" target="_blank" /></a>
 </p>
 
-## Index
+## Summary
 
 <!-- TOC -->
 
-* [Index](#index)
+* [Summary](#Summary)
 * [1. About this project](#1-about-this-project)
-    * [1.1 Description](#11-description)
 * [2. Screenshots or Demo](#2-screenshots-or-demo)
-* [3. Functionalities](#3-functionalities)
-* [4. Getting started](#4-getting-started)
-* [5. Technologies, Patterns and Architecture discussion](#5-technologies-patterns-and-architecture-discussion)
+* [3. Getting started](#3-getting-started)
+* [4. Functionalities](#4-functionalities)
+* [5. Implementation details](#5-implementation-details)
 * [6. Contributing](#6-contributing)
-* [8. License](#8-license)
+* [7. License](#7-license)
 
 <!-- TOC -->
 
 ## 1. About this project
 
-This is a personal, learning-oriented backend that pretends to be the brain of an online store. It is not trying to become a production e-commerce site — it is trying to become a place where the patterns that real systems wrestle with can be practiced end to end: clear module boundaries, validation, error handling, integration testing with real databases, CI, and (eventually) async messaging and a service extraction. The goal is for the code to be readable as a reference: open a folder, recognize the shape, and learn something useful.
-
-Everything here is built to grow. The codebase deliberately starts as a Modular Monolith with seams already drawn so that the next phases — DDD tactical patterns, event-driven communication, and a Payment microservice — can be introduced without rewriting boundaries.
-
-#### 1.1 Description
-
-**What is built today.** A Modular Monolith in .NET 10 / ASP.NET Core 10 backed by PostgreSQL 17 and Entity Framework Core. Each business domain (Catalog, Auth, Orders, Shipping, Payment, Notifications) is modeled as an independent module with its own DbContext, its own Postgres schema, and a small contract surface for talking to other modules through `Ecommerce.Kernel`. CQRS is implemented with MediatR, request validation with FluentValidation, and API documentation is rendered with Scalar UI on top of OpenAPI. Integration tests run against a real Postgres instance via Testcontainers and reset state between tests with Respawner.
-
-**Why and where it is going.** The project is staged to evolve in four phases:
-
-| Phase | Description |
-|---|---|
-| **1. Modular Monolith** | Logical module boundaries, separate DbContexts/schemas, synchronous cross-module communication via shared interfaces. *(current)* |
-| **2. DDD** | Tactical patterns within modules — aggregates, value objects, domain events, formalized bounded contexts. |
-| **3. Event-Driven** | Message broker (RabbitMQ + MassTransit) for async inter-module communication via integration events, replacing synchronous cross-module calls. Eventual consistency between modules. |
-| **4. Microservice Extraction** | Extract the **Payment** module into an independent deployable with its own database, CI pipeline, and API. Communicates with the monolith exclusively through integration events. |
-
-This roadmap is the reason some pieces look heavier than a single CRUD service would warrant — per-module DbContext, cross-module interfaces, mediator-backed adapters. They are seams placed on purpose.
+Ecommerce is a personal portfolio project built in ASP.NET Core to practice new trends and technologies in modern
+backend development. It is **under construction** and intentionally **evolutionary**, shipped today as a **modular
+monolith open for expansion**. The project offers hands-on experience with modern tools, patterns and methodologies,
+promoting growth and adaptability, exploring efficient coding practices, clear architectural decisions and project
+management skills that enhance my ability to deliver high-quality software solutions.
 
 ## 2. Screenshots or Demo
 
 _Coming soon._
 
-## 3. Functionalities
-
-<div align="center">
-
-| Id |           Description            |     Status     |
-|:--:|:--------------------------------:|:--------------:|
-| 1  |       Category Management        |    🟢 Done     |
-| 2  |      CI/CD (Github Actions)      | 🟡 In progress |
-| 3  |          Authentication          | 🟡 In progress |
-| 4  |          Authorization           |    🔴 To do    |
-| 5  |        Product Management        |    🔴 To do    |
-| 6  |         Azure Deployment         |    🔴 To do    |
-| 7  |      Dev & Prod Environment      |    🔴 To do    |
-| 8  |               Logs               |    🔴 To do    |
-| 9  |    Validation rules in Domain    |    🔴 To do    |
-| 10 | (kept empty for future addition) |    🔴 To do    |
-
-</div>
-
-## 4. Getting started
+## 3. Getting started
 
 ### Prerequisites
 
@@ -85,7 +52,8 @@ _Coming soon._
    cp .env.example .env
    ```
 
-   Edit `.env` and set `POSTGRES_PASSWORD` (and the matching password inside `ConnectionStrings__EcommerceDb`) to something other than the default.
+   Edit `.env` and set `POSTGRES_PASSWORD` (and the matching password inside `ConnectionStrings__EcommerceDb`) to
+   something other than the default.
 
 3. Bring the stack up:
 
@@ -95,8 +63,8 @@ _Coming soon._
 
    This boots two containers:
 
-   * `ecommerce-db` — PostgreSQL 17 with a persistent volume.
-   * `ecommerce-api` — the API (`Ecommerce.AppHost`) listening on `http://localhost:8080` and `https://localhost:8081`.
+    * `ecommerce-db` — PostgreSQL 17 with a persistent volume.
+    * `ecommerce-api` — the API (`Ecommerce.AppHost`) listening on `http://localhost:8080` and `https://localhost:8081`.
 
    EF Core migrations are applied on startup so the database is ready as soon as the API answers.
 
@@ -109,9 +77,40 @@ cd src
 dotnet test
 ```
 
-Integration tests require Docker to be running — Testcontainers spins up a PostgreSQL 17 instance per fixture, EF migrations are applied through a `WebApplicationFactory`, and `Respawner` clears the schema between tests so each one starts from a known state. See [5.4 Integration Tests](#54-integration-tests) for the composition.
+Integration tests require Docker to be running. See [5.5 Integration Tests](#55-integration-tests) for the composition.
 
-## 5. Technologies, Patterns and Architecture discussion
+## 4. Functionalities
+
+Each module groups one or more features. Cross-cutting items (CI, deployment, observability) are not tied to a single
+module.
+
+<div align="center">
+
+| Id |         Module         |          Feature           |     Status     |
+|:--:|:----------------------:|:--------------------------:|:--------------:|
+| 1  |        Catalog         |    Category Management     |    🟢 Done     |
+| 2  |        Catalog         |     Product Management     |    🔴 To do    |
+| 3  |          Auth          |       Authentication       | 🟡 In progress |
+| 4  |          Auth          |       Authorization        |    🔴 To do    |
+| 5  |         Orders         |             —              |    🔴 To do    |
+| 6  |        Shipping        |             —              |    🔴 To do    |
+| 7  | Payment (Microservice) |             —              |    🔴 To do    |
+| 8  |     Notifications      |             —              |    🔴 To do    |
+| 9  |     Cross-cutting      |     Request Validation     |    🟢 Done     |
+| 10 |     Cross-cutting      | Global Exception Handling  |    🟢 Done     |
+| 11 |     Cross-cutting      |     API Documentation      |    🟢 Done     |
+| 12 |     Cross-cutting      |   CI/CD (GitHub Actions)   | 🟡 In progress |
+| 13 |     Cross-cutting      | Deployment & Environments  |    🔴 To do    |
+| 14 |     Cross-cutting      |       Observability        |    🔴 To do    |
+| 15 |     Cross-cutting      |       Rate Limiting        |    🔴 To do    |
+| 16 |     Cross-cutting      |  Domain Validation Rules   |    🔴 To do    |
+
+</div>
+
+## 5. Implementation details
+
+This section expands on the Functionalities table — pick a row above and find it here for the technologies, patterns and
+reasoning behind it.
 
 ### 5.0 Tech stack
 
@@ -123,28 +122,24 @@ Integration tests require Docker to be running — Testcontainers spins up a Pos
 * **xUnit**, **NSubstitute**, **Bogus**, **Shouldly**, **Testcontainers**, **Respawner** — testing toolchain.
 * **Docker** + **Docker Compose** — containerization.
 * **GitHub Actions** — CI (build, unit tests, integration tests, Docker image validation, commit message linting).
+* **Azure** — target cloud for deployment (App Service / Container Apps + Azure Database for PostgreSQL).
 
-### 5.A Per-feature technical discussion
-
-Only features that are `Done` or `In progress` are discussed here. Items still `To do` live in the table above. Category Management is a plain CRUD and is omitted on purpose — the architectural building blocks below already explain how a CRUD is wired up in this project.
-
-#### CI/CD (GitHub Actions)
+### 5.1 CI/CD (GitHub Actions)
 
 Three workflows live under `.github/workflows/`:
 
-* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj` hash. Test results are uploaded as TRX artifacts only on failure.
-* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It does not push — it validates that the image still builds, with GHA cache.
-* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (`commitlint.config.cjs`, `commitlinterrc.json`).
+* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
+  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
+  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
+  hash.
+* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
+  does not push — it validates that the image still builds.
+* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
+  `commitlint.config.cjs`, `commitlinterrc.json`).
 
 What is still open: deployment workflows (Azure) and a release pipeline.
 
-### 5.B Architectural building blocks
-
-Each subsection below corresponds to one of the hand-drawn architecture sketches that drove the design.
-
-#### 5.1 Modules
-
-`Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods — `Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked uniformly by `ModulesRegistry.AddModules` / `RegisterModules`. Modules never reference each other directly: cross-module communication goes through interfaces in `Ecommerce.Kernel.Application` (e.g. `IModule`, `ICatalogModule`), and the implementing module ships an internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed contract instead of `ISender`.
+### 5.2 Modules
 
 ```mermaid
 flowchart LR
@@ -157,12 +152,14 @@ flowchart LR
     CatalogInfra --> MBB[MediatorModuleBase<br/>cross-module adapter]
 ```
 
-#### 5.2 API Validation
+`Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods —
+`Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked
+uniformly by `ModulesRegistry.AddModules` / `RegisterModules`. Modules never reference each other directly: cross-module
+communication goes through interfaces in `Ecommerce.Kernel.Application` (e.g. `IModule`, `ICatalogModule`), and the
+implementing module ships an internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed
+contract instead of `ISender`.
 
-Two complementary paths produce a [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) `ProblemDetails` response — one for invalid input, one for thrown exceptions. Both go through a single writer (`ProblemDetailsWriter`) so the response shape stays consistent.
-
-1. **Request body validation.** `RequestValidationFilter` is registered globally in `ApiModule.AddApiModule`. For each request DTO, it resolves the matching `IValidator<T>` from DI, calls `ValidateAsync`, and on failure short-circuits the pipeline with a `400 ValidationProblemDetails` written by `ProblemDetailsWriter` — the controller action never runs.
-2. **Controlled exceptions.** Handlers throw exceptions that implement `IExceptionContract` (e.g. `ResourceNotFoundException` → `404`, `BusinessRuleValidationException` → `409`). `GlobalExceptionHandler` (`IExceptionHandler`) picks up the contract, reads `StatusCode` and `Message`, and produces a `ProblemDetails` through the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of internal details.
+### 5.3 API Validation
 
 ```mermaid
 flowchart LR
@@ -179,9 +176,21 @@ flowchart LR
     PDW3 --> Res
 ```
 
-#### 5.3 Repository
+Two complementary paths produce a [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) `ProblemDetails` response —
+one for invalid input, one for thrown exceptions. Both go through a single writer (`ProblemDetailsWriter`) so the
+response shape stays consistent.
 
-The Kernel ships the abstractions: `IRepository<T>` in `Ecommerce.Kernel.Domain.Repositories` and an abstract `Repository<T, TContext>` base in `Ecommerce.Kernel.Infrastructure.Persistence` that handles `DbSet<T>` access and pagination via `PaginationSettings`. Each module owns its own DbContext — `CatalogDbContext` calls `modelBuilder.HasDefaultSchema("catalog")` and applies `IEntityTypeConfiguration<>` implementations from the assembly so each entity declares its own mapping. The module also declares its own repository interface (`ICatalogRepository`) and implements it on top of the Kernel base (`CategoryRepository : Repository<Category, CatalogDbContext>, ICatalogRepository`). A `CatalogDbContextFactory` (`IDesignTimeDbContextFactory<CatalogDbContext>`) reads the `EcommerceDb` connection string from `Ecommerce.AppHost/appsettings.Development.json` so the EF CLI can generate migrations without booting the host.
+1. **Request body validation.** `RequestValidationFilter` is registered globally in `ApiModule.AddApiModule`. For each
+   request DTO, it resolves the matching `IValidator<T>` from DI, calls `ValidateAsync`, and on failure short-circuits
+   the pipeline with a `400 ValidationProblemDetails` written by `ProblemDetailsWriter` — the controller action never
+   runs.
+2. **Controlled exceptions.** Handlers throw exceptions that implement `IExceptionContract` (e.g.
+   `ResourceNotFoundException` → `404`, `BusinessRuleValidationException` → `409`). `GlobalExceptionHandler` (
+   `IExceptionHandler`) picks up the contract, reads `StatusCode` and `Message`, and produces a `ProblemDetails` through
+   the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of
+   internal details.
+
+### 5.4 Repository
 
 ```mermaid
 flowchart TB
@@ -204,15 +213,17 @@ flowchart TB
     Ctx --> Cfg
 ```
 
-#### 5.4 Integration Tests
+The Kernel ships the abstractions: `IRepository<T>` in `Ecommerce.Kernel.Domain.Repositories` and an abstract
+`Repository<T, TContext>` base in `Ecommerce.Kernel.Infrastructure.Persistence` that handles `DbSet<T>` access and
+pagination via `PaginationSettings`. Each module owns its own DbContext — `CatalogDbContext` calls
+`modelBuilder.HasDefaultSchema("catalog")` and applies `IEntityTypeConfiguration<>` implementations from the assembly so
+each entity declares its own mapping. The module also declares its own repository interface (`ICatalogRepository`) and
+implements it on top of the Kernel base (
+`CategoryRepository : Repository<Category, CatalogDbContext>, ICatalogRepository`). A `CatalogDbContextFactory` (
+`IDesignTimeDbContextFactory<CatalogDbContext>`) reads the `EcommerceDb` connection string from
+`Ecommerce.AppHost/appsettings.Development.json` so the EF CLI can generate migrations without booting the host.
 
-The integration test stack composes a few small pieces, each with one responsibility:
-
-* **`DatabaseContainerFixture`** boots a `postgres:17` container via Testcontainers and exposes its connection string.
-* **`BaseIntegrationFixture<TFactory>`** (Kernel) owns the container, instantiates the per-module `WebApplicationFactory`, calls `CreateClient` (which applies EF migrations during host startup), and then constructs a `DatabaseResetter` over the schemas the module declares.
-* **`EcommerceWebApplicationFactory`** is an abstract base over `WebApplicationFactory<IApiMarker>`. Its `ConfigureWebHost` injects the container connection string into in-memory configuration so the API points at the test database. Each module supplies a concrete factory (e.g. `CatalogWebApplicationFactory`).
-* **`DatabaseResetter`** wraps `Respawner` with `DbAdapter.Postgres` and only the module-owned schemas, giving each test a clean slate via `ResetAsync`.
-* **`CatalogTestCollection`** is an xUnit `[CollectionDefinition]` with `ICollectionFixture<CatalogIntegrationFixture>` so the fixture (and its container) is shared across the whole test class set. `BaseCatalogIntegrationTest` hides the wiring and exposes `Client`, `ResetDatabaseAsync()` and `SeedAsync<CatalogDbContext>()` to test classes.
+### 5.5 Integration Tests
 
 ```mermaid
 flowchart TB
@@ -227,12 +238,29 @@ flowchart TB
     Test --> DR
 ```
 
+Integration tests run against a real PostgreSQL 17 instance — Testcontainers spins up a container per fixture, EF
+migrations are applied through a `WebApplicationFactory` during host startup, and `Respawner` clears the schema between
+tests so each one starts from a known state. The stack composes a few small pieces, each with one responsibility:
+
+* **`DatabaseContainerFixture`** boots a `postgres:17` container via Testcontainers and exposes its connection string.
+* **`BaseIntegrationFixture<TFactory>`** (Kernel) owns the container, instantiates the per-module
+  `WebApplicationFactory`, calls `CreateClient` (which applies EF migrations during host startup), and then constructs a
+  `DatabaseResetter` over the schemas the module declares.
+* **`EcommerceWebApplicationFactory`** is an abstract base over `WebApplicationFactory<IApiMarker>`. Its
+  `ConfigureWebHost` injects the container connection string into in-memory configuration so the API points at the test
+  database. Each module supplies a concrete factory (e.g. `CatalogWebApplicationFactory`).
+* **`DatabaseResetter`** wraps `Respawner` with `DbAdapter.Postgres` and only the module-owned schemas, giving each test
+  a clean slate via `ResetAsync`.
+* **`CatalogTestCollection`** is an xUnit `[CollectionDefinition]` with `ICollectionFixture<CatalogIntegrationFixture>`
+  so the fixture (and its container) is shared across the whole test class set. `BaseCatalogIntegrationTest` hides the
+  wiring and exposes `Client`, `ResetDatabaseAsync()` and `SeedAsync<CatalogDbContext>()` to test classes.
+
 ## 6. Contributing
 
 You can send how many PR's do you want, I'll be glad to analyze and accept them! And if you have any question about the
 project just ask...
 
-## 8. License
+## 7. License
 
 This project is licensed under the MIT License - see
 the [LICENSE.md](https://github.com/MarcusCFarias/ecommerce-platform/blob/main/LICENSE) file for details
