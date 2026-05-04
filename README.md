@@ -26,7 +26,7 @@
 ## 1. About this project
 
 Ecommerce is a personal portfolio project built in ASP.NET Core to practice new trends and technologies in modern
-backend development. It is **under construction** and intentionally **evolutionary**, shipped today as a **modular
+backend development. It is **UNDER CONSTRUCTION** and intentionally **evolutionary**, shipped today as a **modular
 monolith open for expansion**. The project offers hands-on experience with modern tools, patterns and methodologies,
 promoting growth and adaptability, exploring efficient coding practices, clear architectural decisions and project
 management skills that enhance my ability to deliver high-quality software solutions.
@@ -77,33 +77,33 @@ cd src
 dotnet test
 ```
 
-Integration tests require Docker to be running. See [5.5 Integration Tests](#55-integration-tests) for the composition.
+Integration tests require Docker to be running. See [5.4 Integration Tests](#54-integration-tests) for the composition.
 
 ## 4. Functionalities
 
-Each module groups one or more features. Cross-cutting items (CI, deployment, observability) are not tied to a single
+Each module groups one or more features. Cross-cutting items are not tied to a single
 module.
 
 <div align="center">
 
-| Id |         Module         |          Feature           |     Status     |
-|:--:|:----------------------:|:--------------------------:|:--------------:|
-| 1  |        Catalog         |    Category Management     |    🟢 Done     |
-| 2  |        Catalog         |     Product Management     |    🔴 To do    |
-| 3  |          Auth          |       Authentication       | 🟡 In progress |
-| 4  |          Auth          |       Authorization        |    🔴 To do    |
-| 5  |         Orders         |             —              |    🔴 To do    |
-| 6  |        Shipping        |             —              |    🔴 To do    |
-| 7  | Payment (Microservice) |             —              |    🔴 To do    |
-| 8  |     Notifications      |             —              |    🔴 To do    |
-| 9  |     Cross-cutting      |     Request Validation     |    🟢 Done     |
-| 10 |     Cross-cutting      | Global Exception Handling  |    🟢 Done     |
-| 11 |     Cross-cutting      |     API Documentation      |    🟢 Done     |
-| 12 |     Cross-cutting      |   CI/CD (GitHub Actions)   | 🟡 In progress |
-| 13 |     Cross-cutting      | Deployment & Environments  |    🔴 To do    |
-| 14 |     Cross-cutting      |       Observability        |    🔴 To do    |
-| 15 |     Cross-cutting      |       Rate Limiting        |    🔴 To do    |
-| 16 |     Cross-cutting      |  Domain Validation Rules   |    🔴 To do    |
+| Id |         Module         |          Feature          |     Status     |
+|:--:|:----------------------:|:-------------------------:|:--------------:|
+| 1  |        Catalog         |    Category Management    |    🟢 Done     |
+| 2  |        Catalog         |    Product Management     |    🔴 To do    |
+| 3  |          Auth          |             —             | 🟡 In progress |
+| 5  |         Orders         |             —             |    🔴 To do    |
+| 6  |        Shipping        |             —             |    🔴 To do    |
+| 7  | Payment (Microservice) |             —             |    🔴 To do    |
+| 8  |     Notifications      |             —             |    🔴 To do    |
+| 9  |     Cross-cutting      |    Request Validation     |    🟢 Done     |
+| 10 |     Cross-cutting      | Global Exception Handling |    🟢 Done     |
+| 11 |     Cross-cutting      |     API Documentation     |    🟢 Done     |
+| 12 |     Cross-cutting      |  CI/CD (GitHub Actions)   | 🟡 In progress |
+| 13 |     Cross-cutting      | Deployment & Environments |    🔴 To do    |
+| 14 |     Cross-cutting      |       Observability       |    🔴 To do    |
+| 15 |     Cross-cutting      |       Rate Limiting       |    🔴 To do    |
+| 16 |     Cross-cutting      |  Domain Validation Rules  |    🔴 To do    |
+| 17 |     Cross-cutting      |     Integration Tests     |    🟢 Done     |
 
 </div>
 
@@ -124,42 +124,19 @@ reasoning behind it.
 * **GitHub Actions** — CI (build, unit tests, integration tests, Docker image validation, commit message linting).
 * **Azure** — target cloud for deployment (App Service / Container Apps + Azure Database for PostgreSQL).
 
-### 5.1 CI/CD (GitHub Actions)
-
-Three workflows live under `.github/workflows/`:
-
-* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
-  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
-  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
-  hash.
-* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
-  does not push — it validates that the image still builds.
-* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
-  `commitlint.config.cjs`, `commitlinterrc.json`).
-
-What is still open: deployment workflows (Azure) and a release pipeline.
-
-### 5.2 Modules
-
-```mermaid
-flowchart LR
-    Host[Ecommerce.AppHost<br/>Program.cs] --> Registry[ModulesRegistry<br/>AddModules / RegisterModules]
-    Registry --> CatalogApi[Catalog.Api<br/>AddCatalogModule]
-    CatalogApi --> CatalogApp[Catalog.Application]
-    CatalogApi --> CatalogInfra[Catalog.Infrastructure<br/>CatalogDbContext]
-    CatalogApi -. implements .-> Contract[Kernel.Application<br/>ICatalogModule]
-    OtherModule[Other Module] -- consumes --> Contract
-    CatalogInfra --> MBB[MediatorModuleBase<br/>cross-module adapter]
-```
+### 5.1 Modules
 
 `Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods —
 `Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked
-uniformly by `ModulesRegistry.AddModules` / `RegisterModules`. Modules never reference each other directly: cross-module
-communication goes through interfaces in `Ecommerce.Kernel.Application` (e.g. `IModule`, `ICatalogModule`), and the
-implementing module ships an internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed
-contract instead of `ISender`.
+uniformly by `ModulesRegistry.AddModules` / `RegisterModules`.
 
-### 5.3 API Validation
+Modules never reference each other directly: cross-module communication goes through `IModule` in
+`Ecommerce.Kernel.Application` and per-module contracts in
+`{Module}.Application` (e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`); the implementing module ships an
+internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed contract instead of
+`ISender`.
+
+### 5.2 API Validation
 
 ```mermaid
 flowchart LR
@@ -190,53 +167,7 @@ response shape stays consistent.
    the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of
    internal details.
 
-### 5.4 Repository
-
-```mermaid
-flowchart TB
-    subgraph Kernel
-        IRepo[IRepository&lt;T&gt;<br/>Kernel.Domain]
-        BaseRepo[Repository&lt;T,TContext&gt;<br/>Kernel.Infrastructure]
-    end
-    subgraph CatalogModule[Catalog Module]
-        ICatRepo[ICatalogRepository<br/>Catalog.Domain]
-        CatRepo[CategoryRepository<br/>Catalog.Infrastructure]
-        Ctx[CatalogDbContext<br/>schema: catalog]
-        Factory[CatalogDbContextFactory<br/>design-time]
-        Cfg[CategoryConfiguration<br/>IEntityTypeConfiguration]
-    end
-    ICatRepo -- extends --> IRepo
-    CatRepo -- inherits --> BaseRepo
-    CatRepo -- implements --> ICatRepo
-    CatRepo --> Ctx
-    Factory --> Ctx
-    Ctx --> Cfg
-```
-
-The Kernel ships the abstractions: `IRepository<T>` in `Ecommerce.Kernel.Domain.Repositories` and an abstract
-`Repository<T, TContext>` base in `Ecommerce.Kernel.Infrastructure.Persistence` that handles `DbSet<T>` access and
-pagination via `PaginationSettings`. Each module owns its own DbContext — `CatalogDbContext` calls
-`modelBuilder.HasDefaultSchema("catalog")` and applies `IEntityTypeConfiguration<>` implementations from the assembly so
-each entity declares its own mapping. The module also declares its own repository interface (`ICatalogRepository`) and
-implements it on top of the Kernel base (
-`CategoryRepository : Repository<Category, CatalogDbContext>, ICatalogRepository`). A `CatalogDbContextFactory` (
-`IDesignTimeDbContextFactory<CatalogDbContext>`) reads the `EcommerceDb` connection string from
-`Ecommerce.AppHost/appsettings.Development.json` so the EF CLI can generate migrations without booting the host.
-
-### 5.5 Integration Tests
-
-```mermaid
-flowchart TB
-    DC[DatabaseContainerFixture<br/>Testcontainers Postgres 17] --> BIF[BaseIntegrationFixture&lt;TFactory&gt;]
-    BIF --> CIF[CatalogIntegrationFixture<br/>Schemas: catalog]
-    CIF --> CWAF[CatalogWebApplicationFactory<br/>: EcommerceWebApplicationFactory]
-    CWAF --> Client[HttpClient<br/>triggers EF migrations]
-    BIF --> DR[DatabaseResetter<br/>Respawner]
-    Coll[CatalogTestCollection] -. shares .-> CIF
-    Test[CreateCategoryIntegrationTests<br/>: BaseCatalogIntegrationTest] --> Coll
-    Test --> Client
-    Test --> DR
-```
+### 5.4 Integration Tests
 
 Integration tests run against a real PostgreSQL 17 instance — Testcontainers spins up a container per fixture, EF
 migrations are applied through a `WebApplicationFactory` during host startup, and `Respawner` clears the schema between
@@ -254,6 +185,21 @@ tests so each one starts from a known state. The stack composes a few small piec
 * **`CatalogTestCollection`** is an xUnit `[CollectionDefinition]` with `ICollectionFixture<CatalogIntegrationFixture>`
   so the fixture (and its container) is shared across the whole test class set. `BaseCatalogIntegrationTest` hides the
   wiring and exposes `Client`, `ResetDatabaseAsync()` and `SeedAsync<CatalogDbContext>()` to test classes.
+
+### 5.5 CI/CD (GitHub Actions)
+
+Three workflows live under `.github/workflows/`:
+
+* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
+  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
+  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
+  hash.
+* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
+  does not push — it validates that the image still builds.
+* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
+  `commitlint.config.cjs`, `commitlinterrc.json`).
+
+What is still open: deployment workflows (Azure) and a release pipeline.
 
 ## 6. Contributing
 
