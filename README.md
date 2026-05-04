@@ -77,7 +77,7 @@ cd src
 dotnet test
 ```
 
-Integration tests require Docker to be running. See [5.5 Integration Tests](#55-integration-tests) for the composition.
+Integration tests require Docker to be running. See [5.4 Integration Tests](#54-integration-tests) for the composition.
 
 ## 4. Functionalities
 
@@ -104,6 +104,7 @@ module.
 | 14 |     Cross-cutting      |       Observability        |    🔴 To do    |
 | 15 |     Cross-cutting      |       Rate Limiting        |    🔴 To do    |
 | 16 |     Cross-cutting      |  Domain Validation Rules   |    🔴 To do    |
+| 17 |     Cross-cutting      |     Integration Tests      |    🟢 Done     |
 
 </div>
 
@@ -124,42 +125,43 @@ reasoning behind it.
 * **GitHub Actions** — CI (build, unit tests, integration tests, Docker image validation, commit message linting).
 * **Azure** — target cloud for deployment (App Service / Container Apps + Azure Database for PostgreSQL).
 
-### 5.1 CI/CD (GitHub Actions)
-
-Three workflows live under `.github/workflows/`:
-
-* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
-  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
-  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
-  hash.
-* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
-  does not push — it validates that the image still builds.
-* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
-  `commitlint.config.cjs`, `commitlinterrc.json`).
-
-What is still open: deployment workflows (Azure) and a release pipeline.
-
-### 5.2 Modules
+### 5.1 Modules
 
 ```mermaid
 flowchart LR
-    Host[Ecommerce.AppHost<br/>Program.cs] --> Registry[ModulesRegistry<br/>AddModules / RegisterModules]
-    Registry --> CatalogApi[Catalog.Api<br/>AddCatalogModule]
-    CatalogApi --> CatalogApp[Catalog.Application]
-    CatalogApi --> CatalogInfra[Catalog.Infrastructure<br/>CatalogDbContext]
-    CatalogApi -. implements .-> Contract[Kernel.Application<br/>ICatalogModule]
-    OtherModule[Other Module] -- consumes --> Contract
-    CatalogInfra --> MBB[MediatorModuleBase<br/>cross-module adapter]
+    subgraph Kernel["Kernel — generic, used by every module"]
+        Program["Ecommerce.AppHost/<br/>Program.cs"]
+        Registry["Ecommerce.AppHost/Modules/<br/>ModulesRegistry.cs<br/>AddModules / RegisterModules"]
+        IModule["Ecommerce.Kernel.Application/<br/>IModule.cs"]
+        MMB["Ecommerce.Kernel.Infrastructure/<br/>MediatorModuleBase.cs"]
+    end
+
+    subgraph Catalog["Catalog — concrete module"]
+        ICat["Ecommerce.Catalog.Application/<br/>ICatalogModule.cs"]
+        CatApi["Ecommerce.Catalog.Api/<br/>CatalogModule.cs<br/>AddCatalogModule / UseCatalogModule"]
+        CatAdapter["Ecommerce.Catalog.Infrastructure/<br/>CatalogModule.cs<br/>: MediatorModuleBase, ICatalogModule"]
+    end
+
+    OtherModule["Any other module<br/>(Auth, Orders, Shipping…)"]
+
+    Program --> Registry
+    Registry -- invokes Add/Use uniformly --> CatApi
+    Registry -. same contract .-> OtherModule
+    ICat -- extends --> IModule
+    CatAdapter -- inherits --> MMB
+    CatAdapter -- implements --> ICat
+    OtherModule -. consumes typed contract .-> ICat
 ```
 
 `Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods —
 `Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked
 uniformly by `ModulesRegistry.AddModules` / `RegisterModules`. Modules never reference each other directly: cross-module
-communication goes through interfaces in `Ecommerce.Kernel.Application` (e.g. `IModule`, `ICatalogModule`), and the
-implementing module ships an internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed
-contract instead of `ISender`.
+communication goes through `IModule` in `Ecommerce.Kernel.Application` and per-module contracts in
+`{Module}.Application` (e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`); the implementing module ships an
+internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed contract instead of
+`ISender`.
 
-### 5.3 API Validation
+### 5.2 API Validation
 
 ```mermaid
 flowchart LR
@@ -190,27 +192,34 @@ response shape stays consistent.
    the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of
    internal details.
 
-### 5.4 Repository
+### 5.3 Repository
 
 ```mermaid
-flowchart TB
-    subgraph Kernel
-        IRepo[IRepository&lt;T&gt;<br/>Kernel.Domain]
-        BaseRepo[Repository&lt;T,TContext&gt;<br/>Kernel.Infrastructure]
+flowchart LR
+    subgraph Kernel["Kernel — generic, used by every module"]
+        IRepo["Ecommerce.Kernel.Domain/Repositories/<br/>IRepository.cs<br/>IRepository&lt;T&gt; where T : Entity"]
+        BaseRepo["Ecommerce.Kernel.Infrastructure/Persistence/<br/>Repository.cs<br/>abstract Repository&lt;T, TContext&gt;"]
+        Pag["Ecommerce.Kernel.Infrastructure/Settings/<br/>PaginationSettings.cs"]
     end
-    subgraph CatalogModule[Catalog Module]
-        ICatRepo[ICatalogRepository<br/>Catalog.Domain]
-        CatRepo[CategoryRepository<br/>Catalog.Infrastructure]
-        Ctx[CatalogDbContext<br/>schema: catalog]
-        Factory[CatalogDbContextFactory<br/>design-time]
-        Cfg[CategoryConfiguration<br/>IEntityTypeConfiguration]
+
+    subgraph Catalog["Catalog — concrete module"]
+        ICatRepo["Ecommerce.Catalog.Domain/Repositories/<br/>ICatalogRepository.cs"]
+        CatRepo["Ecommerce.Catalog.Infrastructure/Persistence/Repositories/<br/>CategoryRepository.cs"]
+        Ctx["Ecommerce.Catalog.Infrastructure/Persistence/<br/>CatalogDbContext.cs<br/>schema: catalog"]
+        Factory["Ecommerce.Catalog.Infrastructure/Persistence/<br/>CatalogDbContextFactory.cs"]
+        Cfg["Ecommerce.Catalog.Infrastructure/Persistence/Configurations/<br/>CategoryConfiguration.cs"]
     end
+
+    OtherModule["Any other module<br/>(Auth, Orders, Shipping…)"]
+
     ICatRepo -- extends --> IRepo
     CatRepo -- inherits --> BaseRepo
     CatRepo -- implements --> ICatRepo
+    BaseRepo -- uses --> Pag
     CatRepo --> Ctx
     Factory --> Ctx
     Ctx --> Cfg
+    OtherModule -. same shape .-> Kernel
 ```
 
 The Kernel ships the abstractions: `IRepository<T>` in `Ecommerce.Kernel.Domain.Repositories` and an abstract
@@ -223,19 +232,37 @@ implements it on top of the Kernel base (
 `IDesignTimeDbContextFactory<CatalogDbContext>`) reads the `EcommerceDb` connection string from
 `Ecommerce.AppHost/appsettings.Development.json` so the EF CLI can generate migrations without booting the host.
 
-### 5.5 Integration Tests
+### 5.4 Integration Tests
 
 ```mermaid
-flowchart TB
-    DC[DatabaseContainerFixture<br/>Testcontainers Postgres 17] --> BIF[BaseIntegrationFixture&lt;TFactory&gt;]
-    BIF --> CIF[CatalogIntegrationFixture<br/>Schemas: catalog]
-    CIF --> CWAF[CatalogWebApplicationFactory<br/>: EcommerceWebApplicationFactory]
-    CWAF --> Client[HttpClient<br/>triggers EF migrations]
-    BIF --> DR[DatabaseResetter<br/>Respawner]
-    Coll[CatalogTestCollection] -. shares .-> CIF
-    Test[CreateCategoryIntegrationTests<br/>: BaseCatalogIntegrationTest] --> Coll
-    Test --> Client
-    Test --> DR
+flowchart LR
+    subgraph Kernel["Kernel test infra — generic, used by every module"]
+        DC["Ecommerce.Kernel.IntegrationTests/Database/<br/>DatabaseContainerFixture.cs<br/>Testcontainers Postgres 17"]
+        BIF["Ecommerce.Kernel.IntegrationTests/<br/>BaseIntegrationFixture.cs<br/>BaseIntegrationFixture&lt;TFactory&gt;"]
+        EWAF["Ecommerce.Kernel.IntegrationTests/<br/>EcommerceWebApplicationFactory.cs<br/>: WebApplicationFactory&lt;IApiMarker&gt;"]
+        DR["Ecommerce.Kernel.IntegrationTests/Database/<br/>DatabaseResetter.cs<br/>Respawner wrapper"]
+    end
+
+    subgraph Catalog["Catalog tests — concrete module"]
+        CIF["Ecommerce.Catalog.IntegrationTests/Base/<br/>CatalogIntegrationFixture.cs"]
+        CWAF["Ecommerce.Catalog.IntegrationTests/Base/<br/>CatalogWebApplicationFactory.cs"]
+        Coll["Ecommerce.Catalog.IntegrationTests/Base/<br/>CatalogTestCollection.cs"]
+        BCT["Ecommerce.Catalog.IntegrationTests/Base/<br/>BaseCatalogIntegrationTest.cs"]
+        Test["Ecommerce.Catalog.IntegrationTests/Categories/<br/>CreateCategoryIntegrationTests.cs"]
+    end
+
+    OtherModule["Any other module's test project<br/>(Auth, Orders, …)"]
+
+    BIF -- owns --> DC
+    BIF -- builds --> DR
+    CIF -- inherits --> BIF
+    CWAF -- inherits --> EWAF
+    CIF -- builds --> CWAF
+    Coll -- shares --> CIF
+    BCT -- uses --> CIF
+    Test -- inherits --> BCT
+    Test -. in collection .-> Coll
+    OtherModule -. same shape .-> Kernel
 ```
 
 Integration tests run against a real PostgreSQL 17 instance — Testcontainers spins up a container per fixture, EF
@@ -254,6 +281,21 @@ tests so each one starts from a known state. The stack composes a few small piec
 * **`CatalogTestCollection`** is an xUnit `[CollectionDefinition]` with `ICollectionFixture<CatalogIntegrationFixture>`
   so the fixture (and its container) is shared across the whole test class set. `BaseCatalogIntegrationTest` hides the
   wiring and exposes `Client`, `ResetDatabaseAsync()` and `SeedAsync<CatalogDbContext>()` to test classes.
+
+### 5.5 CI/CD (GitHub Actions)
+
+Three workflows live under `.github/workflows/`:
+
+* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
+  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
+  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
+  hash.
+* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
+  does not push — it validates that the image still builds.
+* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
+  `commitlint.config.cjs`, `commitlinterrc.json`).
+
+What is still open: deployment workflows (Azure) and a release pipeline.
 
 ## 6. Contributing
 
