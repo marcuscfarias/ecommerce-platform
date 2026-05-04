@@ -26,7 +26,7 @@
 ## 1. About this project
 
 Ecommerce is a personal portfolio project built in ASP.NET Core to practice new trends and technologies in modern
-backend development. It is **under construction** and intentionally **evolutionary**, shipped today as a **modular
+backend development. It is **UNDER CONSTRUCTION** and intentionally **evolutionary**, shipped today as a **modular
 monolith open for expansion**. The project offers hands-on experience with modern tools, patterns and methodologies,
 promoting growth and adaptability, exploring efficient coding practices, clear architectural decisions and project
 management skills that enhance my ability to deliver high-quality software solutions.
@@ -81,30 +81,29 @@ Integration tests require Docker to be running. See [5.4 Integration Tests](#54-
 
 ## 4. Functionalities
 
-Each module groups one or more features. Cross-cutting items (CI, deployment, observability) are not tied to a single
+Each module groups one or more features. Cross-cutting items are not tied to a single
 module.
 
 <div align="center">
 
-| Id |         Module         |          Feature           |     Status     |
-|:--:|:----------------------:|:--------------------------:|:--------------:|
-| 1  |        Catalog         |    Category Management     |    🟢 Done     |
-| 2  |        Catalog         |     Product Management     |    🔴 To do    |
-| 3  |          Auth          |       Authentication       | 🟡 In progress |
-| 4  |          Auth          |       Authorization        |    🔴 To do    |
-| 5  |         Orders         |             —              |    🔴 To do    |
-| 6  |        Shipping        |             —              |    🔴 To do    |
-| 7  | Payment (Microservice) |             —              |    🔴 To do    |
-| 8  |     Notifications      |             —              |    🔴 To do    |
-| 9  |     Cross-cutting      |     Request Validation     |    🟢 Done     |
-| 10 |     Cross-cutting      | Global Exception Handling  |    🟢 Done     |
-| 11 |     Cross-cutting      |     API Documentation      |    🟢 Done     |
-| 12 |     Cross-cutting      |   CI/CD (GitHub Actions)   | 🟡 In progress |
-| 13 |     Cross-cutting      | Deployment & Environments  |    🔴 To do    |
-| 14 |     Cross-cutting      |       Observability        |    🔴 To do    |
-| 15 |     Cross-cutting      |       Rate Limiting        |    🔴 To do    |
-| 16 |     Cross-cutting      |  Domain Validation Rules   |    🔴 To do    |
-| 17 |     Cross-cutting      |     Integration Tests      |    🟢 Done     |
+| Id |         Module         |          Feature          |     Status     |
+|:--:|:----------------------:|:-------------------------:|:--------------:|
+| 1  |        Catalog         |    Category Management    |    🟢 Done     |
+| 2  |        Catalog         |    Product Management     |    🔴 To do    |
+| 3  |          Auth          |             —             | 🟡 In progress |
+| 5  |         Orders         |             —             |    🔴 To do    |
+| 6  |        Shipping        |             —             |    🔴 To do    |
+| 7  | Payment (Microservice) |             —             |    🔴 To do    |
+| 8  |     Notifications      |             —             |    🔴 To do    |
+| 9  |     Cross-cutting      |    Request Validation     |    🟢 Done     |
+| 10 |     Cross-cutting      | Global Exception Handling |    🟢 Done     |
+| 11 |     Cross-cutting      |     API Documentation     |    🟢 Done     |
+| 12 |     Cross-cutting      |  CI/CD (GitHub Actions)   | 🟡 In progress |
+| 13 |     Cross-cutting      | Deployment & Environments |    🔴 To do    |
+| 14 |     Cross-cutting      |       Observability       |    🔴 To do    |
+| 15 |     Cross-cutting      |       Rate Limiting       |    🔴 To do    |
+| 16 |     Cross-cutting      |  Domain Validation Rules  |    🔴 To do    |
+| 17 |     Cross-cutting      |     Integration Tests     |    🟢 Done     |
 
 </div>
 
@@ -127,36 +126,12 @@ reasoning behind it.
 
 ### 5.1 Modules
 
-```mermaid
-flowchart LR
-    subgraph Kernel["Kernel — generic, used by every module"]
-        Program["Ecommerce.AppHost/<br/>Program.cs"]
-        Registry["Ecommerce.AppHost/Modules/<br/>ModulesRegistry.cs<br/>AddModules / RegisterModules"]
-        IModule["Ecommerce.Kernel.Application/<br/>IModule.cs"]
-        MMB["Ecommerce.Kernel.Infrastructure/<br/>MediatorModuleBase.cs"]
-    end
-
-    subgraph Catalog["Catalog — concrete module"]
-        ICat["Ecommerce.Catalog.Application/<br/>ICatalogModule.cs"]
-        CatApi["Ecommerce.Catalog.Api/<br/>CatalogModule.cs<br/>AddCatalogModule / UseCatalogModule"]
-        CatAdapter["Ecommerce.Catalog.Infrastructure/<br/>CatalogModule.cs<br/>: MediatorModuleBase, ICatalogModule"]
-    end
-
-    OtherModule["Any other module<br/>(Auth, Orders, Shipping…)"]
-
-    Program --> Registry
-    Registry -- invokes Add/Use uniformly --> CatApi
-    Registry -. same contract .-> OtherModule
-    ICat -- extends --> IModule
-    CatAdapter -- inherits --> MMB
-    CatAdapter -- implements --> ICat
-    OtherModule -. consumes typed contract .-> ICat
-```
-
 `Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods —
 `Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked
-uniformly by `ModulesRegistry.AddModules` / `RegisterModules`. Modules never reference each other directly: cross-module
-communication goes through `IModule` in `Ecommerce.Kernel.Application` and per-module contracts in
+uniformly by `ModulesRegistry.AddModules` / `RegisterModules`.
+
+Modules never reference each other directly: cross-module communication goes through `IModule` in
+`Ecommerce.Kernel.Application` and per-module contracts in
 `{Module}.Application` (e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`); the implementing module ships an
 internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed contract instead of
 `ISender`.
@@ -192,78 +167,7 @@ response shape stays consistent.
    the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of
    internal details.
 
-### 5.3 Repository
-
-```mermaid
-flowchart LR
-    subgraph Kernel["Kernel — generic, used by every module"]
-        IRepo["Ecommerce.Kernel.Domain/Repositories/<br/>IRepository.cs<br/>IRepository&lt;T&gt; where T : Entity"]
-        BaseRepo["Ecommerce.Kernel.Infrastructure/Persistence/<br/>Repository.cs<br/>abstract Repository&lt;T, TContext&gt;"]
-        Pag["Ecommerce.Kernel.Infrastructure/Settings/<br/>PaginationSettings.cs"]
-    end
-
-    subgraph Catalog["Catalog — concrete module"]
-        ICatRepo["Ecommerce.Catalog.Domain/Repositories/<br/>ICatalogRepository.cs"]
-        CatRepo["Ecommerce.Catalog.Infrastructure/Persistence/Repositories/<br/>CategoryRepository.cs"]
-        Ctx["Ecommerce.Catalog.Infrastructure/Persistence/<br/>CatalogDbContext.cs<br/>schema: catalog"]
-        Factory["Ecommerce.Catalog.Infrastructure/Persistence/<br/>CatalogDbContextFactory.cs"]
-        Cfg["Ecommerce.Catalog.Infrastructure/Persistence/Configurations/<br/>CategoryConfiguration.cs"]
-    end
-
-    OtherModule["Any other module<br/>(Auth, Orders, Shipping…)"]
-
-    ICatRepo -- extends --> IRepo
-    CatRepo -- inherits --> BaseRepo
-    CatRepo -- implements --> ICatRepo
-    BaseRepo -- uses --> Pag
-    CatRepo --> Ctx
-    Factory --> Ctx
-    Ctx --> Cfg
-    OtherModule -. same shape .-> Kernel
-```
-
-The Kernel ships the abstractions: `IRepository<T>` in `Ecommerce.Kernel.Domain.Repositories` and an abstract
-`Repository<T, TContext>` base in `Ecommerce.Kernel.Infrastructure.Persistence` that handles `DbSet<T>` access and
-pagination via `PaginationSettings`. Each module owns its own DbContext — `CatalogDbContext` calls
-`modelBuilder.HasDefaultSchema("catalog")` and applies `IEntityTypeConfiguration<>` implementations from the assembly so
-each entity declares its own mapping. The module also declares its own repository interface (`ICatalogRepository`) and
-implements it on top of the Kernel base (
-`CategoryRepository : Repository<Category, CatalogDbContext>, ICatalogRepository`). A `CatalogDbContextFactory` (
-`IDesignTimeDbContextFactory<CatalogDbContext>`) reads the `EcommerceDb` connection string from
-`Ecommerce.AppHost/appsettings.Development.json` so the EF CLI can generate migrations without booting the host.
-
 ### 5.4 Integration Tests
-
-```mermaid
-flowchart LR
-    subgraph Kernel["Kernel test infra — generic, used by every module"]
-        DC["Ecommerce.Kernel.IntegrationTests/Database/<br/>DatabaseContainerFixture.cs<br/>Testcontainers Postgres 17"]
-        BIF["Ecommerce.Kernel.IntegrationTests/<br/>BaseIntegrationFixture.cs<br/>BaseIntegrationFixture&lt;TFactory&gt;"]
-        EWAF["Ecommerce.Kernel.IntegrationTests/<br/>EcommerceWebApplicationFactory.cs<br/>: WebApplicationFactory&lt;IApiMarker&gt;"]
-        DR["Ecommerce.Kernel.IntegrationTests/Database/<br/>DatabaseResetter.cs<br/>Respawner wrapper"]
-    end
-
-    subgraph Catalog["Catalog tests — concrete module"]
-        CIF["Ecommerce.Catalog.IntegrationTests/Base/<br/>CatalogIntegrationFixture.cs"]
-        CWAF["Ecommerce.Catalog.IntegrationTests/Base/<br/>CatalogWebApplicationFactory.cs"]
-        Coll["Ecommerce.Catalog.IntegrationTests/Base/<br/>CatalogTestCollection.cs"]
-        BCT["Ecommerce.Catalog.IntegrationTests/Base/<br/>BaseCatalogIntegrationTest.cs"]
-        Test["Ecommerce.Catalog.IntegrationTests/Categories/<br/>CreateCategoryIntegrationTests.cs"]
-    end
-
-    OtherModule["Any other module's test project<br/>(Auth, Orders, …)"]
-
-    BIF -- owns --> DC
-    BIF -- builds --> DR
-    CIF -- inherits --> BIF
-    CWAF -- inherits --> EWAF
-    CIF -- builds --> CWAF
-    Coll -- shares --> CIF
-    BCT -- uses --> CIF
-    Test -- inherits --> BCT
-    Test -. in collection .-> Coll
-    OtherModule -. same shape .-> Kernel
-```
 
 Integration tests run against a real PostgreSQL 17 instance — Testcontainers spins up a container per fixture, EF
 migrations are applied through a `WebApplicationFactory` during host startup, and `Respawner` clears the schema between
