@@ -16,6 +16,14 @@
     <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.IntegrationTests/Ecommerce.Catalog.IntegrationTests.csproj" />
     <Project Path="Ecommerce.Catalog/Ecommerce.Catalog.UnitTests/Ecommerce.Catalog.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/Ecommerce.Auth/">
+    <Project Path="Ecommerce.Auth/Ecommerce.Auth.Api/Ecommerce.Auth.Api.csproj" />
+    <Project Path="Ecommerce.Auth/Ecommerce.Auth.Application/Ecommerce.Auth.Application.csproj" />
+    <Project Path="Ecommerce.Auth/Ecommerce.Auth.Domain/Ecommerce.Auth.Domain.csproj" />
+    <Project Path="Ecommerce.Auth/Ecommerce.Auth.Infrastructure/Ecommerce.Auth.Infrastructure.csproj" />
+    <Project Path="Ecommerce.Auth/Ecommerce.Auth.IntegrationTests/Ecommerce.Auth.IntegrationTests.csproj" />
+    <Project Path="Ecommerce.Auth/Ecommerce.Auth.UnitTests/Ecommerce.Auth.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Ecommerce.Kernel/">
     <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Domain/Ecommerce.Kernel.Domain.csproj" />
     <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Application/Ecommerce.Kernel.Application.csproj" />
