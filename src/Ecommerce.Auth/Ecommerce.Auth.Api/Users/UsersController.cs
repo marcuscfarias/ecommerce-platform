@@ -1,4 +1,5 @@
 using Ecommerce.Auth.Api.Users.CreateUser;
+using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Application;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,5 +21,14 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     {
         var id = await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
         return Created($"/api/v1/users/{id}", null);
+    }
+
+    [HttpGet("{id:int}")]
+    [EndpointDescription("Returns a user by their ID.")]
+    [ProducesResponseType<GetUserByIdResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 }
