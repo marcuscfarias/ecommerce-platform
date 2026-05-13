@@ -32,6 +32,7 @@ public class CreateUserHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
+        _passwordHasher.Received(1).Hash(command.Password);
         _repository.Received(1).Add(Arg.Is<User>(u => u.PasswordHash == "hashed-password"));
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
