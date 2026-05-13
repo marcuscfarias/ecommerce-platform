@@ -16,9 +16,8 @@ internal sealed class CreateUserRequestValidator : AbstractValidator<CreateUserR
             .NotEmpty()
             .MinimumLength(UserConsts.PasswordMinLength)
             .MaximumLength(UserConsts.PasswordHashMaxLength)
-            .Matches("[A-Z]").WithMessage("'Password' must contain at least one uppercase letter.")
-            .Matches("[a-z]").WithMessage("'Password' must contain at least one lowercase letter.")
-            .Matches("[0-9]").WithMessage("'Password' must contain at least one digit.");
+            .Matches("(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])")
+            .WithMessage("'Password' must contain at least one lowercase letter, one uppercase letter, and one digit.");
 
         RuleFor(x => x.FirstName)
             .NotEmpty()

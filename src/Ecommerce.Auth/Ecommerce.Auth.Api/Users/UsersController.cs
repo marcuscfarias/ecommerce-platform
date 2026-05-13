@@ -27,8 +27,9 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     [EndpointDescription("Returns a user by their ID.")]
     [ProducesResponseType<GetUserByIdResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await module.ExecuteQueryAsync(GetUserByIdRequest.ToQuery(id), cancellationToken);
+        return Ok(GetUserByIdResponse.FromResult(result));
     }
 }
