@@ -28,15 +28,11 @@ public class CreateUserHandlerTests
             .Returns(false);
         _passwordHasher.Hash(command.Password).Returns("hashed-password");
 
-        User? capturedUser = null;
-        _repository.Add(Arg.Do<User>(u => capturedUser = u));
-
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        capturedUser!.PasswordHash.ShouldBe("hashed-password");
-        _repository.Received(1).Add(Arg.Any<User>());
+        _repository.Received(1).Add(Arg.Is<User>(u => u.PasswordHash == "hashed-password"));
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
