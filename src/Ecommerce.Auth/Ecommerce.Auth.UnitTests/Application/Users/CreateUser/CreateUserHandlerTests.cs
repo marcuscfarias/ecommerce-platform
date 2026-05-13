@@ -10,6 +10,7 @@ public class CreateUserHandlerTests
 {
     private readonly IAuthRepository _repository = Substitute.For<IAuthRepository>();
     private readonly IPasswordHasher _passwordHasher = Substitute.For<IPasswordHasher>();
+    private readonly Faker _faker = new();
     private readonly CreateUserHandler _handler;
 
     public CreateUserHandlerTests()
@@ -18,34 +19,23 @@ public class CreateUserHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEmailIsUnique_ShouldHashPassword()
+    public async Task Handle_WhenEmailIsUnique_ShouldCreateUserWithHashedPassword()
     {
         // Arrange
-        var command = new CreateUserCommand("user@example.com", "Str0ngPass",
-            "Jane", "Doe");
+        var command = new CreateUserCommand(_faker.Internet.Email(), _faker.Internet.Password(),
+            _faker.Name.FirstName(), _faker.Name.LastName());
         _repository.CheckEmailExistsAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns(false);
+        _passwordHasher.Hash(command.Password).Returns("hashed-password");
+
+        User? capturedUser = null;
+        _repository.Add(Arg.Do<User>(u => capturedUser = u));
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        _passwordHasher.Received(1).Hash(command.Password);
-    }
-
-    [Fact]
-    public async Task Handle_WhenEmailIsUnique_ShouldAddUserAndSaveChanges()
-    {
-        // Arrange
-        var command = new CreateUserCommand("user@example.com", "Str0ngPass",
-            "Jane", "Doe");
-        _repository.CheckEmailExistsAsync(command.Email, Arg.Any<CancellationToken>())
-            .Returns(false);
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
+        capturedUser!.PasswordHash.ShouldBe("hashed-password");
         _repository.Received(1).Add(Arg.Any<User>());
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
