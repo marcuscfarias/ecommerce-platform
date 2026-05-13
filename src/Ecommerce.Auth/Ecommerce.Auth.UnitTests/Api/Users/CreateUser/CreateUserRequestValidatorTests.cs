@@ -1,5 +1,4 @@
 using Ecommerce.Auth.Api.Users.CreateUser;
-using Ecommerce.Auth.Domain.Entities;
 
 namespace Ecommerce.Auth.UnitTests.Api.Users.CreateUser;
 
@@ -37,7 +36,7 @@ public class CreateUserRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Email));
+        result.Errors.ShouldContain(e => e.PropertyName == "Email");
     }
 
     [Theory]
@@ -53,21 +52,21 @@ public class CreateUserRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Email));
+        result.Errors.ShouldContain(e => e.PropertyName == "Email");
     }
 
     [Fact]
     public void Validate_WhenEmailExceedsMaximumLength_ShouldHaveErrorForEmail()
     {
         // Arrange
-        var local = new string('a', UserConsts.EmailMaxLength);
+        var local = new string('a', 256);
         var request = ValidRequest(email: $"{local}@example.com");
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Email));
+        result.Errors.ShouldContain(e => e.PropertyName == "Email");
     }
 
     [Fact]
@@ -80,33 +79,33 @@ public class CreateUserRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Password));
+        result.Errors.ShouldContain(e => e.PropertyName == "Password");
     }
 
     [Fact]
     public void Validate_WhenPasswordIsShorterThanMinimum_ShouldHaveErrorForPassword()
     {
         // Arrange
-        var request = ValidRequest(password: new string('A', UserConsts.PasswordMinLength - 1));
+        var request = ValidRequest(password: new string('A', 7));
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Password));
+        result.Errors.ShouldContain(e => e.PropertyName == "Password");
     }
 
     [Fact]
     public void Validate_WhenPasswordGreaterThanMaximum_ShouldHaveErrorForPassword()
     {
         // Arrange
-        var request = ValidRequest(password: new string('A', UserConsts.PasswordHashMaxLength + 1));
+        var request = ValidRequest(password: new string('A', 257));
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Password));
+        result.Errors.ShouldContain(e => e.PropertyName == "Password");
     }
 
 
@@ -123,7 +122,7 @@ public class CreateUserRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.Password));
+        result.Errors.ShouldContain(e => e.PropertyName == "Password");
     }
 
     [Fact]
@@ -136,20 +135,20 @@ public class CreateUserRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.FirstName));
+        result.Errors.ShouldContain(e => e.PropertyName == "FirstName");
     }
 
     [Fact]
     public void Validate_WhenFirstNameExceedsMaximumLength_ShouldHaveErrorForFirstName()
     {
         // Arrange
-        var request = ValidRequest(firstName: new string('a', UserConsts.FirstNameMaxLength + 1));
+        var request = ValidRequest(firstName: new string('a', 101));
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.FirstName));
+        result.Errors.ShouldContain(e => e.PropertyName == "FirstName");
     }
 
     [Fact]
@@ -162,19 +161,19 @@ public class CreateUserRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.LastName));
+        result.Errors.ShouldContain(e => e.PropertyName == "LastName");
     }
 
     [Fact]
     public void Validate_WhenLastNameExceedsMaximumLength_ShouldHaveErrorForLastName()
     {
         // Arrange
-        var request = ValidRequest(lastName: new string('a', UserConsts.LastNameMaxLength + 1));
+        var request = ValidRequest(lastName: new string('a', 101));
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateUserRequest.LastName));
+        result.Errors.ShouldContain(e => e.PropertyName == "LastName");
     }
 }
