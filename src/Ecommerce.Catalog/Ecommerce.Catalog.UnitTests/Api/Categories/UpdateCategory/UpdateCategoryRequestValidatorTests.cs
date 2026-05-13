@@ -36,7 +36,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Name));
+        result.Errors.ShouldContain(e => e.PropertyName == "Name");
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Name));
+        result.Errors.ShouldContain(e => e.PropertyName == "Name");
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Name));
+        result.Errors.ShouldContain(e => e.PropertyName == "Name");
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Slug));
+        result.Errors.ShouldContain(e => e.PropertyName == "Slug");
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Slug));
+        result.Errors.ShouldContain(e => e.PropertyName == "Slug");
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Slug));
+        result.Errors.ShouldContain(e => e.PropertyName == "Slug");
     }
 
     [Theory]
@@ -120,7 +120,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Slug));
+        result.Errors.ShouldContain(e => e.PropertyName == "Slug");
     }
 
     [Theory]
@@ -137,7 +137,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldNotContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Slug));
+        result.Errors.ShouldNotContain(e => e.PropertyName == "Slug");
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldNotContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Description));
+        result.Errors.ShouldNotContain(e => e.PropertyName == "Description");
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Description));
+        result.Errors.ShouldContain(e => e.PropertyName == "Description");
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateCategoryRequest.Description));
+        result.Errors.ShouldContain(e => e.PropertyName == "Description");
     }
 
     [Theory]
@@ -191,6 +191,6 @@ public class UpdateCategoryRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldNotContain(e => e.PropertyName == nameof(UpdateCategoryRequest.IsActive));
+        result.Errors.ShouldNotContain(e => e.PropertyName == "IsActive");
     }
 }

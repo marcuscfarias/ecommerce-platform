@@ -18,7 +18,7 @@ public class ListCategoriesRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldNotContain(e => e.PropertyName == nameof(ListCategoriesRequest.PageNumber));
+        result.Errors.ShouldNotContain(e => e.PropertyName == "PageNumber");
     }
 
     [Theory]
@@ -33,6 +33,6 @@ public class ListCategoriesRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(ListCategoriesRequest.PageNumber));
+        result.Errors.ShouldContain(e => e.PropertyName == "PageNumber");
     }
 }
