@@ -18,7 +18,7 @@ public class CreateUserHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEmailIsUnique_ShouldAddUserAndSaveChanges()
+    public async Task Handle_WhenEmailIsUnique_ShouldHashPassword()
     {
         // Arrange
         var command = new CreateUserCommand("user@example.com", "Str0ngPass",
@@ -31,6 +31,21 @@ public class CreateUserHandlerTests
 
         // Assert
         _passwordHasher.Received(1).Hash(command.Password);
+    }
+
+    [Fact]
+    public async Task Handle_WhenEmailIsUnique_ShouldAddUserAndSaveChanges()
+    {
+        // Arrange
+        var command = new CreateUserCommand("user@example.com", "Str0ngPass",
+            "Jane", "Doe");
+        _repository.CheckEmailExistsAsync(command.Email, Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
         _repository.Received(1).Add(Arg.Any<User>());
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
