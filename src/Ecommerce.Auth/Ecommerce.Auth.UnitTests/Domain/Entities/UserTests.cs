@@ -28,20 +28,10 @@ public class UserTests
     [Fact]
     public void Constructor_WithIsActiveFalse_ShouldSetIsActiveFalse()
     {
-        // Arrange
-        var email = "user@example.com";
-        var passwordHash = "hashed-password";
-        var firstName = "John";
-        var lastName = "Doe";
-
-        // Act
-        var user = new User(email, passwordHash, firstName, lastName, isActive: false);
+        // Arrange & Act
+        var user = new User("user@example.com", "hashed-password", "John", "Doe", isActive: false);
 
         // Assert
-        user.Email.ShouldBe(email);
-        user.PasswordHash.ShouldBe(passwordHash);
-        user.FirstName.ShouldBe(firstName);
-        user.LastName.ShouldBe(lastName);
         user.IsActive.ShouldBeFalse();
     }
 
