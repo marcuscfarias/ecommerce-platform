@@ -44,9 +44,7 @@ public class GetCategoryByIdHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Name.ShouldBe(category.Name);
-        result.Slug.ShouldBe(category.Slug);
-        result.Description.ShouldBe(category.Description);
-        result.IsActive.ShouldBe(category.IsActive);
+        var expected = new GetCategoryByIdResult(category.Id, category.Name, category.Slug, category.Description, category.IsActive);
+        result.ShouldBe(expected);
     }
 }

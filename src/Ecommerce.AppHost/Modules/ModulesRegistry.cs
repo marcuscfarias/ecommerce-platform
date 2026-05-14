@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Api;
 using Ecommerce.Catalog.Api;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +11,12 @@ internal static class ModulesRegistry
     internal static void AddModules(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddCatalogModule(configuration);
+        services.AddAuthModule(configuration);
     }
 
     internal static void RegisterModules(this WebApplication app)
     {
         app.UseCatalogModule(applyMigrations: app.Environment.IsDevelopment());
+        app.UseAuthModule(applyMigrations: app.Environment.IsDevelopment());
     }
 }
