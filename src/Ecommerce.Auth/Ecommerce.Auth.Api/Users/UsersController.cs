@@ -1,4 +1,5 @@
 using Ecommerce.Auth.Api.Users.CreateUser;
+using Ecommerce.Auth.Api.Users.DeleteUser;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Api.Users.ListUsers;
 using Ecommerce.Auth.Api.Users.UpdateUser;
@@ -48,6 +49,15 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
         return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [EndpointDescription("Deletes a user by their ID.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 
     [HttpGet("{id:int}")]
