@@ -14,11 +14,12 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     [HttpGet]
     [EndpointDescription("Returns a paginated list of users.")]
     [ProducesResponseType<ListUsersResponse>(StatusCodes.Status200OK)]
-    public Task<IActionResult> List(
+    public async Task<IActionResult> List(
         [FromQuery] ListUsersRequest request,
         CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await module.ExecuteQueryAsync(request.ToQuery(), cancellationToken);
+        return Ok(ListUsersResponse.FromResult(result));
     }
 
     [HttpPost]
