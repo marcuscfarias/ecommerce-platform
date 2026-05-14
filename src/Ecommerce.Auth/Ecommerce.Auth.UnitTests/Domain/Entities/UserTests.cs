@@ -4,6 +4,9 @@ namespace Ecommerce.Auth.UnitTests.Domain.Entities;
 
 public class UserTests
 {
+    private readonly Faker _faker = new();
+
+
     [Fact]
     public void Constructor_WithAllParameters_ShouldSetAllProperties()
     {
@@ -70,6 +73,39 @@ public class UserTests
 
         // Assert
         first.SecurityStamp.ShouldNotBe(second.SecurityStamp);
+    }
+
+    [Fact]
+    public void UpdateProfile_WhenCalled_ShouldUpdateFirstNameLastNameAndIsActive()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FirstName(), _faker.Name.LastName());
+        var newFirstName = _faker.Name.FirstName();
+        var newLastName = _faker.Name.LastName();
+
+        // Act
+        user.UpdateProfile(newFirstName, newLastName, isActive: false);
+
+        // Assert
+        user.FirstName.ShouldBe(newFirstName);
+        user.LastName.ShouldBe(newLastName);
+        user.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateProfile_WhenCalled_ShouldNotChangeEmailOrPasswordHash()
+    {
+        // Arrange
+        var email = _faker.Internet.Email();
+        var passwordHash = _faker.Internet.Password();
+        var user = new User(email, passwordHash, _faker.Name.FirstName(), _faker.Name.LastName());
+
+        // Act
+        user.UpdateProfile(_faker.Name.FirstName(), _faker.Name.LastName(), isActive: true);
+
+        // Assert
+        user.Email.ShouldBe(email);
+        user.PasswordHash.ShouldBe(passwordHash);
     }
 
 }

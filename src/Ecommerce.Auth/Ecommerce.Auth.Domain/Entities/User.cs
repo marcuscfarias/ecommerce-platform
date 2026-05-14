@@ -15,4 +15,11 @@ public sealed class User(
     public string FirstName { get; private set; } = firstName;
     public string LastName { get; private set; } = lastName;
     public bool IsActive { get; private set; } = isActive;
+
+    public void UpdateProfile(string firstName, string lastName, bool isActive)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        IsActive = isActive;
+    }
 }
