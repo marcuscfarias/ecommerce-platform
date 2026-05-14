@@ -1,6 +1,7 @@
 using Ecommerce.Auth.Api.Users.CreateUser;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Api.Users.ListUsers;
+using Ecommerce.Auth.Api.Users.UpdateUser;
 using Ecommerce.Auth.Application;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,20 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         var id = await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
-        return Created($"/api/v1/users/{id}", null);
+        return CreatedAtAction(nameof(GetById), new { id }, null);
+    }
+
+    [HttpPut("{id:int}")]
+    [EndpointDescription("Updates an existing user.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> Update(
+        [FromRoute] int id,
+        [FromBody] UpdateUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 
     [HttpGet("{id:int}")]
