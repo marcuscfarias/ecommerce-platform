@@ -16,7 +16,6 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [HttpGet]
     [EndpointDescription("Returns a paginated list of categories.")]
     [ProducesResponseType<ListCategoriesResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> List(
         [FromQuery] ListCategoriesRequest request,
         CancellationToken cancellationToken)
