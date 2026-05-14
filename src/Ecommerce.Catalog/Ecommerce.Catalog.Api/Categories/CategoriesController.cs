@@ -41,7 +41,6 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     [HttpGet("{id:int}")]
     [EndpointDescription("Returns a category by its ID.")]
     [ProducesResponseType<GetCategoryByIdResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
     {
