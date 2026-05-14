@@ -27,6 +27,10 @@ public static class InfrastructureModule
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 
+        services.Configure<JwtSettings>(configuration.GetSection("Auth:Jwt"));
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
         return services;
     }
 
