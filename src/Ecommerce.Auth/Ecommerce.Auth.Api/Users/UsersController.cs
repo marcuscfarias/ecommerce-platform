@@ -41,12 +41,13 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public Task<IActionResult> Update(
+    public async Task<IActionResult> Update(
         [FromRoute] int id,
         [FromBody] UpdateUserRequest request,
         CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
     }
 
     [HttpGet("{id:int}")]
