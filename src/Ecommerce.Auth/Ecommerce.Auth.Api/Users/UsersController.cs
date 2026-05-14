@@ -55,9 +55,10 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     [EndpointDescription("Deletes a user by their ID.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await module.ExecuteCommandAsync(DeleteUserRequest.ToCommand(id), cancellationToken);
+        return NoContent();
     }
 
     [HttpGet("{id:int}")]
