@@ -1,9 +1,9 @@
+using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Application.Exceptions;
-using Ecommerce.Auth.Application.Users.Security;
 using Ecommerce.Auth.Domain.Repositories;
 using MediatR;
 
-namespace Ecommerce.Auth.Application.Users.Login;
+namespace Ecommerce.Auth.Application.Auth.Login;
 
 internal sealed class LoginHandler(
     IAuthRepository repository,

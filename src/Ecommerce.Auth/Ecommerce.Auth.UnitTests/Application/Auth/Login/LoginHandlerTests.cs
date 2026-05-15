@@ -1,10 +1,10 @@
+using Ecommerce.Auth.Application.Auth.Login;
+using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Application.Exceptions;
-using Ecommerce.Auth.Application.Users.Login;
-using Ecommerce.Auth.Application.Users.Security;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Repositories;
 
-namespace Ecommerce.Auth.UnitTests.Application.Users.Login;
+namespace Ecommerce.Auth.UnitTests.Application.Auth.Login;
 
 public class LoginHandlerTests
 {

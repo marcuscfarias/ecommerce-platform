@@ -1,4 +1,4 @@
-using Ecommerce.Auth.Application.Users.Security;
+using Ecommerce.Auth.Application.Auth.Security;
 using Microsoft.Extensions.Options;
 
 namespace Ecommerce.Auth.Infrastructure.Security;

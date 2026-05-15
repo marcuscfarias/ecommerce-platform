@@ -1,4 +1,4 @@
-namespace Ecommerce.Auth.Application.Users.Security;
+namespace Ecommerce.Auth.Application.Auth.Security;
 
 // BCrypt hash of a random string at cost factor 12. Used only to equalise timing
 // when the email does not exist — prevents user enumeration via response latency.

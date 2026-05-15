@@ -1,4 +1,4 @@
-using Ecommerce.Auth.Application.Users.Login;
+using Ecommerce.Auth.Application.Auth.Login;
 
 namespace Ecommerce.Auth.Api.Auth.Login;
 

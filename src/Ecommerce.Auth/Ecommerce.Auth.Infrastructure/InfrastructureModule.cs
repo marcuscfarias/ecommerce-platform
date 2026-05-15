@@ -1,5 +1,5 @@
 using Ecommerce.Auth.Application;
-using Ecommerce.Auth.Application.Users.Security;
+using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Auth.Infrastructure.Mediation;
 using Ecommerce.Auth.Infrastructure.Persistence;
@@ -27,7 +27,7 @@ public static class InfrastructureModule
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 
-        services.Configure<JwtSettings>(configuration.GetSection("Auth:Jwt"));
+        services.AddJwtAuthentication(configuration);
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
