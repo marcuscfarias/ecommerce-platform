@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -26,12 +27,17 @@ internal static class AuthenticationModule
                 "Auth:Jwt:AccessTokenMinutes must be greater than zero.")
             .ValidateOnStart();
 
-        var jwt = configuration.GetSection("Auth:Jwt").Get<JwtSettings>() ?? new JwtSettings();
-
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            .AddJwtBearer();
+
+        // Build TokenValidationParameters lazily so test hosts that inject the JWT
+        // config via ConfigureAppConfiguration are seen by the time the options are resolved.
+        services
+            .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtSettings>>((options, jwtOptions) =>
             {
+                var jwt = jwtOptions.Value;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
