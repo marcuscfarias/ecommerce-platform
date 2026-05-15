@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
+using Ecommerce.Kernel.IntegrationTests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth.Login;
@@ -39,12 +40,12 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         var body = await response.Content.ReadFromJsonAsync<LoginResponseBody>();
         body.ShouldNotBeNull();
         body.TokenType.ShouldBe("Bearer");
-        body.ExpiresInSeconds.ShouldBe(AuthWebApplicationFactory.TestAccessTokenMinutes * 60);
+        body.ExpiresInSeconds.ShouldBe(TestJwtDefaults.AccessTokenMinutes * 60);
         body.AccessToken.ShouldNotBeNullOrWhiteSpace();
 
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(body.AccessToken);
-        jwt.Issuer.ShouldBe(AuthWebApplicationFactory.TestIssuer);
-        jwt.Audiences.ShouldContain(AuthWebApplicationFactory.TestAudience);
+        jwt.Issuer.ShouldBe(TestJwtDefaults.Issuer);
+        jwt.Audiences.ShouldContain(TestJwtDefaults.Audience);
         jwt.Subject.ShouldNotBeNullOrWhiteSpace();
         jwt.ValidTo.ShouldBeGreaterThan(DateTime.UtcNow);
     }

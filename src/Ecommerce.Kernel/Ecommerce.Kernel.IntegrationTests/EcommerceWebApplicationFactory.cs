@@ -13,6 +13,9 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
     {
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration(cfg =>
-            cfg.AddInMemoryCollection(databaseConfiguration.GetConfigurationEntries()));
+        {
+            cfg.AddInMemoryCollection(databaseConfiguration.GetConfigurationEntries());
+            cfg.AddInMemoryCollection(TestJwtDefaults.AsConfiguration());
+        });
     }
 }

@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Ecommerce.Auth.Infrastructure.Persistence;
+using Ecommerce.Kernel.IntegrationTests;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Ecommerce.Auth.IntegrationTests.Base;
@@ -27,9 +28,9 @@ public abstract class BaseAuthIntegrationTest
     // `lifetime` < 0 produces an already-expired token for negative tests.
     protected static string IssueToken(int userId, string email, TimeSpan? lifetime = null)
     {
-        var span = lifetime ?? TimeSpan.FromMinutes(AuthWebApplicationFactory.TestAccessTokenMinutes);
+        var span = lifetime ?? TimeSpan.FromMinutes(TestJwtDefaults.AccessTokenMinutes);
         var now = DateTime.UtcNow;
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthWebApplicationFactory.TestSecretKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtDefaults.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -40,8 +41,8 @@ public abstract class BaseAuthIntegrationTest
         };
 
         var token = new JwtSecurityToken(
-            issuer: AuthWebApplicationFactory.TestIssuer,
-            audience: AuthWebApplicationFactory.TestAudience,
+            issuer: TestJwtDefaults.Issuer,
+            audience: TestJwtDefaults.Audience,
             claims: claims,
             notBefore: now,
             expires: now.Add(span),
