@@ -39,6 +39,7 @@ internal static class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseAuthentication();
         app.UseAuthorization();
         app.UseApiModule();
         app.RegisterModules();

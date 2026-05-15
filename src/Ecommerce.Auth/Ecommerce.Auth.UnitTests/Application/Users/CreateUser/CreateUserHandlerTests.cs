@@ -1,5 +1,5 @@
+using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Application.Users.CreateUser;
-using Ecommerce.Auth.Application.Users.Security;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Kernel.Domain.Exceptions;

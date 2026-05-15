@@ -14,4 +14,7 @@ internal sealed class UserRepository(AuthDbContext context, IOptions<PaginationS
     {
         return await Context.Users.AnyAsync(u => u.Email == normalizedEmail, ct);
     }
+
+    public Task<User?> GetByEmailAsync(string normalizedEmail, CancellationToken ct = default)
+        => Context.Users.SingleOrDefaultAsync(u => u.Email == normalizedEmail, ct);
 }
