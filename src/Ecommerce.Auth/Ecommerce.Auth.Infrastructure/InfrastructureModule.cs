@@ -31,6 +31,16 @@ public static class InfrastructureModule
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
+        services
+            .AddOptions<AdminSeedSettings>()
+            .Bind(configuration.GetSection("Auth:AdminSeed"))
+            .Validate(s => !string.IsNullOrWhiteSpace(s.Email), "Auth:AdminSeed:Email is required.")
+            .Validate(s => !string.IsNullOrWhiteSpace(s.Password), "Auth:AdminSeed:Password is required.")
+            .Validate(s => !string.IsNullOrWhiteSpace(s.Name), "Auth:AdminSeed:Name is required.")
+            .ValidateOnStart();
+
+        services.AddHostedService<AdminSeedService>();
+
         return services;
     }
 
