@@ -9,16 +9,14 @@ public class CategoryTests
     {
         // Arrange
         var name = "Electronics";
-        var slug = "electronics";
         var description = "Electronic devices";
         var isActive = true;
 
         // Act
-        var category = new Category(name, slug, description, isActive);
+        var category = new Category(name, description, isActive);
 
         // Assert
         category.Name.ShouldBe(name);
-        category.Slug.ShouldBe(slug);
         category.Description.ShouldBe(description);
         category.IsActive.ShouldBeTrue();
     }
@@ -28,16 +26,14 @@ public class CategoryTests
     {
         // Arrange
         var name = "Electronics";
-        var slug = "electronics";
         string? description = null;
         var isActive = false;
 
         // Act
-        var category = new Category(name, slug, description, isActive);
+        var category = new Category(name, description, isActive);
 
         // Assert
         category.Name.ShouldBe(name);
-        category.Slug.ShouldBe(slug);
         category.Description.ShouldBeNull();
         category.IsActive.ShouldBeFalse();
     }
@@ -47,61 +43,56 @@ public class CategoryTests
     {
         // Arrange
         var name = "Electronics";
-        var slug = "electronics";
         var description = "Electronic devices";
 
         // Act
-        var category = new Category(name, slug, description);
+        var category = new Category(name, description);
 
         // Assert
         category.IsActive.ShouldBeTrue();
     }
 
     [Fact]
-    public void Update_ShouldSetAllProperties()
+    public void Update_ShouldSetNameAndDescription()
     {
         // Arrange
-        var name = "Electronics";
-        var slug = "electronics";
-        var description = "Electronic devices";
-        var category = new Category(name, slug, description);
+        var category = new Category("Electronics", "Electronic devices");
 
         var newName = "Books";
-        var newSlug = "books";
         var newDescription = "All kinds of books";
-        var newIsActive = false;
 
         // Act
-        category.Update(newName, newSlug, newDescription, newIsActive);
+        category.Update(newName, newDescription);
 
         // Assert
         category.Name.ShouldBe(newName);
-        category.Slug.ShouldBe(newSlug);
         category.Description.ShouldBe(newDescription);
-        category.IsActive.ShouldBeFalse();
     }
 
     [Fact]
     public void Update_WithNullDescription_ShouldSetDescriptionToNull()
     {
         // Arrange
-        var name = "Electronics";
-        var slug = "electronics";
-        var description = "Electronic devices";
-        var category = new Category(name, slug, description);
-
-        var newName = "Books";
-        var newSlug = "books";
-        string? newDescription = null;
-        var newIsActive = true;
+        var category = new Category("Electronics", "Electronic devices");
 
         // Act
-        category.Update(newName, newSlug, newDescription, newIsActive);
+        category.Update("Books", null);
 
         // Assert
-        category.Name.ShouldBe(newName);
-        category.Slug.ShouldBe(newSlug);
+        category.Name.ShouldBe("Books");
         category.Description.ShouldBeNull();
-        category.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Deactivate_ShouldSetIsActiveToFalse()
+    {
+        // Arrange
+        var category = new Category("Electronics", null);
+
+        // Act
+        category.Deactivate();
+
+        // Assert
+        category.IsActive.ShouldBeFalse();
     }
 }

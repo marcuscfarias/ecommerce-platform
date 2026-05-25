@@ -16,7 +16,7 @@ public sealed class GetCategoryByIdIntegrationTests(CatalogIntegrationFixture fi
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new Category("Electronics", "electronics", "Electronic devices and accessories");
+        var seeded = new Category("Electronics", "Electronic devices and accessories");
         await SeedAsync(db =>
         {
             db.Categories.Add(seeded);
@@ -33,7 +33,6 @@ public sealed class GetCategoryByIdIntegrationTests(CatalogIntegrationFixture fi
         body.ShouldNotBeNull();
         body.Id.ShouldBe(seeded.Id);
         body.Name.ShouldBe("Electronics");
-        body.Slug.ShouldBe("electronics");
         body.Description.ShouldBe("Electronic devices and accessories");
         body.IsActive.ShouldBeTrue();
     }

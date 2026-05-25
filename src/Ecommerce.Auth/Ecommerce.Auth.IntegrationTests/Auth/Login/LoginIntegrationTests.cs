@@ -27,7 +27,7 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange
         await SeedAsync(db =>
         {
-            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane", "Doe", isActive: true));
+            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: true));
             return Task.CompletedTask;
         });
         var request = new { email = ValidEmail, password = ValidPassword };
@@ -77,7 +77,7 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange
         await SeedAsync(db =>
         {
-            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane", "Doe", isActive: true));
+            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: true));
             return Task.CompletedTask;
         });
         var request = new { email = ValidEmail, password = "WrongPassword1!" };
@@ -101,7 +101,7 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange
         await SeedAsync(db =>
         {
-            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane", "Doe", isActive: false));
+            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: false));
             return Task.CompletedTask;
         });
         var request = new { email = ValidEmail, password = ValidPassword };
@@ -125,8 +125,8 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange — seed two users: one active (for wrong-password path) and one inactive.
         await SeedAsync(db =>
         {
-            db.Users.Add(new User("active@example.com", ValidPasswordHash, "Active", "User", isActive: true));
-            db.Users.Add(new User("inactive@example.com", ValidPasswordHash, "Inactive", "User", isActive: false));
+            db.Users.Add(new User("active@example.com", ValidPasswordHash, "Active User", isActive: true));
+            db.Users.Add(new User("inactive@example.com", ValidPasswordHash, "Inactive User", isActive: false));
             return Task.CompletedTask;
         });
 

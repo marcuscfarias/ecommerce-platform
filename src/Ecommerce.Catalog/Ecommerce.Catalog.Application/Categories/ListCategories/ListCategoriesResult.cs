@@ -9,6 +9,4 @@ public sealed record ListCategoriesResult(
 public sealed record ListCategoriesItemResult(
     int Id,
     string Name,
-    string Slug,
-    string? Description,
     bool IsActive);

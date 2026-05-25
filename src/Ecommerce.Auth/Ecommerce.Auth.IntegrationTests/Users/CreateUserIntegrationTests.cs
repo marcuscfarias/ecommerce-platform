@@ -19,8 +19,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         {
             email = "user@example.com",
             password = "Str0ngPass1",
-            firstName = "Jane",
-            lastName = "Doe"
+            name = "Jane Doe"
         };
 
         // Act
@@ -48,8 +47,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         {
             email = "not-an-email",
             password = "Str0ngPass1",
-            firstName = "Jane",
-            lastName = "Doe"
+            name = "Jane Doe"
         };
 
         // Act
@@ -74,8 +72,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         {
             email = "user@example.com",
             password = "weak",
-            firstName = "Jane",
-            lastName = "Doe"
+            name = "Jane Doe"
         };
 
         // Act
@@ -98,15 +95,14 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange
         await SeedAsync(db =>
         {
-            db.Users.Add(new User("user@example.com", "hash", "Existing", "User"));
+            db.Users.Add(new User("user@example.com", "hash", "Existing User"));
             return Task.CompletedTask;
         });
         var duplicate = new
         {
             email = "user@example.com",
             password = "Str0ngPass1",
-            firstName = "Other",
-            lastName = "Person"
+            name = "Other Person"
         };
 
         // Act
@@ -118,5 +114,30 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
 
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         body.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Post_WhenNameIsEmpty_ShouldReturn400WithValidationProblemDetails()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var request = new
+        {
+            email = "user@example.com",
+            password = "Str0ngPass1",
+            name = ""
+        };
+
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        body.ShouldNotBeNull();
+        body.Errors.ShouldContainKey("Name");
     }
 }

@@ -8,7 +8,5 @@ public sealed record ListUsersResult(
 
 public sealed record ListUsersItemResult(
     int Id,
-    string Email,
-    string FirstName,
-    string LastName,
+    string Name,
     bool IsActive);

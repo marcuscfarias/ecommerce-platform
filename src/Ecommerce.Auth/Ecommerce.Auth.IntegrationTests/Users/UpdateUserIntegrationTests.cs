@@ -15,13 +15,13 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new User("jane@example.com", "hash", "Jane", "Doe");
+        var seeded = new User("jane@example.com", "hash", "Jane Doe");
         await SeedAsync(db =>
         {
             db.Users.Add(seeded);
             return Task.CompletedTask;
         });
-        var request = new { firstName = "Janet", lastName = "Smith", isActive = false };
+        var request = new { name = "Janet Smith" };
 
         // Act
         var response = await Client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
@@ -36,7 +36,7 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Arrange
-        var request = new { firstName = "Janet", lastName = "Smith", isActive = true };
+        var request = new { name = "Janet Smith" };
 
         // Act
         var response = await Client.PutAsJsonAsync($"{Endpoint}/999999", request);
@@ -50,12 +50,12 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task Put_WhenFirstNameIsEmpty_ShouldReturn400WithValidationProblemDetails()
+    public async Task Put_WhenNameIsEmpty_ShouldReturn400WithValidationProblemDetails()
     {
         await ResetDatabaseAsync();
 
         // Arrange
-        var request = new { firstName = "", lastName = "Smith", isActive = true };
+        var request = new { name = "" };
 
         // Act
         var response = await Client.PutAsJsonAsync($"{Endpoint}/1", request);
@@ -66,6 +66,6 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
 
         var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         body.ShouldNotBeNull();
-        body.Errors.ShouldNotBeEmpty();
+        body.Errors.ShouldContainKey("Name");
     }
 }

@@ -2,7 +2,6 @@ using Ecommerce.Catalog.Application.Categories.UpdateCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Kernel.Application.Exceptions;
-using Ecommerce.Kernel.Domain.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.UpdateCategory;
 
@@ -21,7 +20,7 @@ public class UpdateCategoryHandlerTests
     {
         // Arrange
         Category? category = null;
-        var command = new UpdateCategoryCommand(1, "Electronics", "electronics", "Electronic devices", true);
+        var command = new UpdateCategoryCommand(1, "Electronics", "Electronic devices");
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
@@ -33,38 +32,20 @@ public class UpdateCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenSlugAlreadyExists_ShouldThrowBusinessRuleValidationException()
+    public async Task Handle_WhenCategoryExists_ShouldUpdateAndSaveChanges()
     {
         // Arrange
-        var category = new Category("Old Name", "old-slug", null);
-        var command = new UpdateCategoryCommand(1, "Electronics", "electronics", null, true);
+        var command = new UpdateCategoryCommand(1, "Electronics", "Electronic devices");
+        var category = new Category("Old Name", null);
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(category);
-        _repository.CheckSlugExistsAsync(command.Slug, command.Id, Arg.Any<CancellationToken>())
-            .Returns(true);
-
-        // Act
-        var act = () => _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        await act.ShouldThrowAsync<BusinessRuleValidationException>();
-    }
-
-    [Fact]
-    public async Task Handle_WhenSlugIsUnique_ShouldUpdateCategoryAndSaveChanges()
-    {
-        // Arrange
-        var category = new Category("Old Name", "old-slug", "Old description");
-        var command = new UpdateCategoryCommand(1, "Electronics", "electronics", "Electronic devices", true);
-        _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
-            .Returns(category);
-        _repository.CheckSlugExistsAsync(command.Slug, command.Id, Arg.Any<CancellationToken>())
-            .Returns(false);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
+        category.Name.ShouldBe(command.Name);
+        category.Description.ShouldBe(command.Description);
         _repository.Received(1).Update(category);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }

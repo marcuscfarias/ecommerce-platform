@@ -6,11 +6,7 @@ public class UpdateUserRequestValidatorTests
 {
     private readonly UpdateUserRequestValidator _sut = new();
 
-    private static UpdateUserRequest ValidRequest(
-        string firstName = "Jane",
-        string lastName = "Doe",
-        bool isActive = true) =>
-        new(firstName, lastName, isActive);
+    private static UpdateUserRequest ValidRequest(string name = "Jane Doe") => new(name);
 
     [Fact]
     public void Validate_WhenRequestIsValid_ShouldHaveNoErrors()
@@ -26,54 +22,28 @@ public class UpdateUserRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WhenFirstNameIsEmpty_ShouldHaveErrorForFirstName()
+    public void Validate_WhenNameIsEmpty_ShouldHaveErrorForName()
     {
         // Arrange
-        var request = ValidRequest(firstName: "");
+        var request = ValidRequest(name: "");
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "FirstName");
+        result.Errors.ShouldContain(e => e.PropertyName == "Name");
     }
 
     [Fact]
-    public void Validate_WhenFirstNameExceedsMaximumLength_ShouldHaveErrorForFirstName()
+    public void Validate_WhenNameExceedsMaximumLength_ShouldHaveErrorForName()
     {
         // Arrange
-        var request = ValidRequest(firstName: new string('a', 101));
+        var request = ValidRequest(name: new string('a', 201));
 
         // Act
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "FirstName");
-    }
-
-    [Fact]
-    public void Validate_WhenLastNameIsEmpty_ShouldHaveErrorForLastName()
-    {
-        // Arrange
-        var request = ValidRequest(lastName: "");
-
-        // Act
-        var result = _sut.Validate(request);
-
-        // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "LastName");
-    }
-
-    [Fact]
-    public void Validate_WhenLastNameExceedsMaximumLength_ShouldHaveErrorForLastName()
-    {
-        // Arrange
-        var request = ValidRequest(lastName: new string('a', 101));
-
-        // Act
-        var result = _sut.Validate(request);
-
-        // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "LastName");
+        result.Errors.ShouldContain(e => e.PropertyName == "Name");
     }
 }

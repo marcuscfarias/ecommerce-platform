@@ -1,7 +1,6 @@
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
@@ -16,7 +15,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new Category("Electronics", "electronics", null);
+        var seeded = new Category("Electronics", null);
         await SeedAsync(db =>
         {
             db.Categories.Add(seeded);
@@ -25,9 +24,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         var request = new
         {
             name = "Consumer Electronics",
-            slug = "consumer-electronics",
-            description = "Updated description text",
-            isActive = true
+            description = "Updated description text"
         };
 
         // Act
@@ -38,12 +35,12 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
     }
 
     [Fact]
-    public async Task Put_WhenRequestIsInvalid_ShouldReturn400WithValidationProblemDetails()
+    public async Task Put_WhenNameIsEmpty_ShouldReturn400WithValidationProblemDetails()
     {
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new Category("Electronics", "electronics", null);
+        var seeded = new Category("Electronics", null);
         await SeedAsync(db =>
         {
             db.Categories.Add(seeded);
@@ -51,10 +48,8 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         });
         var request = new
         {
-            name = "Valid Name",
-            slug = "",
-            description = (string?)null,
-            isActive = true
+            name = "",
+            description = (string?)null
         };
 
         // Act
@@ -70,6 +65,36 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
     }
 
     [Fact]
+    public async Task Put_WhenDescriptionIsTooShort_ShouldReturn400WithValidationProblemDetails()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var seeded = new Category("Electronics", null);
+        await SeedAsync(db =>
+        {
+            db.Categories.Add(seeded);
+            return Task.CompletedTask;
+        });
+        var request = new
+        {
+            name = "Electronics",
+            description = "short"
+        };
+
+        // Act
+        var response = await Client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        body.ShouldNotBeNull();
+        body.Errors.ShouldContainKey("Description");
+    }
+
+    [Fact]
     public async Task Put_WhenIdDoesNotExist_ShouldReturn404WithProblemDetails()
     {
         await ResetDatabaseAsync();
@@ -78,9 +103,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         var request = new
         {
             name = "Electronics",
-            slug = "electronics",
-            description = (string?)null,
-            isActive = true
+            description = (string?)null
         };
 
         // Act
@@ -88,39 +111,6 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        body.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public async Task Put_WhenSlugBelongsToAnotherCategory_ShouldReturn409WithProblemDetails()
-    {
-        await ResetDatabaseAsync();
-
-        // Arrange
-        var electronics = new Category("Electronics", "electronics", null);
-        var books = new Category("Books", "books", null);
-        await SeedAsync(db =>
-        {
-            db.Categories.Add(electronics);
-            db.Categories.Add(books);
-            return Task.CompletedTask;
-        });
-        var request = new
-        {
-            name = "Books",
-            slug = "electronics",
-            description = (string?)null,
-            isActive = true
-        };
-
-        // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/{books.Id}", request);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
 
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();

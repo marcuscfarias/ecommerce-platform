@@ -15,7 +15,7 @@ public sealed class DeleteCategoryIntegrationTests(CatalogIntegrationFixture fix
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new Category("Electronics", "electronics", null);
+        var seeded = new Category("Electronics", null);
         await SeedAsync(db =>
         {
             db.Categories.Add(seeded);

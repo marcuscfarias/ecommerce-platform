@@ -42,7 +42,7 @@ public class LoginHandlerTests
     {
         // Arrange
         LoginCommand command = new(_faker.Internet.Email(), _faker.Internet.Password());
-        User user = new(command.Email, DummyHash, _faker.Person.FirstName, _faker.Person.LastName,
+        User user = new(command.Email, DummyHash, _faker.Person.FullName,
             isActive: false);
 
         _repository.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>())
@@ -64,7 +64,7 @@ public class LoginHandlerTests
     {
         // Arrange
         LoginCommand command = new(_faker.Internet.Email(), _faker.Internet.Password());
-        User user = new(command.Email, DummyHash, _faker.Person.FirstName, _faker.Person.LastName,
+        User user = new(command.Email, DummyHash, _faker.Person.FullName,
             isActive: true);
 
         _repository.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>())
@@ -86,7 +86,7 @@ public class LoginHandlerTests
     {
         // Arrange
         LoginCommand command = new(_faker.Internet.Email(), _faker.Internet.Password());
-        User user = new(command.Email, DummyHash, _faker.Person.FirstName, _faker.Person.LastName,
+        User user = new(command.Email, DummyHash, _faker.Person.FullName,
             isActive: true);
         JwtAccessToken issuedToken = new(_faker.Random.AlphaNumeric(32), 900);
 

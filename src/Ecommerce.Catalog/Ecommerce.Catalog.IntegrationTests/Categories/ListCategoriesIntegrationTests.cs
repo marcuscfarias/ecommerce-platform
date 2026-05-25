@@ -1,7 +1,6 @@
 using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
@@ -18,9 +17,9 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         // Arrange
         await SeedAsync(db =>
         {
-            db.Categories.Add(new Category("Electronics", "electronics", null));
-            db.Categories.Add(new Category("Books", "books", null));
-            db.Categories.Add(new Category("Clothing", "clothing", null));
+            db.Categories.Add(new Category("Electronics", null));
+            db.Categories.Add(new Category("Books", null));
+            db.Categories.Add(new Category("Clothing", null));
             return Task.CompletedTask;
         });
 
@@ -40,7 +39,6 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         var first = body.Data[0];
         first.Id.ShouldBeGreaterThan(0);
         first.Name.ShouldNotBeNullOrWhiteSpace();
-        first.Slug.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -51,9 +49,9 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         // Arrange
         await SeedAsync(db =>
         {
-            db.Categories.Add(new Category("Electronics", "electronics", null));
-            db.Categories.Add(new Category("Books", "books", null));
-            db.Categories.Add(new Category("Clothing", "clothing", null, isActive: false));
+            db.Categories.Add(new Category("Electronics", null));
+            db.Categories.Add(new Category("Books", null));
+            db.Categories.Add(new Category("Clothing", null, isActive: false));
             return Task.CompletedTask;
         });
 
@@ -86,21 +84,4 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         body.Data.ShouldBeEmpty();
         body.TotalCount.ShouldBe(0);
     }
-
-    // [Fact]
-    // public async Task Get_WhenPageNumberIsInvalid_ShouldReturn400WithValidationProblemDetails()
-    // {
-    //     await ResetDatabaseAsync();
-    //
-    //     // Act
-    //     var response = await Client.GetAsync($"{Endpoint}?pageNumber=0");
-    //
-    //     // Assert
-    //     response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    //     response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-    //
-    //     var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-    //     body.ShouldNotBeNull();
-    //     body.Errors.ShouldNotBeEmpty();
-    // }
 }

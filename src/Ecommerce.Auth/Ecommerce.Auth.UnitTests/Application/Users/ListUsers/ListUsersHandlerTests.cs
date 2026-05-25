@@ -22,8 +22,8 @@ public class ListUsersHandlerTests
         // Arrange
         var users = new List<User>
         {
-            new(_faker.Internet.Email(), "hash", _faker.Name.FirstName(), _faker.Name.LastName()),
-            new(_faker.Internet.Email(), "hash", _faker.Name.FirstName(), _faker.Name.LastName())
+            new(_faker.Internet.Email(), "hash", _faker.Name.FullName()),
+            new(_faker.Internet.Email(), "hash", _faker.Name.FullName())
         };
         var pagedResult = new PagedResult<User>(users, Page: 1, TotalCount: 2, TotalPages: 1);
         var query = new ListUsersQuery(1);
@@ -38,14 +38,10 @@ public class ListUsersHandlerTests
         result.TotalCount.ShouldBe(2);
         result.TotalPages.ShouldBe(1);
 
-        result.Data[0].Email.ShouldBe(users[0].Email);
-        result.Data[0].FirstName.ShouldBe(users[0].FirstName);
-        result.Data[0].LastName.ShouldBe(users[0].LastName);
+        result.Data[0].Name.ShouldBe(users[0].Name);
         result.Data[0].IsActive.ShouldBeTrue();
 
-        result.Data[1].Email.ShouldBe(users[1].Email);
-        result.Data[1].FirstName.ShouldBe(users[1].FirstName);
-        result.Data[1].LastName.ShouldBe(users[1].LastName);
+        result.Data[1].Name.ShouldBe(users[1].Name);
         result.Data[1].IsActive.ShouldBeTrue();
     }
 

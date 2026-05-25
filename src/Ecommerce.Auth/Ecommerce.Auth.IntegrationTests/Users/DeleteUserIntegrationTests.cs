@@ -15,7 +15,7 @@ public sealed class DeleteUserIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new User("jane@example.com", "hash", "Jane", "Doe");
+        var seeded = new User("jane@example.com", "hash", "Jane Doe");
         await SeedAsync(db =>
         {
             db.Users.Add(seeded);

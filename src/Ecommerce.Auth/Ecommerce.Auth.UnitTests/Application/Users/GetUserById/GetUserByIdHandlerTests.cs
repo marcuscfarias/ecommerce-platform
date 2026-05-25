@@ -34,7 +34,7 @@ public class GetUserByIdHandlerTests
     public async Task Handle_WhenUserExists_ShouldReturnMappedResult()
     {
         // Arrange
-        var user = new User("jane@example.com", "hash", "Jane", "Doe");
+        var user = new User("jane@example.com", "hash", "Jane Doe");
         var query = new GetUserByIdQuery(1);
         _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
 
@@ -42,7 +42,7 @@ public class GetUserByIdHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        var expected = new GetUserByIdResult(user.Id, user.Email, user.FirstName, user.LastName, user.IsActive);
+        var expected = new GetUserByIdResult(user.Id, user.Email, user.Name, user.IsActive);
         result.ShouldBe(expected);
     }
 }

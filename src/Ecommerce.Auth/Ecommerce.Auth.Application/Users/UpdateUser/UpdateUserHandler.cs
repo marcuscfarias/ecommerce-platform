@@ -12,7 +12,7 @@ internal sealed class UpdateUserHandler(IAuthRepository repository)
         var user = await repository.GetByIdAsync(command.Id, cancellationToken) ??
                    throw new ResourceNotFoundException("User", command.Id);
 
-        user.UpdateProfile(command.FirstName, command.LastName, command.IsActive);
+        user.UpdateProfile(command.Name);
 
         await repository.SaveChangesAsync(cancellationToken);
     }

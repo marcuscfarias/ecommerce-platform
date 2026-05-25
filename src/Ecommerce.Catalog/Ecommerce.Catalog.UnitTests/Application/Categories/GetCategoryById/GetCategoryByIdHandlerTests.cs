@@ -35,7 +35,7 @@ public class GetCategoryByIdHandlerTests
     public async Task Handle_WhenCategoryExists_ShouldReturnMappedResult()
     {
         // Arrange
-        var category = new Category("Electronics", "electronics", "Electronic devices");
+        var category = new Category("Electronics", "Electronic devices");
         var query = new GetCategoryByIdQuery(1);
         _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>())
             .Returns(category);
@@ -44,7 +44,7 @@ public class GetCategoryByIdHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        var expected = new GetCategoryByIdResult(category.Id, category.Name, category.Slug, category.Description, category.IsActive);
+        var expected = new GetCategoryByIdResult(category.Id, category.Name, category.Description, category.IsActive);
         result.ShouldBe(expected);
     }
 }

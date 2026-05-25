@@ -10,7 +10,7 @@ public sealed record ListCategoriesResponse(
 {
     internal static ListCategoriesResponse FromResult(ListCategoriesResult result) =>
         new(result.Data.Select(i => new ListCategoriesItemResponse(
-            i.Id, i.Name, i.Slug, i.Description, i.IsActive)).ToList(),
+            i.Id, i.Name, i.IsActive)).ToList(),
             result.Page,
             result.TotalCount,
             result.TotalPages);
@@ -19,6 +19,4 @@ public sealed record ListCategoriesResponse(
 public sealed record ListCategoriesItemResponse(
     int Id,
     string Name,
-    string Slug,
-    string? Description,
     bool IsActive);

@@ -22,8 +22,7 @@ public class CreateUserHandlerTests
     public async Task Handle_WhenEmailIsUnique_ShouldCreateUserWithHashedPassword()
     {
         // Arrange
-        var command = new CreateUserCommand(_faker.Internet.Email(), _faker.Internet.Password(),
-            _faker.Name.FirstName(), _faker.Name.LastName());
+        var command = new CreateUserCommand(_faker.Internet.Email(), _faker.Internet.Password(), _faker.Name.FullName());
         _repository.CheckEmailExistsAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns(false);
         _passwordHasher.Hash(command.Password).Returns("hashed-password");
@@ -41,8 +40,7 @@ public class CreateUserHandlerTests
     public async Task Handle_WhenEmailAlreadyExists_ShouldThrowBusinessRuleValidationException()
     {
         // Arrange
-        var command = new CreateUserCommand("user@example.com", "Str0ngPass",
-            "Jane", "Doe");
+        var command = new CreateUserCommand(_faker.Internet.Email(), _faker.Internet.Password(), _faker.Name.FullName());
         _repository.CheckEmailExistsAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns(true);
 
