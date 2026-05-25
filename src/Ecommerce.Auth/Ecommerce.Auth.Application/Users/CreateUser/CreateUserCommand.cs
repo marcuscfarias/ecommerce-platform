@@ -5,5 +5,4 @@ namespace Ecommerce.Auth.Application.Users.CreateUser;
 public sealed record CreateUserCommand(
     string Email,
     string Password,
-    string FirstName,
-    string LastName) : ICommand<int>;
+    string Name) : ICommand<int>;

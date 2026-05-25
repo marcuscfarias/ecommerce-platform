@@ -10,7 +10,7 @@ public sealed record ListUsersResponse(
 {
     internal static ListUsersResponse FromResult(ListUsersResult result) =>
         new(result.Data.Select(u => new ListUsersItemResponse(
-            u.Id, u.Email, u.FirstName, u.LastName, u.IsActive)).ToList(),
+            u.Id, u.Name, u.IsActive)).ToList(),
             result.Page,
             result.TotalCount,
             result.TotalPages);
@@ -18,7 +18,5 @@ public sealed record ListUsersResponse(
 
 public sealed record ListUsersItemResponse(
     int Id,
-    string Email,
-    string FirstName,
-    string LastName,
+    string Name,
     bool IsActive);

@@ -32,10 +32,10 @@ public class DeleteUserHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenUserExists_ShouldRemoveAndSave()
+    public async Task Handle_WhenUserExists_ShouldDeactivateAndSave()
     {
         // Arrange
-        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FirstName(), _faker.Name.LastName());
+        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FullName());
         var command = new DeleteUserCommand(1);
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(user);
 
@@ -43,7 +43,8 @@ public class DeleteUserHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        _repository.Received(1).Remove(user);
+        user.IsActive.ShouldBeFalse();
+        _repository.Received(1).Update(user);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

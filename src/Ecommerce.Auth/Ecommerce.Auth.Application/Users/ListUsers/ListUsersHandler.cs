@@ -11,7 +11,7 @@ internal sealed class ListUsersHandler(IAuthRepository repository)
         var result = await repository.GetAllAsync(query.PageNumber, cancellationToken);
 
         var items = result.Data
-            .Select(u => new ListUsersItemResult(u.Id, u.Email, u.FirstName, u.LastName, u.IsActive))
+            .Select(u => new ListUsersItemResult(u.Id, u.Name, u.IsActive))
             .ToList();
 
         return new ListUsersResult(items, result.Page, result.TotalCount, result.TotalPages);

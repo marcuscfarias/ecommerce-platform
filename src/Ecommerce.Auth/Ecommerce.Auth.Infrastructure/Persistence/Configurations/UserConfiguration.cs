@@ -23,17 +23,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(UserConsts.PasswordHashMaxLength);
 
-        builder.Property(u => u.SecurityStamp)
+        builder.Property(u => u.Name)
             .IsRequired()
-            .HasMaxLength(UserConsts.SecurityStampMaxLength);
-
-        builder.Property(u => u.FirstName)
-            .IsRequired()
-            .HasMaxLength(UserConsts.FirstNameMaxLength);
-
-        builder.Property(u => u.LastName)
-            .IsRequired()
-            .HasMaxLength(UserConsts.LastNameMaxLength);
+            .HasMaxLength(UserConsts.NameMaxLength);
 
         builder.Property(u => u.IsActive)
             .IsRequired();

@@ -17,9 +17,9 @@ public sealed class ListUsersIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange
         await SeedAsync(db =>
         {
-            db.Users.Add(new User("alice@example.com", "hash", "Alice", "Smith"));
-            db.Users.Add(new User("bob@example.com", "hash", "Bob", "Jones"));
-            db.Users.Add(new User("carol@example.com", "hash", "Carol", "White"));
+            db.Users.Add(new User("alice@example.com", "hash", "Alice Smith"));
+            db.Users.Add(new User("bob@example.com", "hash", "Bob Jones"));
+            db.Users.Add(new User("carol@example.com", "hash", "Carol White"));
             return Task.CompletedTask;
         });
 
@@ -38,7 +38,7 @@ public sealed class ListUsersIntegrationTests(AuthIntegrationFixture fixture)
 
         var first = body.Data[0];
         first.Id.ShouldBeGreaterThan(0);
-        first.Email.ShouldNotBeNullOrWhiteSpace();
+        first.Name.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]

@@ -21,8 +21,7 @@ internal sealed class CreateUserHandler(
         var user = new User(
             command.Email,
             passwordHash,
-            command.FirstName,
-            command.LastName);
+            command.Name);
 
         repository.Add(user);
         await repository.SaveChangesAsync(cancellationToken);

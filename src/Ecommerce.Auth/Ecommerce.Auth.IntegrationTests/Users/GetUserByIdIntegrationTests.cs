@@ -16,7 +16,7 @@ public sealed class GetUserByIdIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Arrange
-        var seeded = new User("jane@example.com", "hash", "Jane", "Doe");
+        var seeded = new User("jane@example.com", "hash", "Jane Doe");
         await SeedAsync(db =>
         {
             db.Users.Add(seeded);
@@ -33,8 +33,7 @@ public sealed class GetUserByIdIntegrationTests(AuthIntegrationFixture fixture)
         body.ShouldNotBeNull();
         body.Id.ShouldBe(seeded.Id);
         body.Email.ShouldBe("jane@example.com");
-        body.FirstName.ShouldBe("Jane");
-        body.LastName.ShouldBe("Doe");
+        body.Name.ShouldBe("Jane Doe");
         body.IsActive.ShouldBeTrue();
     }
 

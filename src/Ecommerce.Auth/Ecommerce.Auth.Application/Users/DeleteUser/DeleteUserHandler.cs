@@ -12,7 +12,8 @@ internal sealed class DeleteUserHandler(IAuthRepository repository)
         var user = await repository.GetByIdAsync(command.Id, cancellationToken) ??
                    throw new ResourceNotFoundException("User", command.Id);
 
-        repository.Remove(user);
+        user.Deactivate();
+        repository.Update(user);
         await repository.SaveChangesAsync(cancellationToken);
     }
 }

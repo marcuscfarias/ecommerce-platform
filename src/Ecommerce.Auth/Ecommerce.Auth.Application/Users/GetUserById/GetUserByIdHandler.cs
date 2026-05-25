@@ -15,8 +15,7 @@ internal sealed class GetUserByIdHandler(IAuthRepository repository)
         return new GetUserByIdResult(
             user.Id,
             user.Email,
-            user.FirstName,
-            user.LastName,
+            user.Name,
             user.IsActive);
     }
 }

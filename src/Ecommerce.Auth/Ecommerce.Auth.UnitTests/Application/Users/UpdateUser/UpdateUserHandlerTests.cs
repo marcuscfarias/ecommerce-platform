@@ -21,7 +21,7 @@ public class UpdateUserHandlerTests
     {
         // Arrange
         User? user = null;
-        var command = new UpdateUserCommand(1, _faker.Name.FirstName(), _faker.Name.LastName(), true);
+        var command = new UpdateUserCommand(1, _faker.Name.FullName());
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act
@@ -32,20 +32,18 @@ public class UpdateUserHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenUserExists_ShouldUpdateProfileAndSave()
+    public async Task Handle_WhenUserExists_ShouldUpdateNameAndSave()
     {
         // Arrange
-        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FirstName(), _faker.Name.LastName());
-        var command = new UpdateUserCommand(1, _faker.Name.FirstName(), _faker.Name.LastName(), false);
+        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FullName());
+        var command = new UpdateUserCommand(1, _faker.Name.FullName());
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        user.FirstName.ShouldBe(command.FirstName);
-        user.LastName.ShouldBe(command.LastName);
-        user.IsActive.ShouldBeFalse();
+        user.Name.ShouldBe(command.Name);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

@@ -6,25 +6,22 @@ public class UserTests
 {
     private readonly Faker _faker = new();
 
-
     [Fact]
     public void Constructor_WithAllParameters_ShouldSetAllProperties()
     {
         // Arrange
-        var email = "user@example.com";
-        var passwordHash = "hashed-password";
-        var firstName = "John";
-        var lastName = "Doe";
+        var email = _faker.Internet.Email();
+        var passwordHash = _faker.Random.AlphaNumeric(60);
+        var name = _faker.Name.FullName();
         var isActive = true;
 
         // Act
-        var user = new User(email, passwordHash, firstName, lastName, isActive);
+        var user = new User(email, passwordHash, name, isActive);
 
         // Assert
         user.Email.ShouldBe(email);
         user.PasswordHash.ShouldBe(passwordHash);
-        user.FirstName.ShouldBe(firstName);
-        user.LastName.ShouldBe(lastName);
+        user.Name.ShouldBe(name);
         user.IsActive.ShouldBeTrue();
     }
 
@@ -32,7 +29,7 @@ public class UserTests
     public void Constructor_WithIsActiveFalse_ShouldSetIsActiveFalse()
     {
         // Arrange & Act
-        var user = new User("user@example.com", "hashed-password", "John", "Doe", isActive: false);
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName(), isActive: false);
 
         // Assert
         user.IsActive.ShouldBeFalse();
@@ -41,55 +38,25 @@ public class UserTests
     [Fact]
     public void Constructor_WithoutIsActive_ShouldDefaultToTrue()
     {
-        // Arrange
-        var email = "user@example.com";
-        var passwordHash = "hashed-password";
-        var firstName = "John";
-        var lastName = "Doe";
-
-        // Act
-        var user = new User(email, passwordHash, firstName, lastName);
+        // Arrange & Act
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
 
         // Assert
         user.IsActive.ShouldBeTrue();
     }
 
     [Fact]
-    public void Constructor_ShouldGenerateNonEmptySecurityStamp()
-    {
-        // Arrange & Act
-        var user = new User("user@example.com", "hash", "John", "Doe");
-
-        // Assert
-        user.SecurityStamp.ShouldNotBeNullOrWhiteSpace();
-    }
-
-    [Fact]
-    public void Constructor_ShouldGenerateUniqueSecurityStampPerInstance()
-    {
-        // Arrange & Act
-        var first = new User("a@example.com", "hash", "John", "Doe");
-        var second = new User("b@example.com", "hash", "Jane", "Doe");
-
-        // Assert
-        first.SecurityStamp.ShouldNotBe(second.SecurityStamp);
-    }
-
-    [Fact]
-    public void UpdateProfile_WhenCalled_ShouldUpdateFirstNameLastNameAndIsActive()
+    public void UpdateProfile_WhenCalled_ShouldUpdateName()
     {
         // Arrange
-        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FirstName(), _faker.Name.LastName());
-        var newFirstName = _faker.Name.FirstName();
-        var newLastName = _faker.Name.LastName();
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var newName = _faker.Name.FullName();
 
         // Act
-        user.UpdateProfile(newFirstName, newLastName, isActive: false);
+        user.UpdateProfile(newName);
 
         // Assert
-        user.FirstName.ShouldBe(newFirstName);
-        user.LastName.ShouldBe(newLastName);
-        user.IsActive.ShouldBeFalse();
+        user.Name.ShouldBe(newName);
     }
 
     [Fact]
@@ -97,15 +64,27 @@ public class UserTests
     {
         // Arrange
         var email = _faker.Internet.Email();
-        var passwordHash = _faker.Internet.Password();
-        var user = new User(email, passwordHash, _faker.Name.FirstName(), _faker.Name.LastName());
+        var passwordHash = _faker.Random.AlphaNumeric(60);
+        var user = new User(email, passwordHash, _faker.Name.FullName());
 
         // Act
-        user.UpdateProfile(_faker.Name.FirstName(), _faker.Name.LastName(), isActive: true);
+        user.UpdateProfile(_faker.Name.FullName());
 
         // Assert
         user.Email.ShouldBe(email);
         user.PasswordHash.ShouldBe(passwordHash);
     }
 
+    [Fact]
+    public void Deactivate_ShouldSetIsActiveToFalse()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+
+        // Act
+        user.Deactivate();
+
+        // Assert
+        user.IsActive.ShouldBeFalse();
+    }
 }

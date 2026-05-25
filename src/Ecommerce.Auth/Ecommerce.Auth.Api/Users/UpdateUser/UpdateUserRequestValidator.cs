@@ -7,12 +7,8 @@ internal sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserR
 {
     public UpdateUserRequestValidator()
     {
-        RuleFor(x => x.FirstName)
+        RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(UserConsts.FirstNameMaxLength);
-
-        RuleFor(x => x.LastName)
-            .NotEmpty()
-            .MaximumLength(UserConsts.LastNameMaxLength);
+            .MaximumLength(UserConsts.NameMaxLength);
     }
 }
