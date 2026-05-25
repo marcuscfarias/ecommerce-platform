@@ -86,24 +86,25 @@ module.
 
 <div align="center">
 
-| Id |         Module         |          Feature          |     Status     |
-|:--:|:----------------------:|:-------------------------:|:--------------:|
-| 1  |        Catalog         |    Category Management    |    🟢 Done     |
-| 2  |        Catalog         |    Product Management     |    🔴 To do    |
-| 3  |          Auth          |             —             | 🟡 In progress |
-| 5  |         Orders         |             —             |    🔴 To do    |
-| 6  |        Shipping        |             —             |    🔴 To do    |
-| 7  | Payment (Microservice) |             —             |    🔴 To do    |
-| 8  |     Notifications      |             —             |    🔴 To do    |
-| 9  |     Cross-cutting      |    Request Validation     |    🟢 Done     |
-| 10 |     Cross-cutting      | Global Exception Handling |    🟢 Done     |
-| 11 |     Cross-cutting      |     API Documentation     |    🟢 Done     |
-| 12 |     Cross-cutting      |  CI/CD (GitHub Actions)   | 🟡 In progress |
-| 13 |     Cross-cutting      | Deployment & Environments |    🔴 To do    |
-| 14 |     Cross-cutting      |       Observability       |    🔴 To do    |
-| 15 |     Cross-cutting      |       Rate Limiting       |    🔴 To do    |
-| 16 |     Cross-cutting      |  Domain Validation Rules  |    🔴 To do    |
-| 17 |     Cross-cutting      |     Integration Tests     |    🟢 Done     |
+| Id |         Module         |               Feature               |     Status     |
+|:--:|:----------------------:|:-----------------------------------:|:--------------:|
+| 1  |        Catalog         |         Category Management         |    🟢 Done     |
+| 2  |          Auth          |           User Management           |    🟢 Done     |
+| 3  |          Auth          |   Authentication & Authorization    | 🟡 In progress |
+| 4  |        Catalog         |         Product Management          |    🔴 To do    |
+| 5  |         Orders         |                  —                  |    🔴 To do    |
+| 6  |        Shipping        |                  —                  |    🔴 To do    |
+| 7  | Payment (Microservice) |                  —                  |    🔴 To do    |
+| 8  |     Notifications      |                  —                  |    🔴 To do    |
+| 9  |     Cross-cutting      |         Request Validation          |    🟢 Done     |
+| 10 |     Cross-cutting      |      Global Exception Handling      |    🟢 Done     |
+| 11 |     Cross-cutting      |          API Documentation          |    🟢 Done     |
+| 12 |     Cross-cutting      |       CI/CD (GitHub Actions)        | 🟡 In progress |
+| 13 |     Cross-cutting      |      Deployment & Environments      |    🔴 To do    |
+| 14 |     Cross-cutting      |            Observability            |    🔴 To do    |
+| 15 |     Cross-cutting      |            Rate Limiting            |    🔴 To do    |
+| 16 |     Cross-cutting      |       Domain Validation Rules       |    🔴 To do    |
+| 17 |     Cross-cutting      | Integration Tests (Test Containers) |    🟢 Done     |
 
 </div>
 
