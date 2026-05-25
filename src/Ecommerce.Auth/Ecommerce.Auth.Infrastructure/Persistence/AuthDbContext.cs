@@ -9,6 +9,7 @@ internal sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : D
     internal const string Schema = "auth";
 
     public DbSet<User> Users { get; init; }
+    public DbSet<Role> Roles { get; init; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
