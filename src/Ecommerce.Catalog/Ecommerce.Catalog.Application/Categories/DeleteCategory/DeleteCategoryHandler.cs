@@ -12,7 +12,8 @@ internal sealed class DeleteCategoryHandler(ICatalogRepository repository)
         var category = await repository.GetByIdAsync(command.Id, cancellationToken) ??
                        throw new ResourceNotFoundException("Category", command.Id);
 
-        repository.Remove(category);
+        category.Deactivate();
+        repository.Update(category);
         await repository.SaveChangesAsync(cancellationToken);
     }
 }

@@ -15,7 +15,6 @@ internal sealed class GetCategoryByIdHandler(ICatalogRepository repository)
         return new GetCategoryByIdResult(
             category.Id,
             category.Name,
-            category.Slug,
             category.Description,
             category.IsActive);
     }

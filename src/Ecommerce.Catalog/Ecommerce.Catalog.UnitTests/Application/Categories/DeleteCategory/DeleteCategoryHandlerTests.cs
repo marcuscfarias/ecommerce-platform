@@ -32,10 +32,10 @@ public class DeleteCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenCommandIsValid_ShouldRemoveCategoryAndSaveChanges()
+    public async Task Handle_WhenCommandIsValid_ShouldDeactivateCategoryAndSaveChanges()
     {
         // Arrange
-        var category = new Category("Electronics", "electronics", null);
+        var category = new Category("Electronics", null);
         var command = new DeleteCategoryCommand(1);
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(category);
@@ -44,7 +44,8 @@ public class DeleteCategoryHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        _repository.Received(1).Remove(category);
+        category.IsActive.ShouldBeFalse();
+        _repository.Received(1).Update(category);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

@@ -15,8 +15,7 @@ internal sealed class ListCategoriesHandler(ICatalogRepository repository)
             cancellationToken);
 
         var items = result.Data
-            .Select(c => new ListCategoriesItemResult(
-                c.Id, c.Name, c.Slug, c.Description, c.IsActive))
+            .Select(c => new ListCategoriesItemResult(c.Id, c.Name, c.IsActive))
             .ToList();
 
         return new ListCategoriesResult(items, result.Page, result.TotalCount, result.TotalPages);

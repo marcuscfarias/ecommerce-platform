@@ -1,7 +1,5 @@
-using Ecommerce.Catalog.Application.Categories.Rules;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Kernel.Domain.BusinessRules;
 using MediatR;
 
 namespace Ecommerce.Catalog.Application.Categories.CreateCategory;
@@ -10,10 +8,7 @@ internal sealed class CreateCategoryHandler(ICatalogRepository repository) : IRe
 {
     public async Task<int> Handle(CreateCategoryCommand command, CancellationToken cancellationToken)
     {
-        var slugExists = await repository.CheckSlugExistsAsync(command.Slug, cancellationToken);
-        BusinessRule.Validate(new CategorySlugMustBeUniqueRule(slugExists));
-
-        var category = new Category(command.Name, command.Slug, command.Description);
+        var category = new Category(command.Name, command.Description);
 
         repository.Add(category);
         await repository.SaveChangesAsync(cancellationToken);

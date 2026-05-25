@@ -1,8 +1,6 @@
 using Ecommerce.Catalog.Application.Categories.CreateCategory;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
-using Ecommerce.Kernel.Domain.BusinessRules;
-using Ecommerce.Kernel.Domain.Exceptions;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Categories.CreateCategory;
 
@@ -17,12 +15,10 @@ public class CreateCategoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenSlugIsUnique_ShouldAddCategoryAndSaveChanges()
+    public async Task Handle_ValidCommand_ShouldAddCategoryAndSaveChanges()
     {
         // Arrange
-        var command = new CreateCategoryCommand("Electronics", "electronics", "Electronic devices");
-        _repository.CheckSlugExistsAsync(command.Slug, Arg.Any<CancellationToken>())
-            .Returns(false);
+        var command = new CreateCategoryCommand("Electronics", "Electronic devices");
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -30,20 +26,5 @@ public class CreateCategoryHandlerTests
         // Assert
         _repository.Received(1).Add(Arg.Any<Category>());
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_WhenSlugAlreadyExists_ShouldThrowBusinessRuleValidationException()
-    {
-        // Arrange
-        var command = new CreateCategoryCommand("Electronics", "electronics", null);
-        _repository.CheckSlugExistsAsync(command.Slug, Arg.Any<CancellationToken>())
-            .Returns(true);
-
-        // Act
-        var act = () => _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        await act.ShouldThrowAsync<BusinessRuleValidationException>();
     }
 }

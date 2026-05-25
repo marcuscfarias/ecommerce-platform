@@ -1,4 +1,3 @@
-using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +17,6 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         var request = new
         {
             name = "Electronics",
-            slug = "electronics",
             description = "Electronic devices and accessories"
         };
 
@@ -28,22 +26,22 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         response.Headers.Location.ShouldNotBeNull();
-        
+
         var location = response.Headers.Location!.ToString();
         location.ShouldContain("/api/v1/categories/");
-        
+
         var idSegment = location[(location.LastIndexOf('/') + 1)..];
         int.TryParse(idSegment, out var id).ShouldBeTrue();
         id.ShouldBeGreaterThan(0);
     }
 
     [Fact]
-    public async Task Post_WhenRequestIsInvalid_ShouldReturn400WithValidationProblemDetails()
+    public async Task Post_WhenNameIsEmpty_ShouldReturn400WithValidationProblemDetails()
     {
         await ResetDatabaseAsync();
 
         // Arrange
-        var request = new { name = "Valid Name", slug = "", description = (string?)null };
+        var request = new { name = "", description = (string?)null };
 
         // Act
         var response = await Client.PostAsJsonAsync(Endpoint, request);
@@ -51,33 +49,29 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-        
+
         var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         body.ShouldNotBeNull();
         body.Errors.ShouldNotBeEmpty();
     }
 
     [Fact]
-    public async Task Post_WhenSlugAlreadyExists_ShouldReturn409WithProblemDetails()
+    public async Task Post_WhenDescriptionIsTooShort_ShouldReturn400WithValidationProblemDetails()
     {
         await ResetDatabaseAsync();
 
         // Arrange
-        await SeedAsync(db =>
-        {
-            db.Categories.Add(new Category("Electronics", "electronics", null));
-            return Task.CompletedTask;
-        });
-        var duplicate = new { name = "Other Name", slug = "electronics", description = (string?)null };
+        var request = new { name = "Electronics", description = "short" };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, duplicate);
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-        
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         body.ShouldNotBeNull();
+        body.Errors.ShouldContainKey("Description");
     }
 }
