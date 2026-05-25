@@ -87,4 +87,34 @@ public class UserTests
         // Assert
         user.IsActive.ShouldBeFalse();
     }
+
+    [Fact]
+    public void AssignRole_WhenRoleNotAssigned_ShouldAddRole()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var role = new Role(_faker.Random.Word());
+
+        // Act
+        user.AssignRole(role);
+
+        // Assert
+        user.Roles.Count.ShouldBe(1);
+        user.Roles.ShouldContain(role);
+    }
+
+    [Fact]
+    public void AssignRole_WhenRoleDuplicated_ShouldNotAddTwice()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var role = new Role(_faker.Random.Word());
+
+        // Act
+        user.AssignRole(role);
+        user.AssignRole(role);
+
+        // Assert
+        user.Roles.Count.ShouldBe(1);
+    }
 }
