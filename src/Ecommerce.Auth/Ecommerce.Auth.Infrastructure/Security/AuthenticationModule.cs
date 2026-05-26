@@ -1,4 +1,6 @@
 using System.Text;
+using Ecommerce.Auth.Application.Auth.Authorization;
+using Ecommerce.Auth.Domain.Enums;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +57,18 @@ internal static class AuthenticationModule
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(opts =>
+        {
+            opts.AddPolicy(AuthPolicies.CanManageUsers,
+                p => p.RequireRole(RoleName.Admin.ToString()));
+            opts.AddPolicy(AuthPolicies.CanViewUsers,
+                p => p.RequireRole(RoleName.Admin.ToString(), RoleName.Owner.ToString()));
+            opts.AddPolicy(AuthPolicies.CanManageCatalog,
+                p => p.RequireRole(
+                    RoleName.Admin.ToString(),
+                    RoleName.Owner.ToString(),
+                    RoleName.Manager.ToString()));
+        });
 
         return services;
     }
