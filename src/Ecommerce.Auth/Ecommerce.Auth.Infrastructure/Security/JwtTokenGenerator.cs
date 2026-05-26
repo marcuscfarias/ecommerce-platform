@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Ecommerce.Auth.Application.Auth.Security;
+using Ecommerce.Auth.Domain.Enums;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -20,17 +20,20 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
         _timeProvider = timeProvider;
     }
 
-    public JwtAccessToken Generate(int userId, string email)
+    public JwtAccessToken Generate(int userId, string email, IEnumerable<RoleName> roles)
     {
         var now = _timeProvider.GetUtcNow();
         var expiration = now.AddMinutes(_settings.AccessTokenMinutes);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            new(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
+            new(JwtRegisteredClaimNames.Email, email),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
+
+        foreach (var role in roles)
+            claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
