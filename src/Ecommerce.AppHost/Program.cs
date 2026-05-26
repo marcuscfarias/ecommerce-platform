@@ -20,6 +20,7 @@ internal static class Program
         {
             options.AddFluentValidationRules();
             options.AddDocumentTransformer<RemoveRequiredFromResponseTransformer>();
+            options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
 
         var app = builder.Build();
@@ -27,9 +28,11 @@ internal static class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference( options =>
+            app.MapScalarApiReference(options =>
                 {
-                    options.WithTitle("Ecommerce API Documentation");
+                    options.WithTitle("Ecommerce API Documentation")
+                        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http);
+
                     options.DotNetFlag = true;
                     options.HideModels = true;
                     options.HideClientButton = true;

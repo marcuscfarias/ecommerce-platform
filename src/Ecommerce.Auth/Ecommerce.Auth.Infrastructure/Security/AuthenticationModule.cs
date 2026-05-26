@@ -48,8 +48,7 @@ internal static class AuthenticationModule
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwt.Issuer,
                     ValidAudience = jwt.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwt.SecretKey)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SecretKey)),
                     // ClockSkew zero is deliberate: default 5min tolerance would invalidate
                     // the precision of the 15min access-token TTL.
                     ClockSkew = TimeSpan.Zero,
