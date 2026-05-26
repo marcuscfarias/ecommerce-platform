@@ -14,8 +14,10 @@ public sealed class AuthWebApplicationFactory(DatabaseContainerFixture container
         builder.ConfigureAppConfiguration(cfg =>
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                // Lower bcrypt cost so seeded hashes verify quickly in tests.
                 ["Auth:Password:BcryptWorkFactor"] = "4",
+                ["Auth:AdminSeed:Email"] = TestAdminDefaults.Email,
+                ["Auth:AdminSeed:Password"] = TestAdminDefaults.Password,
+                ["Auth:AdminSeed:Name"] = TestAdminDefaults.Name,
             }));
     }
 }
