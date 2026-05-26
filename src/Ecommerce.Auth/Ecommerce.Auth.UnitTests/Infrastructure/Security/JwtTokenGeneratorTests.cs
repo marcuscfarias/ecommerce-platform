@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Infrastructure.Security;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -21,7 +23,7 @@ public class JwtTokenGeneratorTests
         var sut = CreateSut().Sut;
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         result.ShouldNotBeNull();
@@ -37,7 +39,7 @@ public class JwtTokenGeneratorTests
         var (sut, settings, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         result.ShouldNotBeNull();
@@ -53,7 +55,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -70,7 +72,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -87,7 +89,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -104,8 +106,8 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var first = sut.Generate(userId, email);
-        var second = sut.Generate(userId, email);
+        var first = sut.Generate(userId, email, []);
+        var second = sut.Generate(userId, email, []);
 
         // Assert
         var firstJti = ReadToken(first.Token).Claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
@@ -122,7 +124,7 @@ public class JwtTokenGeneratorTests
         var (sut, settings, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -139,7 +141,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, clock) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -155,7 +157,7 @@ public class JwtTokenGeneratorTests
         var (sut, settings, clock) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -171,7 +173,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -194,12 +196,48 @@ public class JwtTokenGeneratorTests
         };
 
         // Act
-        var result = sut.Generate(userId, email);
+        var result = sut.Generate(userId, email, []);
 
         // Assert
         Should.NotThrow(() => new JwtSecurityTokenHandler().ValidateToken(result.Token, validationParameters, out _));
     }
 
+
+    [Fact]
+    public void Generate_WhenRolesProvided_ShouldIncludeRoleClaimsInToken()
+    {
+        // Arrange
+        var userId = Faker.Random.Int(1, int.MaxValue);
+        var email = Faker.Internet.Email();
+        var (sut, _, _) = CreateSut();
+
+        // Act
+        var result = sut.Generate(userId, email, [RoleName.Admin, RoleName.Manager]);
+
+        // Assert
+        var jwt = ReadToken(result.Token);
+        var roleClaims = jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+        roleClaims.ShouldContain(nameof(RoleName.Admin));
+        roleClaims.ShouldContain(nameof(RoleName.Manager));
+        roleClaims.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Generate_WhenNoRoles_ShouldNotIncludeRoleClaims()
+    {
+        // Arrange
+        var userId = Faker.Random.Int(1, int.MaxValue);
+        var email = Faker.Internet.Email();
+        var (sut, _, _) = CreateSut();
+
+        // Act
+        var result = sut.Generate(userId, email, []);
+
+        // Assert
+        var jwt = ReadToken(result.Token);
+        var roleClaims = jwt.Claims.Where(c => c.Type == ClaimTypes.Role).ToList();
+        roleClaims.ShouldBeEmpty();
+    }
 
     private static (JwtTokenGenerator Sut, JwtSettings Settings, FakeTimeProvider Clock) CreateSut(
         int accessTokenMinutes = 15)
