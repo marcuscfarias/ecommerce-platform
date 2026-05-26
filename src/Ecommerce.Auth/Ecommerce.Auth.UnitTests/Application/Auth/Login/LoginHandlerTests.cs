@@ -2,6 +2,7 @@ using Ecommerce.Auth.Application.Auth.Login;
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Application.Exceptions;
 using Ecommerce.Auth.Domain.Entities;
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 
 namespace Ecommerce.Auth.UnitTests.Application.Auth.Login;
@@ -25,7 +26,7 @@ public class LoginHandlerTests
     {
         // Arrange
         LoginCommand command = new(_faker.Internet.Email(), _faker.Internet.Password());
-        _repository.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>())
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -33,7 +34,7 @@ public class LoginHandlerTests
 
         // Assert
         await act.ShouldThrowAsync<InvalidCredentialsException>();
-        await _repository.Received(1).GetByEmailAsync(command.Email, Arg.Any<CancellationToken>());
+        await _repository.Received(1).GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>());
         _passwordHasher.Received(1).Verify(command.Password, DummyHash);
     }
 
@@ -45,7 +46,7 @@ public class LoginHandlerTests
         User user = new(command.Email, DummyHash, _faker.Person.FullName,
             isActive: false);
 
-        _repository.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>())
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns(user);
         _passwordHasher.Verify(command.Password, user.PasswordHash)
             .Returns(true);
@@ -55,7 +56,7 @@ public class LoginHandlerTests
 
         // Assert
         await act.ShouldThrowAsync<InvalidCredentialsException>();
-        await _repository.Received(1).GetByEmailAsync(command.Email, Arg.Any<CancellationToken>());
+        await _repository.Received(1).GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>());
         _passwordHasher.Received(1).Verify(command.Password, user.PasswordHash);
     }
 
@@ -67,7 +68,7 @@ public class LoginHandlerTests
         User user = new(command.Email, DummyHash, _faker.Person.FullName,
             isActive: true);
 
-        _repository.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>())
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns(user);
         _passwordHasher.Verify(command.Password, user.PasswordHash)
             .Returns(false);
@@ -77,7 +78,7 @@ public class LoginHandlerTests
 
         // Assert
         await act.ShouldThrowAsync<InvalidCredentialsException>();
-        await _repository.Received(1).GetByEmailAsync(command.Email, Arg.Any<CancellationToken>());
+        await _repository.Received(1).GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>());
         _passwordHasher.Received(1).Verify(command.Password, user.PasswordHash);
     }
 
@@ -90,11 +91,11 @@ public class LoginHandlerTests
             isActive: true);
         JwtAccessToken issuedToken = new(_faker.Random.AlphaNumeric(32), 900);
 
-        _repository.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>())
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>())
             .Returns(user);
         _passwordHasher.Verify(command.Password, user.PasswordHash)
             .Returns(true);
-        _jwtTokenGenerator.Generate(user.Id, user.Email)
+        _jwtTokenGenerator.Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>())
             .Returns(issuedToken);
 
         // Act
@@ -104,8 +105,8 @@ public class LoginHandlerTests
         result.AccessToken.ShouldBe(issuedToken.Token);
         result.TokenType.ShouldBe("Bearer");
         result.ExpiresInSeconds.ShouldBe(issuedToken.ExpiresInSeconds);
-        await _repository.Received(1).GetByEmailAsync(command.Email, Arg.Any<CancellationToken>());
+        await _repository.Received(1).GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>());
         _passwordHasher.Received(1).Verify(command.Password, user.PasswordHash);
-        _jwtTokenGenerator.Received(1).Generate(user.Id, user.Email);
+        _jwtTokenGenerator.Received(1).Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>());
     }
 }
