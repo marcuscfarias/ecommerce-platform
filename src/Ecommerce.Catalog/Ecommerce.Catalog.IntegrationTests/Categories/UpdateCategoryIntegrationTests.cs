@@ -1,13 +1,17 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
-public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fixture)
-    : BaseCatalogIntegrationTest(fixture)
+public sealed class UpdateCategoryIntegrationTests : BaseCatalogIntegrationTest
 {
     private const string Endpoint = "/api/v1/categories";
+    private readonly HttpClient _client;
+
+    public UpdateCategoryIntegrationTests(CatalogIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(CatalogPermissions.Manage);
 
     [Fact]
     public async Task Put_WhenRequestIsValid_ShouldReturn204()
@@ -28,7 +32,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -53,7 +57,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -83,7 +87,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -107,7 +111,7 @@ public sealed class UpdateCategoryIntegrationTests(CatalogIntegrationFixture fix
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/999999", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/999999", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);

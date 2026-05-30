@@ -1,9 +1,11 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Categories.CreateCategory;
 using Ecommerce.Catalog.Api.Categories.DeleteCategory;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
 using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Api.Categories.UpdateCategory;
 using Ecommerce.Catalog.Application;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +16,7 @@ namespace Ecommerce.Catalog.Api.Categories;
 public sealed class CategoriesController(ICatalogModule module) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = CatalogPolicies.CanViewCatalog)]
     [EndpointDescription("Returns a paginated list of categories.")]
     [ProducesResponseType<ListCategoriesResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(
@@ -25,6 +28,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
     [EndpointDescription("Creates a new category.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -38,6 +42,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = CatalogPolicies.CanViewCatalog)]
     [EndpointDescription("Returns a category by its ID.")]
     [ProducesResponseType<GetCategoryByIdResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -48,6 +53,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
     [EndpointDescription("Updates an existing category.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -63,6 +69,7 @@ public sealed class CategoriesController(ICatalogModule module) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
     [EndpointDescription("Deletes a category by its ID.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

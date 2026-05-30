@@ -1,13 +1,17 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Categories.ListCategories;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
-public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fixture)
-    : BaseCatalogIntegrationTest(fixture)
+public sealed class ListCategoriesIntegrationTests : BaseCatalogIntegrationTest
 {
     private const string Endpoint = "/api/v1/categories";
+    private readonly HttpClient _client;
+
+    public ListCategoriesIntegrationTests(CatalogIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(CatalogPermissions.View);
 
     [Fact]
     public async Task Get_WhenCategoriesExist_ShouldReturn200WithPagedResponse()
@@ -24,7 +28,7 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         });
 
         // Act
-        var response = await Client.GetAsync(Endpoint);
+        var response = await _client.GetAsync(Endpoint);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -56,7 +60,7 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         });
 
         // Act
-        var response = await Client.GetAsync($"{Endpoint}?isActive=false");
+        var response = await _client.GetAsync($"{Endpoint}?isActive=false");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -74,7 +78,7 @@ public sealed class ListCategoriesIntegrationTests(CatalogIntegrationFixture fix
         await ResetDatabaseAsync();
 
         // Act
-        var response = await Client.GetAsync(Endpoint);
+        var response = await _client.GetAsync(Endpoint);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
