@@ -1,12 +1,16 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
-public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fixture)
-    : BaseCatalogIntegrationTest(fixture)
+public sealed class CreateCategoryIntegrationTests : BaseCatalogIntegrationTest
 {
     private const string Endpoint = "/api/v1/categories";
+    private readonly HttpClient _client;
+
+    public CreateCategoryIntegrationTests(CatalogIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(CatalogPermissions.Manage);
 
     [Fact]
     public async Task Post_WhenRequestIsValid_ShouldReturn201WithLocationHeader()
@@ -21,7 +25,7 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -44,7 +48,7 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         var request = new { name = "", description = (string?)null };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -64,7 +68,7 @@ public sealed class CreateCategoryIntegrationTests(CatalogIntegrationFixture fix
         var request = new { name = "Electronics", description = "short" };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

@@ -1,3 +1,4 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Categories.GetCategoryById;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
@@ -5,10 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
-public sealed class GetCategoryByIdIntegrationTests(CatalogIntegrationFixture fixture)
-    : BaseCatalogIntegrationTest(fixture)
+public sealed class GetCategoryByIdIntegrationTests : BaseCatalogIntegrationTest
 {
     private const string Endpoint = "/api/v1/categories";
+    private readonly HttpClient _client;
+
+    public GetCategoryByIdIntegrationTests(CatalogIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(CatalogPermissions.View);
 
     [Fact]
     public async Task Get_WhenIdExists_ShouldReturn200WithCategory()
@@ -24,7 +28,7 @@ public sealed class GetCategoryByIdIntegrationTests(CatalogIntegrationFixture fi
         });
 
         // Act
-        var response = await Client.GetAsync($"{Endpoint}/{seeded.Id}");
+        var response = await _client.GetAsync($"{Endpoint}/{seeded.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -43,7 +47,7 @@ public sealed class GetCategoryByIdIntegrationTests(CatalogIntegrationFixture fi
         await ResetDatabaseAsync();
 
         // Act
-        var response = await Client.GetAsync($"{Endpoint}/999999");
+        var response = await _client.GetAsync($"{Endpoint}/999999");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);

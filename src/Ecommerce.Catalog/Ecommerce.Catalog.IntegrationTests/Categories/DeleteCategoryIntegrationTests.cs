@@ -1,13 +1,17 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Catalog.IntegrationTests.Categories;
 
-public sealed class DeleteCategoryIntegrationTests(CatalogIntegrationFixture fixture)
-    : BaseCatalogIntegrationTest(fixture)
+public sealed class DeleteCategoryIntegrationTests : BaseCatalogIntegrationTest
 {
     private const string Endpoint = "/api/v1/categories";
+    private readonly HttpClient _client;
+
+    public DeleteCategoryIntegrationTests(CatalogIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(CatalogPermissions.Manage);
 
     [Fact]
     public async Task Delete_WhenIdExists_ShouldReturn204()
@@ -23,7 +27,7 @@ public sealed class DeleteCategoryIntegrationTests(CatalogIntegrationFixture fix
         });
 
         // Act
-        var response = await Client.DeleteAsync($"{Endpoint}/{seeded.Id}");
+        var response = await _client.DeleteAsync($"{Endpoint}/{seeded.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -35,7 +39,7 @@ public sealed class DeleteCategoryIntegrationTests(CatalogIntegrationFixture fix
         await ResetDatabaseAsync();
 
         // Act
-        var response = await Client.DeleteAsync($"{Endpoint}/999999");
+        var response = await _client.DeleteAsync($"{Endpoint}/999999");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
