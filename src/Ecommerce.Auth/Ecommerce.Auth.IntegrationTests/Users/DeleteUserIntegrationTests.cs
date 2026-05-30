@@ -1,13 +1,17 @@
+using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Auth.IntegrationTests.Users;
 
-public sealed class DeleteUserIntegrationTests(AuthIntegrationFixture fixture)
-    : BaseAuthIntegrationTest(fixture)
+public sealed class DeleteUserIntegrationTests : BaseAuthIntegrationTest
 {
     private const string Endpoint = "/api/v1/users";
+    private readonly HttpClient _client;
+
+    public DeleteUserIntegrationTests(AuthIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(AuthPermissions.ManageUsers);
 
     [Fact]
     public async Task Delete_WhenUserExists_ShouldReturn204()
@@ -23,7 +27,7 @@ public sealed class DeleteUserIntegrationTests(AuthIntegrationFixture fixture)
         });
 
         // Act
-        var response = await Client.DeleteAsync($"{Endpoint}/{seeded.Id}");
+        var response = await _client.DeleteAsync($"{Endpoint}/{seeded.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -35,7 +39,7 @@ public sealed class DeleteUserIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Act
-        var response = await Client.DeleteAsync($"{Endpoint}/999999");
+        var response = await _client.DeleteAsync($"{Endpoint}/999999");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);

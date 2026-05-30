@@ -1,13 +1,17 @@
+using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Auth.IntegrationTests.Users;
 
-public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
-    : BaseAuthIntegrationTest(fixture)
+public sealed class UpdateUserIntegrationTests : BaseAuthIntegrationTest
 {
     private const string Endpoint = "/api/v1/users";
+    private readonly HttpClient _client;
+
+    public UpdateUserIntegrationTests(AuthIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(AuthPermissions.ManageUsers);
 
     [Fact]
     public async Task Put_WhenUserExists_ShouldReturn204()
@@ -24,7 +28,7 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
         var request = new { name = "Janet Smith" };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/{seeded.Id}", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -39,7 +43,7 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
         var request = new { name = "Janet Smith" };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/999999", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/999999", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -58,7 +62,7 @@ public sealed class UpdateUserIntegrationTests(AuthIntegrationFixture fixture)
         var request = new { name = "" };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"{Endpoint}/1", request);
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/1", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

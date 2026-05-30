@@ -1,20 +1,29 @@
+using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Auth.IntegrationTests.Users;
 
-public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
-    : BaseAuthIntegrationTest(fixture)
+public sealed class CreateUserIntegrationTests : BaseAuthIntegrationTest
 {
     private const string Endpoint = "/api/v1/users";
+    private readonly HttpClient _client;
+
+    public CreateUserIntegrationTests(AuthIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(AuthPermissions.ManageUsers);
 
     [Fact]
     public async Task Post_WhenRequestIsValid_ShouldReturn201WithLocationHeader()
     {
         await ResetDatabaseAsync();
 
-        // Arrange
+        // Arrange — user creation assigns the default Manager role, so it must exist.
+        await SeedAsync(db =>
+        {
+            db.Roles.Add(new Role("Manager"));
+            return Task.CompletedTask;
+        });
         var request = new
         {
             email = "user@example.com",
@@ -23,7 +32,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -51,7 +60,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -76,7 +85,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -106,7 +115,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, duplicate);
+        var response = await _client.PostAsJsonAsync(Endpoint, duplicate);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -130,7 +139,7 @@ public sealed class CreateUserIntegrationTests(AuthIntegrationFixture fixture)
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync(Endpoint, request);
+        var response = await _client.PostAsJsonAsync(Endpoint, request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

@@ -22,5 +22,8 @@ public abstract class BaseAuthIntegrationTest
 
     protected Task ResetDatabaseAsync() => _fixture.ResetDatabaseAsync();
 
+    protected HttpClient CreateAuthenticatedClient(params string[] permissions) =>
+        _fixture.CreateAuthenticatedClient(permissions);
+
     internal Task SeedAsync(Func<AuthDbContext, Task> seed) => _fixture.SeedAsync(seed);
 }

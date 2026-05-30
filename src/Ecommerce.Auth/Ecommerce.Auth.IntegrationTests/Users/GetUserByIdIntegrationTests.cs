@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
@@ -5,10 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Auth.IntegrationTests.Users;
 
-public sealed class GetUserByIdIntegrationTests(AuthIntegrationFixture fixture)
-    : BaseAuthIntegrationTest(fixture)
+public sealed class GetUserByIdIntegrationTests : BaseAuthIntegrationTest
 {
     private const string Endpoint = "/api/v1/users";
+    private readonly HttpClient _client;
+
+    public GetUserByIdIntegrationTests(AuthIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(AuthPermissions.ViewUsers);
 
     [Fact]
     public async Task Get_WhenIdExists_ShouldReturn200WithUser()
@@ -24,7 +28,7 @@ public sealed class GetUserByIdIntegrationTests(AuthIntegrationFixture fixture)
         });
 
         // Act
-        var response = await Client.GetAsync($"{Endpoint}/{seeded.Id}");
+        var response = await _client.GetAsync($"{Endpoint}/{seeded.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -43,7 +47,7 @@ public sealed class GetUserByIdIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Act
-        var response = await Client.GetAsync($"{Endpoint}/999999");
+        var response = await _client.GetAsync($"{Endpoint}/999999");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
