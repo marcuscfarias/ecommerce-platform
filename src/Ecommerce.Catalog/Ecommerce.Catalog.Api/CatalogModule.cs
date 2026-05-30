@@ -1,4 +1,6 @@
+using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Infrastructure;
+using Ecommerce.Kernel.Application.Security;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +15,13 @@ public static class CatalogModule
         services.AddControllers().AddApplicationPart(typeof(CatalogModule).Assembly);
         services.AddValidatorsFromAssembly(typeof(CatalogModule).Assembly, includeInternalTypes: true);
         services.AddInfrastructure(configuration);
+
+        services.AddAuthorizationBuilder()
+            .AddPolicy(CatalogPolicies.CanManageCatalog,
+                policy => policy.RequireClaim(AppClaimTypes.Permission, CatalogPermissions.Manage))
+            .AddPolicy(CatalogPolicies.CanViewCatalog,
+                policy => policy.RequireClaim(AppClaimTypes.Permission, CatalogPermissions.View));
+
         return services;
     }
 

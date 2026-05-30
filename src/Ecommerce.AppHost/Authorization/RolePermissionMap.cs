@@ -1,6 +1,7 @@
 using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Application.Auth.Authorization;
 using Ecommerce.Auth.Domain.Enums;
+using Ecommerce.Catalog.Api.Authorization;
 
 namespace Ecommerce.AppHost.Authorization;
 
@@ -11,9 +12,12 @@ internal sealed class RolePermissionMap : IRolePermissionMap
 {
     private static readonly Dictionary<RoleName, string[]> Map = new()
     {
-        [RoleName.Admin] = [AuthPermissions.ManageUsers, AuthPermissions.ViewUsers],
-        [RoleName.Owner] = [AuthPermissions.ViewUsers],
-        [RoleName.Manager] = [],
+        [RoleName.Admin] =
+            [AuthPermissions.ManageUsers, AuthPermissions.ViewUsers, CatalogPermissions.Manage, CatalogPermissions.View],
+        [RoleName.Owner] =
+            [AuthPermissions.ViewUsers, CatalogPermissions.Manage, CatalogPermissions.View],
+        [RoleName.Manager] =
+            [CatalogPermissions.Manage, CatalogPermissions.View],
     };
 
     public IReadOnlyCollection<string> ResolvePermissions(IEnumerable<RoleName> roles) =>
