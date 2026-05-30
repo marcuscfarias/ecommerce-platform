@@ -1,3 +1,4 @@
+using Ecommerce.AppHost.Authorization;
 using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
 using Ecommerce.Kernel.API;
@@ -14,7 +15,8 @@ internal static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddKernelInfrastructure(builder.Configuration);
-        builder.Services.AddApiModule();
+        builder.Services.AddApiModule(builder.Configuration);
+        builder.Services.AddHostAuthorization();
         builder.Services.AddModules(builder.Configuration);
         builder.Services.AddOpenApi(options =>
         {
