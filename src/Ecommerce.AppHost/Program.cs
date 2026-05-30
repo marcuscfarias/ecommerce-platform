@@ -1,3 +1,4 @@
+using Ecommerce.AppHost.Authorization;
 using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
 using Ecommerce.Kernel.API;
@@ -14,12 +15,14 @@ internal static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddKernelInfrastructure(builder.Configuration);
-        builder.Services.AddApiModule();
+        builder.Services.AddApiModule(builder.Configuration);
+        builder.Services.AddHostAuthorization();
         builder.Services.AddModules(builder.Configuration);
         builder.Services.AddOpenApi(options =>
         {
             options.AddFluentValidationRules();
             options.AddDocumentTransformer<RemoveRequiredFromResponseTransformer>();
+            options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
 
         var app = builder.Build();
@@ -27,9 +30,11 @@ internal static class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference( options =>
+            app.MapScalarApiReference(options =>
                 {
-                    options.WithTitle("Ecommerce API Documentation");
+                    options.WithTitle("Ecommerce API Documentation")
+                        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http);
+
                     options.DotNetFlag = true;
                     options.HideModels = true;
                     options.HideClientButton = true;

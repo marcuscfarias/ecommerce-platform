@@ -1,5 +1,6 @@
 using Ecommerce.Auth.Api.Auth.Login;
 using Ecommerce.Auth.Application;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,7 @@ namespace Ecommerce.Auth.Api.Auth;
 [Route("api/v1/auth")]
 public sealed class AuthController(IAuthModule module) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost("login")]
     [EndpointDescription("Authenticates a user and issues a JWT access token.")]
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]

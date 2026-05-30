@@ -1,17 +1,20 @@
 using System.Text.Json.Serialization;
 using Ecommerce.Kernel.API.Exceptions;
 using Ecommerce.Kernel.API.Filters;
+using Ecommerce.Kernel.API.Security;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using MicroElements.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.Kernel.API;
 
 public static class ApiModule
 {
-    public static IServiceCollection AddApiModule(this IServiceCollection services)
+    public static IServiceCollection AddApiModule(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddJwtAuthentication(configuration);
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails(options =>
         {

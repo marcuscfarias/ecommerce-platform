@@ -1,6 +1,7 @@
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Application.Users.Rules;
 using Ecommerce.Auth.Domain.Entities;
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Kernel.Domain.BusinessRules;
 using MediatR;
@@ -22,6 +23,9 @@ internal sealed class CreateUserHandler(
             command.Email,
             passwordHash,
             command.Name);
+
+        var managerRole = await repository.GetRoleByNameAsync(RoleName.Manager, cancellationToken);
+        user.AssignRole(managerRole!);
 
         repository.Add(user);
         await repository.SaveChangesAsync(cancellationToken);

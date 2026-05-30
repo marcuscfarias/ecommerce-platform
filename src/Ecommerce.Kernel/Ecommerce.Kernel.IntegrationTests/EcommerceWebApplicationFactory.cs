@@ -16,6 +16,18 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
         {
             cfg.AddInMemoryCollection(databaseConfiguration.GetConfigurationEntries());
             cfg.AddInMemoryCollection(TestJwtDefaults.AsConfiguration());
+
+            // Every test host boots the whole composed AppHost, which includes the Auth
+            // module (validates Auth:AdminSeed on startup and seeds an admin). CI has no
+            // appsettings.Development.json, so the shared harness supplies the boot config
+            // here — once — for every bounded-context's test host.
+            cfg.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Auth:Password:BcryptWorkFactor"] = "4",
+                ["Auth:AdminSeed:Email"] = "admin@test.local",
+                ["Auth:AdminSeed:Password"] = "TestAdminP@ss1",
+                ["Auth:AdminSeed:Name"] = "Test Admin",
+            });
         });
     }
 }

@@ -1,5 +1,6 @@
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Application.Exceptions;
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 using MediatR;
 
@@ -12,7 +13,7 @@ internal sealed class LoginHandler(
 {
     public async Task<LoginResult> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
-        var user = await repository.GetByEmailAsync(command.Email, cancellationToken);
+        var user = await repository.GetByEmailWithRolesAsync(command.Email, cancellationToken);
 
         if (user is null)
         {
@@ -27,7 +28,8 @@ internal sealed class LoginHandler(
             throw new InvalidCredentialsException();
         }
 
-        var token = jwtTokenGenerator.Generate(user.Id, user.Email);
+        var roles = user.Roles.Select(r => Enum.Parse<RoleName>(r.Name));
+        var token = jwtTokenGenerator.Generate(user.Id, user.Email, roles);
         return new LoginResult(token.Token, "Bearer", token.ExpiresInSeconds);
     }
 }

@@ -29,5 +29,16 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive)
             .IsRequired();
+
+        builder.HasMany(u => u.Roles)
+            .WithMany()
+            .UsingEntity("UserRoles",
+                r => r.HasOne(typeof(Role)).WithMany().HasForeignKey("RoleId"),
+                u => u.HasOne(typeof(User)).WithMany().HasForeignKey("UserId"),
+                j =>
+                {
+                    j.ToTable("UserRoles");
+                    j.HasKey("UserId", "RoleId");
+                });
     }
 }

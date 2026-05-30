@@ -22,32 +22,8 @@ public abstract class BaseAuthIntegrationTest
 
     protected Task ResetDatabaseAsync() => _fixture.ResetDatabaseAsync();
 
+    protected HttpClient CreateAuthenticatedClient(params string[] permissions) =>
+        _fixture.CreateAuthenticatedClient(permissions);
+
     internal Task SeedAsync(Func<AuthDbContext, Task> seed) => _fixture.SeedAsync(seed);
-
-    // Mints a JWT signed with the same key/issuer/audience the test host trusts.
-    // `lifetime` < 0 produces an already-expired token for negative tests.
-    protected static string IssueToken(int userId, string email, TimeSpan? lifetime = null)
-    {
-        var span = lifetime ?? TimeSpan.FromMinutes(TestJwtDefaults.AccessTokenMinutes);
-        var now = DateTime.UtcNow;
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtDefaults.SecretKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: TestJwtDefaults.Issuer,
-            audience: TestJwtDefaults.Audience,
-            claims: claims,
-            notBefore: now,
-            expires: now.Add(span),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
 }

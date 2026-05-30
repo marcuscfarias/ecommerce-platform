@@ -27,9 +27,26 @@ public static class InfrastructureModule
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 
-        services.AddJwtAuthentication(configuration);
+        // Token issuance settings (Auth signs tokens). Validation of the shared secret
+        // lives in the Kernel's AddJwtAuthentication; here we only guard the TTL.
+        services
+            .AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection("Jwt"))
+            .Validate(s => s.AccessTokenMinutes > 0, "Jwt:AccessTokenMinutes must be greater than zero.")
+            .ValidateOnStart();
+
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        services
+            .AddOptions<AdminSeedSettings>()
+            .Bind(configuration.GetSection("Auth:AdminSeed"))
+            .Validate(s => !string.IsNullOrWhiteSpace(s.Email), "Auth:AdminSeed:Email is required.")
+            .Validate(s => !string.IsNullOrWhiteSpace(s.Password), "Auth:AdminSeed:Password is required.")
+            .Validate(s => !string.IsNullOrWhiteSpace(s.Name), "Auth:AdminSeed:Name is required.")
+            .ValidateOnStart();
+
+        services.AddHostedService<AdminSeedService>();
 
         return services;
     }

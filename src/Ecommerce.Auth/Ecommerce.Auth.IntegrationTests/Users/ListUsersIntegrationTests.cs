@@ -1,13 +1,17 @@
+using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Api.Users.ListUsers;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
 
 namespace Ecommerce.Auth.IntegrationTests.Users;
 
-public sealed class ListUsersIntegrationTests(AuthIntegrationFixture fixture)
-    : BaseAuthIntegrationTest(fixture)
+public sealed class ListUsersIntegrationTests : BaseAuthIntegrationTest
 {
     private const string Endpoint = "/api/v1/users";
+    private readonly HttpClient _client;
+
+    public ListUsersIntegrationTests(AuthIntegrationFixture fixture) : base(fixture) =>
+        _client = CreateAuthenticatedClient(AuthPermissions.ViewUsers);
 
     [Fact]
     public async Task Get_WhenUsersExist_ShouldReturn200WithPagedResponse()
@@ -24,7 +28,7 @@ public sealed class ListUsersIntegrationTests(AuthIntegrationFixture fixture)
         });
 
         // Act
-        var response = await Client.GetAsync(Endpoint);
+        var response = await _client.GetAsync(Endpoint);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -47,7 +51,7 @@ public sealed class ListUsersIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Act
-        var response = await Client.GetAsync(Endpoint);
+        var response = await _client.GetAsync(Endpoint);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

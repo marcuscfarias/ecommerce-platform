@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Ecommerce.Kernel.IntegrationTests.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,16 @@ public abstract class BaseIntegrationFixture<TFactory> : IAsyncLifetime
     }
 
     public Task ResetDatabaseAsync() => _resetter.ResetAsync();
+
+    // A fresh client carrying a bearer token with the given permission claims, so tests
+    // can exercise protected endpoints as a least-privileged persona.
+    public HttpClient CreateAuthenticatedClient(params string[] permissions)
+    {
+        var client = Factory.CreateClient();
+        var token = TestTokenFactory.Create(permissions);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return client;
+    }
 
     public async Task SeedAsync<TDbContext>(Func<TDbContext, Task> seed)
         where TDbContext : DbContext

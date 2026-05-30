@@ -3,7 +3,9 @@ using Ecommerce.Auth.Api.Users.DeleteUser;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Api.Users.ListUsers;
 using Ecommerce.Auth.Api.Users.UpdateUser;
+using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Application;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +16,7 @@ namespace Ecommerce.Auth.Api.Users;
 public sealed class UsersController(IAuthModule module) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = AuthPolicies.CanViewUsers)]
     [EndpointDescription("Returns a paginated list of users.")]
     [ProducesResponseType<ListUsersResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(
@@ -25,6 +28,7 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthPolicies.CanManageUsers)]
     [EndpointDescription("Creates a new user.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -38,6 +42,7 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = AuthPolicies.CanManageUsers)]
     [EndpointDescription("Updates an existing user.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -52,9 +57,11 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = AuthPolicies.CanManageUsers)]
     [EndpointDescription("Deletes a user by their ID.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(DeleteUserRequest.ToCommand(id), cancellationToken);
@@ -62,6 +69,7 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = AuthPolicies.CanViewUsers)]
     [EndpointDescription("Returns a user by their ID.")]
     [ProducesResponseType<GetUserByIdResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
