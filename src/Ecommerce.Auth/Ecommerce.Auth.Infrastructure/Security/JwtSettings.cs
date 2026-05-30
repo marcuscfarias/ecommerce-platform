@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-
 namespace Ecommerce.Auth.Infrastructure.Security;
 
-internal sealed class JwtSettings : JwtBearerOptions
+// Token issuance settings. Auth signs tokens with the shared key/issuer/audience
+// from the neutral "Jwt" section and owns the access-token TTL.
+internal sealed class JwtSettings
 {
     public string Issuer { get; init; } = string.Empty;
-    // public string Audience { get; init; } = string.Empty;
+    public string Audience { get; init; } = string.Empty;
     public string SecretKey { get; init; } = string.Empty;
     public int AccessTokenMinutes { get; init; } = 15;
 }

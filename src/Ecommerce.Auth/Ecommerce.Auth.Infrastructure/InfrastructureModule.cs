@@ -27,7 +27,14 @@ public static class InfrastructureModule
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 
-        services.AddJwtAuthentication(configuration);
+        // Token issuance settings (Auth signs tokens). Validation of the shared secret
+        // lives in the Kernel's AddJwtAuthentication; here we only guard the TTL.
+        services
+            .AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection("Jwt"))
+            .Validate(s => s.AccessTokenMinutes > 0, "Jwt:AccessTokenMinutes must be greater than zero.")
+            .ValidateOnStart();
+
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
