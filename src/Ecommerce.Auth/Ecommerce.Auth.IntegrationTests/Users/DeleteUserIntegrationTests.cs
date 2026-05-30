@@ -48,4 +48,31 @@ public sealed class DeleteUserIntegrationTests : BaseAuthIntegrationTest
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         body.ShouldNotBeNull();
     }
+
+    [Fact]
+    public async Task Delete_WhenTargetIsAdmin_ShouldReturn409WithProblemDetails()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange — an admin user must not be deactivable.
+        var admin = new User("admin@example.com", "hash", "Admin User");
+        await SeedAsync(db =>
+        {
+            var adminRole = new Role("Admin");
+            db.Roles.Add(adminRole);
+            db.Users.Add(admin);
+            admin.AssignRole(adminRole);
+            return Task.CompletedTask;
+        });
+
+        // Act
+        var response = await _client.DeleteAsync($"{Endpoint}/{admin.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        body.ShouldNotBeNull();
+    }
 }

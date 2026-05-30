@@ -61,6 +61,7 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     [EndpointDescription("Deletes a user by their ID.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(DeleteUserRequest.ToCommand(id), cancellationToken);
