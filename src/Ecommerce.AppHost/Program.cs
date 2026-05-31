@@ -18,6 +18,7 @@ internal static class Program
         builder.Services.AddKernelInfrastructure(builder.Configuration);
         builder.Services.AddApiModule(builder.Configuration);
         builder.Services.AddHostAuthorization();
+        builder.Services.AddGlobalRateLimiting(builder.Configuration);
         builder.Services.AddModules(builder.Configuration);
         builder.Services.AddOpenApi(options =>
         {
@@ -46,6 +47,8 @@ internal static class Program
 
         app.UseHttpsRedirection();
         app.UseSecurityHeaders();
+        app.UseRouting();
+        app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseApiModule();
