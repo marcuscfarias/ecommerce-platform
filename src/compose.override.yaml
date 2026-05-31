@@ -4,6 +4,8 @@ services:
       - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ${USERPROFILE}/.aspnet/https:/https:ro
 
   ecommerce-db:
     env_file:

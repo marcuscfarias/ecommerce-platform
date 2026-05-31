@@ -27,6 +27,10 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
                 ["Auth:AdminSeed:Email"] = "admin@test.local",
                 ["Auth:AdminSeed:Password"] = "TestAdminP@ss1",
                 ["Auth:AdminSeed:Name"] = "Test Admin",
+
+                // The composed host now wires the global rate limiter (default on). Disable it
+                // for every functional suite so legitimate test traffic is never throttled.
+                ["RateLimiting:Enabled"] = "false",
             });
         });
     }
