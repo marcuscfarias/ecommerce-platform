@@ -46,8 +46,11 @@ internal static class Program
                 }
             );
         }
+        else
+        {
+            app.UseHsts();
+        }
 
-        app.UseHttpsRedirection();
         app.UseSecurityHeaders();
         app.UseRouting();
         app.UseRateLimiter();
