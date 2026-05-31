@@ -2,6 +2,7 @@ using Ecommerce.AppHost.Authorization;
 using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
 using Ecommerce.Kernel.API;
+using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Scalar.AspNetCore;
@@ -44,6 +45,7 @@ internal static class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseSecurityHeaders();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseApiModule();
