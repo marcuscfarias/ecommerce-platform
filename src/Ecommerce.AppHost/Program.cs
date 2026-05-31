@@ -1,6 +1,7 @@
 using Ecommerce.AppHost.Authorization;
 using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
+using Ecommerce.AppHost.Security;
 using Ecommerce.Kernel.API;
 using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.Infrastructure.Persistence;
@@ -19,6 +20,7 @@ internal static class Program
         builder.Services.AddApiModule(builder.Configuration);
         builder.Services.AddHostAuthorization();
         builder.Services.AddGlobalRateLimiting(builder.Configuration);
+        builder.Services.AddSpaCors(builder.Configuration);
         builder.Services.AddModules(builder.Configuration);
         builder.Services.AddOpenApi(options =>
         {
@@ -49,6 +51,7 @@ internal static class Program
         app.UseSecurityHeaders();
         app.UseRouting();
         app.UseRateLimiter();
+        app.UseCors(CorsConfiguration.PolicyName);
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseApiModule();
