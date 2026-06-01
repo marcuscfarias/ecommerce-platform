@@ -14,11 +14,16 @@ public sealed class User(
     public string PasswordHash { get; private set; } = passwordHash;
     public string Name { get; private set; } = name;
     public bool IsActive { get; private set; } = isActive;
+
+    public string SecurityStamp { get; private set; } = Guid.NewGuid().ToString("N");
+
     public IReadOnlyCollection<Role> Roles => _roles.AsReadOnly();
 
     public void UpdateProfile(string name) => Name = name;
 
     public void Deactivate() => IsActive = false;
+
+    public void RotateSecurityStamp() => SecurityStamp = Guid.NewGuid().ToString("N");
 
     public void AssignRole(Role role)
     {

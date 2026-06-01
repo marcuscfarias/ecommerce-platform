@@ -89,6 +89,41 @@ public class UserTests
     }
 
     [Fact]
+    public void Constructor_WhenCalled_ShouldGenerateSecurityStamp()
+    {
+        // Arrange & Act
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+
+        // Assert
+        user.SecurityStamp.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public void Constructor_WhenCalledTwice_ShouldGenerateDistinctSecurityStamps()
+    {
+        // Arrange & Act
+        var first = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var second = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+
+        // Assert
+        first.SecurityStamp.ShouldNotBe(second.SecurityStamp);
+    }
+
+    [Fact]
+    public void RotateSecurityStamp_WhenCalled_ShouldChangeSecurityStamp()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var original = user.SecurityStamp;
+
+        // Act
+        user.RotateSecurityStamp();
+
+        // Assert
+        user.SecurityStamp.ShouldNotBe(original);
+    }
+
+    [Fact]
     public void AssignRole_WhenRoleNotAssigned_ShouldAddRole()
     {
         // Arrange
