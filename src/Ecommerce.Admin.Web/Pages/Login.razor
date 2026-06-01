@@ -1,0 +1,142 @@
+@page "/login"
+@layout MainLayout
+@using System.ComponentModel.DataAnnotations
+@inject AuthApiClient AuthApi
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Sign in · Ecommerce Backoffice</PageTitle>
+
+<div class="login">
+    <section class="login__brand">
+        <div class="login__brand-top">
+            <span class="wordmark">ecommerce</span>
+            <span class="wordmark__tag">Backoffice</span>
+        </div>
+
+        <div class="login__brand-copy">
+            <h2 class="brand-headline">Run the store,<br />not the busywork.</h2>
+            <p class="brand-sub">
+                One console for your catalog, orders and team —
+                fast, permission-aware, and built for the people behind the storefront.
+            </p>
+            <ul class="brand-points">
+                <li>Curate the catalog without leaving the keyboard.</li>
+                <li>See who can do what, at a glance.</li>
+                <li>Every action scoped to a role.</li>
+            </ul>
+        </div>
+
+        <p class="login__brand-foot">Authorized personnel only · Internal tool</p>
+    </section>
+
+    <section class="login__panel">
+        <div class="login__form">
+            <h1 class="login__title">Sign in</h1>
+            <p class="login__subtitle">Use your admin account to continue.</p>
+
+            @if (_error is not null)
+            {
+                <div class="login__error" role="alert">
+                    <span class="login__error-mark" aria-hidden="true">!</span>
+                    <div>
+                        <strong>There was a problem</strong>
+                        <span>@_error</span>
+                    </div>
+                </div>
+            }
+
+            <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+                <DataAnnotationsValidator />
+
+                <div class="field">
+                    <label for="email">Email</label>
+                    <InputText id="email" class="field__input" autocomplete="username"
+                               @bind-Value="_model.Email" placeholder="you@company.com" />
+                    <ValidationMessage For="@(() => _model.Email)" />
+                </div>
+
+                <div class="field">
+                    <div class="field__label-row">
+                        <label for="password">Password</label>
+                        <button type="button" class="field__reveal" @onclick="ToggleReveal">
+                            @(_revealPassword ? "Hide" : "Show")
+                        </button>
+                    </div>
+                    <InputText id="password" class="field__input" autocomplete="current-password"
+                               type="@(_revealPassword ? "text" : "password")"
+                               @bind-Value="_model.Password" placeholder="Your password" />
+                    <ValidationMessage For="@(() => _model.Password)" />
+                </div>
+
+                <button type="submit" class="cta" disabled="@_submitting">
+                    @(_submitting ? "Signing in…" : "Sign in")
+                </button>
+            </EditForm>
+
+            <p class="login__fineprint">
+                By continuing you agree to use this console in line with your organization's
+                access policy. Sessions expire automatically.
+            </p>
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly LoginFormModel _model = new();
+    private bool _revealPassword;
+    private bool _submitting;
+    private string? _error;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+        }
+    }
+
+    private void ToggleReveal() => _revealPassword = !_revealPassword;
+
+    private async Task SubmitAsync()
+    {
+        _error = null;
+        _submitting = true;
+
+        var outcome = await AuthApi.LoginAsync(new LoginRequest(_model.Email.Trim(), _model.Password));
+
+        if (!outcome.Succeeded || outcome.AccessToken is null)
+        {
+            _error = outcome.Error;
+            _submitting = false;
+            return;
+        }
+
+        await ((TokenAuthenticationStateProvider)AuthState).SignInAsync(outcome.AccessToken);
+        Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+    }
+
+    private string SafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl) || !ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//"))
+        {
+            return "/";
+        }
+
+        return ReturnUrl;
+    }
+
+    private sealed class LoginFormModel
+    {
+        [Required(ErrorMessage = "Enter your email.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Enter your password.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}
