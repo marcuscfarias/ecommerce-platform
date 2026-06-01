@@ -33,4 +33,5 @@
     <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.IntegrationTests/Ecommerce.Kernel.IntegrationTests.csproj" />
   </Folder>
   <Project Path="Ecommerce.AppHost/Ecommerce.AppHost.csproj" />
+  <Project Path="Ecommerce.Admin.Web/Ecommerce.Admin.Web.csproj" />
 </Solution>
