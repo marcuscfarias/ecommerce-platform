@@ -26,6 +26,7 @@ public static class InfrastructureModule
 
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddSingleton<IRefreshTokenFactory, RefreshTokenFactory>();
 
         // Token issuance settings (Auth signs tokens). Validation of the shared secret
         // lives in the Kernel's AddJwtAuthentication; here we only guard the TTL.
