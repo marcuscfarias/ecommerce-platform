@@ -52,6 +52,23 @@ public static class JwtAuthenticationModule
                     ClockSkew = TimeSpan.Zero,
                     NameClaimType = JwtRegisteredClaimNames.Sub,
                 };
+
+                // Fall back to the httpOnly access-token cookie when no Authorization
+                // header is present, so BROWSER (!) clients authenticate without exposing
+                // the token to JS. The header keeps precedence (existing bearer flows).
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (string.IsNullOrEmpty(context.Request.Headers.Authorization)
+                            && context.Request.Cookies.TryGetValue(AuthCookieNames.AccessToken, out var cookieToken))
+                        {
+                            context.Token = cookieToken;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                };
             });
 
         return services;
