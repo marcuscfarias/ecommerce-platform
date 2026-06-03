@@ -37,6 +37,8 @@ public static class JwtAuthenticationModule
             .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtValidationSettings>>((options, jwtOptions) =>
             {
+                options.MapInboundClaims = false;
+
                 var jwt = jwtOptions.Value;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {

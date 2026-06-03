@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Api.Auth.GetMe;
 using Ecommerce.Auth.Api.Auth.Login;
 using Ecommerce.Auth.Application;
 using Microsoft.AspNetCore.Authorization;
@@ -22,5 +23,16 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     {
         var result = await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
         return Ok(LoginResponse.FromResult(result));
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    [EndpointDescription("Returns the authenticated user's identity.")]
+    [ProducesResponseType<GetMeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteQueryAsync(GetMeRequest.ToQuery(), cancellationToken);
+        return Ok(GetMeResponse.FromResult(result));
     }
 }

@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Ecommerce.Kernel.API.Exceptions;
 using Ecommerce.Kernel.API.Filters;
 using Ecommerce.Kernel.API.Security;
+using Ecommerce.Kernel.Application.Security;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using MicroElements.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +16,10 @@ public static class ApiModule
     public static IServiceCollection AddApiModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddJwtAuthentication(configuration);
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, HttpUserContext>();
+
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails(options =>
         {
