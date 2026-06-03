@@ -10,7 +10,8 @@ public static class TestJwtDefaults
     public const string SecretKey = "integration-test-secret-key-with-at-least-32-bytes-for-hs256!!";
     public const string Issuer = "ecommerce-platform";
     public const string Audience = "ecommerce-platform";
-    public const int AccessTokenMinutes = 15;
+    public const int AccessTokenMinutes = 20;
+    public const int RefreshTokenDays = 3;
 
     public static IReadOnlyDictionary<string, string?> AsConfiguration() => new Dictionary<string, string?>
     {
@@ -18,5 +19,6 @@ public static class TestJwtDefaults
         ["Jwt:Issuer"] = Issuer,
         ["Jwt:Audience"] = Audience,
         ["Jwt:AccessTokenMinutes"] = AccessTokenMinutes.ToString(CultureInfo.InvariantCulture),
+        ["Jwt:RefreshTokenDays"] = RefreshTokenDays.ToString(CultureInfo.InvariantCulture),
     };
 }

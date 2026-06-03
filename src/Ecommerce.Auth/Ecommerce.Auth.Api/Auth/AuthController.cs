@@ -13,7 +13,7 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
-    [EndpointDescription("Authenticates a user and issues a JWT access token.")]
+    [EndpointDescription("Authenticates a user, sets the access/refresh cookies, and returns the user summary.")]
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -22,6 +22,9 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+
+        Response.SetAuthCookies(result.Tokens);
+
         return Ok(LoginResponse.FromResult(result));
     }
 
