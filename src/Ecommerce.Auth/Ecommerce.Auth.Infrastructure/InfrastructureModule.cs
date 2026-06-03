@@ -34,6 +34,7 @@ public static class InfrastructureModule
             .AddOptions<JwtSettings>()
             .Bind(configuration.GetSection("Jwt"))
             .Validate(s => s.AccessTokenMinutes > 0, "Jwt:AccessTokenMinutes must be greater than zero.")
+            .Validate(s => s.RefreshTokenDays > 0, "Jwt:RefreshTokenDays must be greater than zero.")
             .ValidateOnStart();
 
         services.AddSingleton(TimeProvider.System);

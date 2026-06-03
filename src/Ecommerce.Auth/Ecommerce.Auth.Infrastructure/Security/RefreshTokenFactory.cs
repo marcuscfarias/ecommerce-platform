@@ -2,12 +2,15 @@ using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
 using Ecommerce.Auth.Application.Auth.Security;
+using Microsoft.Extensions.Options;
 
 namespace Ecommerce.Auth.Infrastructure.Security;
 
-internal sealed class RefreshTokenFactory : IRefreshTokenFactory
+internal sealed class RefreshTokenFactory(IOptions<JwtSettings> settings) : IRefreshTokenFactory
 {
     private const int TokenByteLength = 32;
+
+    public TimeSpan Lifetime { get; } = TimeSpan.FromDays(settings.Value.RefreshTokenDays);
 
     public RefreshTokenPair Create()
     {

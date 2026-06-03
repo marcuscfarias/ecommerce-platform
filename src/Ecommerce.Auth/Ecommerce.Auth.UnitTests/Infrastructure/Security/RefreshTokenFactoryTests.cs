@@ -1,4 +1,5 @@
 using Ecommerce.Auth.Infrastructure.Security;
+using Microsoft.Extensions.Options;
 
 namespace Ecommerce.Auth.UnitTests.Infrastructure.Security;
 
@@ -6,7 +7,8 @@ public class RefreshTokenFactoryTests
 {
     private static readonly Faker Faker = new();
 
-    private static RefreshTokenFactory CreateSut() => new();
+    private static RefreshTokenFactory CreateSut(int refreshTokenDays = 7) =>
+        new(Options.Create(new JwtSettings { RefreshTokenDays = refreshTokenDays }));
 
     [Fact]
     public void Create_WhenCalled_ShouldReturnNonEmptyPlainAndHash()
@@ -79,5 +81,18 @@ public class RefreshTokenFactoryTests
 
         // Assert
         firstHash.ShouldNotBe(secondHash);
+    }
+
+    [Fact]
+    public void Lifetime_WhenConfigured_ShouldReflectRefreshTokenDays()
+    {
+        // Arrange
+        var sut = CreateSut(refreshTokenDays: 10);
+
+        // Act
+        var lifetime = sut.Lifetime;
+
+        // Assert
+        lifetime.ShouldBe(TimeSpan.FromDays(10));
     }
 }
