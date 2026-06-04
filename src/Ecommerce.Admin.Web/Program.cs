@@ -12,12 +12,19 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("ApiBaseUrl is not configured (wwwroot/appsettings.json).");
+var apiBaseAddress = new Uri(apiBaseUrl);
 
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
-builder.Services.AddScoped<AuthApiClient>();
+builder.Services.AddTransient<CookieAuthenticationHandler>();
 
-builder.Services.AddScoped<ITokenStore, LocalStorageTokenStore>();
-builder.Services.AddScoped<AuthenticationStateProvider, TokenAuthenticationStateProvider>();
+// API client: cookies attached on every request + transparent refresh on 401.
+builder.Services.AddHttpClient<AuthApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<CookieAuthenticationHandler>();
+
+// Bare client used only by the handler's refresh call (no handler -> no recursion).
+builder.Services.AddHttpClient(CookieAuthenticationHandler.RefreshClientName,
+    client => client.BaseAddress = apiBaseAddress);
+
+builder.Services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 

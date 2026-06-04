@@ -6,6 +6,8 @@ namespace Ecommerce.Admin.Web.Services;
 public sealed class AuthApiClient(HttpClient httpClient)
 {
     private const string LoginPath = "api/v1/auth/login";
+    private const string MePath = "api/v1/auth/me";
+    private const string LogoutPath = "api/v1/auth/logout";
     private const string FallbackError = "Something went wrong. Please try again.";
 
     public async Task<LoginOutcome> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -20,15 +22,38 @@ public sealed class AuthApiClient(HttpClient httpClient)
             return LoginOutcome.Failure("We couldn't reach the server. Check your connection and try again.");
         }
 
-        if (response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken);
-            return payload is null
-                ? LoginOutcome.Failure(FallbackError)
-                : LoginOutcome.Success(payload.AccessToken);
-        }
+        // On success the access/refresh tokens arrive as httpOnly cookies; nothing to read from the body.
+        return response.IsSuccessStatusCode
+            ? LoginOutcome.Success()
+            : LoginOutcome.Failure(await ReadErrorAsync(response, cancellationToken));
+    }
 
-        return LoginOutcome.Failure(await ReadErrorAsync(response, cancellationToken));
+    public async Task<MeResponse?> GetMeAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(MePath, cancellationToken);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<MeResponse>(cancellationToken)
+                : null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    public async Task LogoutAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await httpClient.PostAsync(LogoutPath, content: null, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            // Logout is best-effort: the server clears cookies when reachable; the client
+            // drops its auth state regardless.
+        }
     }
 
     private static async Task<string> ReadErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken)
