@@ -13,11 +13,14 @@ public static class RateLimitingExtensions
     public static IServiceCollection AddGlobalRateLimiting(
         this IServiceCollection services, IConfiguration configuration)
     {
-        var settings = configuration.GetSection("RateLimiting").Get<RateLimitingSettings>()
-                       ?? new RateLimitingSettings();
-
         services.AddRateLimiter(options =>
         {
+            // Read inside the delegate, which runs at app startup once every configuration
+            // source is merged. Reading eagerly here at registration time would miss sources
+            // added later (e.g. the integration-test host's RateLimiting:Enabled override).
+            var settings = configuration.GetSection("RateLimiting").Get<RateLimitingSettings>()
+                           ?? new RateLimitingSettings();
+
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
             // Tell a throttled client how long to wait before retrying.
