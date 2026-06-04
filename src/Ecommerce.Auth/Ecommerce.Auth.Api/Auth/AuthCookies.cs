@@ -11,9 +11,12 @@ internal static class AuthCookies
 
     public static void SetAuthCookies(this HttpResponse response, AuthTokens tokens)
     {
-        Append(response, AuthCookieNames.AccessToken, tokens.AccessToken, AccessCookiePath, tokens.AccessTokenExpiresInSeconds);
+        response.SetAccessCookie(tokens.AccessToken, tokens.AccessTokenExpiresInSeconds);
         Append(response, AuthCookieNames.RefreshToken, tokens.RefreshToken, RefreshCookiePath, tokens.RefreshTokenExpiresInSeconds);
     }
+
+    public static void SetAccessCookie(this HttpResponse response, string accessToken, int expiresInSeconds) =>
+        Append(response, AuthCookieNames.AccessToken, accessToken, AccessCookiePath, expiresInSeconds);
 
     private static void Append(HttpResponse response, string name, string value, string path, int maxAgeSeconds) =>
         response.Cookies.Append(name, value, new CookieOptions
