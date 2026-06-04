@@ -18,6 +18,21 @@ internal static class AuthCookies
     public static void SetAccessCookie(this HttpResponse response, string accessToken, int expiresInSeconds) =>
         Append(response, AuthCookieNames.AccessToken, accessToken, AccessCookiePath, expiresInSeconds);
 
+    public static void ClearAuthCookies(this HttpResponse response)
+    {
+        Delete(response, AuthCookieNames.AccessToken, AccessCookiePath);
+        Delete(response, AuthCookieNames.RefreshToken, RefreshCookiePath);
+    }
+
+    private static void Delete(HttpResponse response, string name, string path) =>
+        response.Cookies.Delete(name, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = path,
+        });
+
     private static void Append(HttpResponse response, string name, string value, string path, int maxAgeSeconds) =>
         response.Cookies.Append(name, value, new CookieOptions
         {

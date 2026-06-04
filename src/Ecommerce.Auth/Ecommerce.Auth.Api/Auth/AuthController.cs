@@ -1,5 +1,6 @@
 using Ecommerce.Auth.Api.Auth.GetMe;
 using Ecommerce.Auth.Api.Auth.Login;
+using Ecommerce.Auth.Api.Auth.Logout;
 using Ecommerce.Auth.Api.Auth.Refresh;
 using Ecommerce.Auth.Application;
 using Ecommerce.Kernel.API.Security;
@@ -53,6 +54,21 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
         var result = await module.ExecuteCommandAsync(RefreshRequest.ToCommand(refreshToken), cancellationToken);
 
         Response.SetAccessCookie(result.AccessToken, result.AccessTokenExpiresInSeconds);
+
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("logout")]
+    [EndpointDescription("Revokes the presented refresh token and clears the access/refresh cookies.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    {
+        var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken] ?? string.Empty;
+
+        await module.ExecuteCommandAsync(LogoutRequest.ToCommand(refreshToken), cancellationToken);
+
+        Response.ClearAuthCookies();
 
         return NoContent();
     }
