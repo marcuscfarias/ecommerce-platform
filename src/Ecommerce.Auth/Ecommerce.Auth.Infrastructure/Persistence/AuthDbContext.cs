@@ -10,6 +10,7 @@ internal sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : D
 
     public DbSet<User> Users { get; init; }
     public DbSet<Role> Roles { get; init; }
+    public DbSet<RefreshToken> RefreshTokens { get; init; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

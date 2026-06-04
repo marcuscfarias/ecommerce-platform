@@ -2,6 +2,7 @@
 @layout MainLayout
 @attribute [Authorize]
 @inject AuthenticationStateProvider AuthState
+@inject AuthApiClient AuthApi
 @inject NavigationManager Navigation
 
 <PageTitle>Dashboard · Ecommerce Backoffice</PageTitle>
@@ -35,7 +36,8 @@
 
     private async Task SignOutAsync()
     {
-        await ((TokenAuthenticationStateProvider)AuthState).SignOutAsync();
+        await AuthApi.LogoutAsync();
+        ((CookieAuthenticationStateProvider)AuthState).NotifyStateChanged();
         Navigation.NavigateTo("login", replace: true);
     }
 }

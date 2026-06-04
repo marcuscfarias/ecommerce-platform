@@ -1,7 +1,7 @@
-using System.IdentityModel.Tokens.Jwt;
+using System.Text.Json;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
-using Ecommerce.Kernel.IntegrationTests;
+using Ecommerce.Kernel.API.Security;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth.Login;
@@ -17,10 +17,12 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
     private static readonly string ValidPasswordHash =
         BCrypt.Net.BCrypt.HashPassword(ValidPassword, 4);
 
-    private sealed record LoginResponseBody(string AccessToken, string TokenType, int ExpiresInSeconds);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private sealed record LoginResponseBody(int Id, string Email, string Name);
 
     [Fact]
-    public async Task Login_WhenCredentialsAreValid_ShouldReturnAccessToken()
+    public async Task Login_WhenCredentialsAreValid_ShouldSetCookiesAndReturnUserSummary()
     {
         await ResetDatabaseAsync();
 
@@ -37,17 +39,27 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var body = await response.Content.ReadFromJsonAsync<LoginResponseBody>();
-        body.ShouldNotBeNull();
-        body.TokenType.ShouldBe("Bearer");
-        body.ExpiresInSeconds.ShouldBe(TestJwtDefaults.AccessTokenMinutes * 60);
-        body.AccessToken.ShouldNotBeNullOrWhiteSpace();
 
-        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(body.AccessToken);
-        jwt.Issuer.ShouldBe(TestJwtDefaults.Issuer);
-        jwt.Audiences.ShouldContain(TestJwtDefaults.Audience);
-        jwt.Subject.ShouldNotBeNullOrWhiteSpace();
-        jwt.ValidTo.ShouldBeGreaterThan(DateTime.UtcNow);
+        var raw = await response.Content.ReadAsStringAsync();
+        raw.ShouldNotContain("token", Case.Insensitive); // no access/refresh token leaked into the body
+
+        var body = JsonSerializer.Deserialize<LoginResponseBody>(raw, JsonOptions);
+        body.ShouldNotBeNull();
+        body.Id.ShouldBeGreaterThan(0);
+        body.Email.ShouldBe(ValidEmail);
+        body.Name.ShouldBe("Jane Doe");
+
+        var accessCookie = GetSetCookie(response, AuthCookieNames.AccessToken).ToLowerInvariant();
+        accessCookie.ShouldContain("httponly");
+        accessCookie.ShouldContain("secure");
+        accessCookie.ShouldContain("samesite=strict");
+        accessCookie.ShouldContain("path=/");
+
+        var refreshCookie = GetSetCookie(response, AuthCookieNames.RefreshToken).ToLowerInvariant();
+        refreshCookie.ShouldContain("httponly");
+        refreshCookie.ShouldContain("secure");
+        refreshCookie.ShouldContain("samesite=strict");
+        refreshCookie.ShouldContain("path=/api/v1/auth");
     }
 
     [Fact]
@@ -200,5 +212,14 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         body.ShouldNotBeNull();
         body.Errors.ShouldContainKey("Password");
+    }
+
+    private static string GetSetCookie(HttpResponseMessage response, string cookieName)
+    {
+        var setCookies = response.Headers.TryGetValues("Set-Cookie", out var values)
+            ? values
+            : [];
+
+        return setCookies.Single(c => c.StartsWith($"{cookieName}=", StringComparison.Ordinal));
     }
 }

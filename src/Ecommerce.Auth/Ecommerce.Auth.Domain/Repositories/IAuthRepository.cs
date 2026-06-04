@@ -11,4 +11,6 @@ public interface IAuthRepository : IRepository<User>
     Task<User?> GetByEmailWithRolesAsync(string normalizedEmail, CancellationToken ct = default);
     Task<User?> GetByIdWithRolesAsync(int id, CancellationToken ct = default);
     Task<Role?> GetRoleByNameAsync(RoleName roleName, CancellationToken ct = default);
+    void AddRefreshToken(RefreshToken token);
+    Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default);
 }

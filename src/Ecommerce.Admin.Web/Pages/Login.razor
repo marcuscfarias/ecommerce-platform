@@ -109,14 +109,14 @@
 
         var outcome = await AuthApi.LoginAsync(new LoginRequest(_model.Email.Trim(), _model.Password));
 
-        if (!outcome.Succeeded || outcome.AccessToken is null)
+        if (!outcome.Succeeded)
         {
             _error = outcome.Error;
             _submitting = false;
             return;
         }
 
-        await ((TokenAuthenticationStateProvider)AuthState).SignInAsync(outcome.AccessToken);
+        ((CookieAuthenticationStateProvider)AuthState).NotifyStateChanged();
         Navigation.NavigateTo(SafeReturnUrl(), replace: true);
     }
 

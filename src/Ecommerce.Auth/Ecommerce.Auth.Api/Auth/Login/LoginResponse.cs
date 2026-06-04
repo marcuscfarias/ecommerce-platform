@@ -2,8 +2,8 @@ using Ecommerce.Auth.Application.Auth.Login;
 
 namespace Ecommerce.Auth.Api.Auth.Login;
 
-public sealed record LoginResponse(string AccessToken, string TokenType, int ExpiresInSeconds)
+public sealed record LoginResponse(int Id, string Email, string Name)
 {
     internal static LoginResponse FromResult(LoginResult result) =>
-        new(result.AccessToken, result.TokenType, result.ExpiresInSeconds);
+        new(result.User.Id, result.User.Email, result.User.Name);
 }

@@ -27,4 +27,10 @@ internal sealed class UserRepository(AuthDbContext context, IOptions<PaginationS
 
     public Task<Role?> GetRoleByNameAsync(RoleName roleName, CancellationToken ct = default)
         => Context.Set<Role>().SingleOrDefaultAsync(r => r.Name == roleName.ToString(), ct);
+
+    public void AddRefreshToken(RefreshToken token)
+        => Context.RefreshTokens.Add(token);
+
+    public Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default)
+        => Context.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
 }
