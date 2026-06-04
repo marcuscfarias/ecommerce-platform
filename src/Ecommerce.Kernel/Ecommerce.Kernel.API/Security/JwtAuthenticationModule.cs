@@ -62,7 +62,12 @@ public static class JwtAuthenticationModule
                 {
                     OnMessageReceived = context =>
                     {
-                        if (string.IsNullOrEmpty(context.Request.Headers.Authorization)
+                        const string bearerPrefix = "Bearer ";
+                        var authorization = context.Request.Headers.Authorization.ToString();
+                        var hasBearerToken = authorization.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase)
+                                             && !string.IsNullOrWhiteSpace(authorization[bearerPrefix.Length..]);
+
+                        if (!hasBearerToken
                             && context.Request.Cookies.TryGetValue(AuthCookieNames.AccessToken, out var cookieToken))
                         {
                             context.Token = cookieToken;
