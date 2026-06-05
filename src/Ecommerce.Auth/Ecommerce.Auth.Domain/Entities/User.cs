@@ -24,7 +24,19 @@ public sealed class User(
 
     public void UpdateProfile(string name) => Name = name;
 
-    public void Deactivate() => IsActive = false;
+    public void Deactivate()
+    {
+        IsActive = false;
+        RotateSecurityStamp();
+    }
+
+    public void Reactivate() => IsActive = true;
+
+    public void ResetPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+        RotateSecurityStamp();
+    }
 
     public void RotateSecurityStamp() => SecurityStamp = Guid.NewGuid().ToString("N");
 
@@ -53,5 +65,11 @@ public sealed class User(
             return;
 
         _roles.Add(role);
+    }
+
+    public void SetRoles(IEnumerable<Role> roles)
+    {
+        _roles.Clear();
+        _roles.AddRange(roles.Distinct());
     }
 }

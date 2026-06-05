@@ -89,6 +89,79 @@ public class UserTests
     }
 
     [Fact]
+    public void Deactivate_WhenCalled_ShouldRotateSecurityStamp()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var original = user.SecurityStamp;
+
+        // Act
+        user.Deactivate();
+
+        // Assert
+        user.SecurityStamp.ShouldNotBe(original);
+    }
+
+    [Fact]
+    public void Reactivate_WhenUserIsInactive_ShouldSetIsActiveToTrue()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName(), isActive: false);
+
+        // Act
+        user.Reactivate();
+
+        // Assert
+        user.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ResetPassword_WhenCalled_ShouldChangePasswordHashAndRotateSecurityStamp()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var originalStamp = user.SecurityStamp;
+        var newHash = _faker.Random.AlphaNumeric(60);
+
+        // Act
+        user.ResetPassword(newHash);
+
+        // Assert
+        user.PasswordHash.ShouldBe(newHash);
+        user.SecurityStamp.ShouldNotBe(originalStamp);
+    }
+
+    [Fact]
+    public void SetRoles_WhenUserHasExistingRoles_ShouldReplaceThem()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        user.AssignRole(new Role(_faker.Random.Word()));
+        var newRole = new Role(_faker.Random.Word());
+
+        // Act
+        user.SetRoles([newRole]);
+
+        // Assert
+        user.Roles.Count.ShouldBe(1);
+        user.Roles.ShouldContain(newRole);
+    }
+
+    [Fact]
+    public void SetRoles_WhenSameRoleInstanceRepeated_ShouldDeduplicate()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var role = new Role(_faker.Random.Word());
+
+        // Act
+        user.SetRoles([role, role]);
+
+        // Assert
+        user.Roles.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void Constructor_WhenCalled_ShouldGenerateSecurityStamp()
     {
         // Arrange & Act
