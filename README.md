@@ -102,7 +102,7 @@ module.
 | 12 |     Cross-cutting      |       CI/CD (GitHub Actions)        | 🟡 In progress |
 | 13 |     Cross-cutting      |      Deployment & Environments      |    🔴 To do    |
 | 14 |     Cross-cutting      |            Observability            |    🔴 To do    |
-| 15 |     Cross-cutting      |            Rate Limiting            |    🔴 To do    |
+| 15 |     Cross-cutting      |            Rate Limiting            |    🟢 Done     |
 | 16 |     Cross-cutting      |       Domain Validation Rules       |    🔴 To do    |
 | 17 |     Cross-cutting      | Integration Tests (Test Containers) |    🟢 Done     |
 

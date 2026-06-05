@@ -17,6 +17,9 @@ public sealed class User(
 
     public string SecurityStamp { get; private set; } = Guid.NewGuid().ToString("N");
 
+    public int AccessFailedCount { get; private set; }
+    public DateTimeOffset? LockoutEnd { get; private set; }
+
     public IReadOnlyCollection<Role> Roles => _roles.AsReadOnly();
 
     public void UpdateProfile(string name) => Name = name;
@@ -24,6 +27,25 @@ public sealed class User(
     public void Deactivate() => IsActive = false;
 
     public void RotateSecurityStamp() => SecurityStamp = Guid.NewGuid().ToString("N");
+
+    public bool IsLockedOut(DateTimeOffset now) => LockoutEnd is { } end && end > now;
+
+    public void RegisterFailedAccess(DateTimeOffset now, int maxAttempts, TimeSpan lockoutDuration)
+    {
+        AccessFailedCount++;
+
+        if (AccessFailedCount < maxAttempts)
+            return;
+
+        LockoutEnd = now + lockoutDuration;
+        AccessFailedCount = 0;
+    }
+
+    public void ResetAccessFailedCount()
+    {
+        AccessFailedCount = 0;
+        LockoutEnd = null;
+    }
 
     public void AssignRole(Role role)
     {

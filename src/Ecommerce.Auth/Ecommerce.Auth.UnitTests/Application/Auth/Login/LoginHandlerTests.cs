@@ -14,6 +14,7 @@ public class LoginHandlerTests
     private readonly IPasswordHasher _passwordHasher = Substitute.For<IPasswordHasher>();
     private readonly IJwtTokenGenerator _jwtTokenGenerator = Substitute.For<IJwtTokenGenerator>();
     private readonly IRefreshTokenFactory _refreshTokenFactory = Substitute.For<IRefreshTokenFactory>();
+    private readonly ILockoutPolicy _lockoutPolicy = Substitute.For<ILockoutPolicy>();
     private readonly FakeTimeProvider _timeProvider = new();
     private readonly Faker _faker = new();
     private readonly LoginHandler _handler;
@@ -21,8 +22,11 @@ public class LoginHandlerTests
 
     public LoginHandlerTests()
     {
+        _lockoutPolicy.MaxFailedAttempts.Returns(5);
+        _lockoutPolicy.LockoutDuration.Returns(TimeSpan.FromMinutes(15));
+
         _handler = new LoginHandler(
-            _repository, _passwordHasher, _jwtTokenGenerator, _refreshTokenFactory, _timeProvider);
+            _repository, _passwordHasher, _jwtTokenGenerator, _refreshTokenFactory, _lockoutPolicy, _timeProvider);
     }
 
     [Fact]
@@ -58,6 +62,7 @@ public class LoginHandlerTests
         await act.ShouldThrowAsync<InvalidCredentialsException>();
         await _repository.Received(1).GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>());
         _passwordHasher.Received(1).Verify(command.Password, user.PasswordHash);
+        user.AccessFailedCount.ShouldBe(0);
     }
 
     [Fact]
@@ -108,6 +113,70 @@ public class LoginHandlerTests
             t.ExpiresAt == now.Add(lifetime) &&
             t.CreatedAt == now));
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenAccountIsLockedOut_ShouldThrowAccountLockedException()
+    {
+        // Arrange
+        var command = FakeCommand();
+        var user = FakeUser(true);
+        var lockedAt = _faker.Date.RecentOffset();
+        user.RegisterFailedAccess(lockedAt, maxAttempts: 1, lockoutDuration: TimeSpan.FromMinutes(15));
+        _timeProvider.SetUtcNow(lockedAt + TimeSpan.FromMinutes(5));
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<AccountLockedException>();
+        exception.RetryAfterSeconds.ShouldBe(600);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPasswordIsWrong_ShouldRegisterFailedAccessAndPersist()
+    {
+        // Arrange
+        var command = FakeCommand();
+        var user = FakeUser(true);
+
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
+        _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(false);
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidCredentialsException>();
+        user.AccessFailedCount.ShouldBe(1);
+        await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenLoginIsValid_ShouldResetFailedAccessCount()
+    {
+        // Arrange
+        var command = FakeCommand();
+        var user = FakeUser(true);
+        var now = _faker.Date.RecentOffset();
+        user.RegisterFailedAccess(now, maxAttempts: 5, lockoutDuration: TimeSpan.FromMinutes(15));
+        user.RegisterFailedAccess(now, maxAttempts: 5, lockoutDuration: TimeSpan.FromMinutes(15));
+
+        _timeProvider.SetUtcNow(now);
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
+        _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(true);
+        _jwtTokenGenerator.Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>())
+            .Returns(new JwtAccessToken(_faker.Random.AlphaNumeric(32), _faker.Random.Int(1, 900)));
+        _refreshTokenFactory.Lifetime.Returns(TimeSpan.FromDays(7));
+        _refreshTokenFactory.Create().Returns(new RefreshTokenPair(_faker.Random.AlphaNumeric(43), _faker.Random.Hash()));
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        user.AccessFailedCount.ShouldBe(0);
+        user.LockoutEnd.ShouldBeNull();
     }
 
     private LoginCommand FakeCommand() => new(_faker.Internet.Email(), _faker.Internet.Password());

@@ -124,6 +124,86 @@ public class UserTests
     }
 
     [Fact]
+    public void RegisterFailedAccess_WhenBelowThreshold_ShouldIncrementWithoutLocking()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        user.RegisterFailedAccess(now, maxAttempts: 5, lockoutDuration: TimeSpan.FromMinutes(15));
+
+        // Assert
+        user.AccessFailedCount.ShouldBe(1);
+        user.LockoutEnd.ShouldBeNull();
+        user.IsLockedOut(now).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RegisterFailedAccess_WhenThresholdReached_ShouldLockAndResetCounter()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var now = DateTimeOffset.UtcNow;
+        var lockoutDuration = TimeSpan.FromMinutes(15);
+
+        // Act
+        for (var attempt = 0; attempt < 5; attempt++)
+            user.RegisterFailedAccess(now, maxAttempts: 5, lockoutDuration);
+
+        // Assert
+        user.AccessFailedCount.ShouldBe(0);
+        user.LockoutEnd.ShouldBe(now + lockoutDuration);
+    }
+
+    [Fact]
+    public void IsLockedOut_WhenWithinLockoutWindow_ShouldBeTrue()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var now = DateTimeOffset.UtcNow;
+        user.RegisterFailedAccess(now, maxAttempts: 1, lockoutDuration: TimeSpan.FromMinutes(15));
+
+        // Act
+        var locked = user.IsLockedOut(now + TimeSpan.FromMinutes(5));
+
+        // Assert
+        locked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsLockedOut_WhenLockoutWindowElapsed_ShouldBeFalse()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var now = DateTimeOffset.UtcNow;
+        user.RegisterFailedAccess(now, maxAttempts: 1, lockoutDuration: TimeSpan.FromMinutes(15));
+
+        // Act
+        var locked = user.IsLockedOut(now + TimeSpan.FromMinutes(20));
+
+        // Assert
+        locked.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ResetAccessFailedCount_WhenCalled_ShouldClearCounterAndLockout()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        var now = DateTimeOffset.UtcNow;
+        user.RegisterFailedAccess(now, maxAttempts: 1, lockoutDuration: TimeSpan.FromMinutes(15));
+
+        // Act
+        user.ResetAccessFailedCount();
+
+        // Assert
+        user.AccessFailedCount.ShouldBe(0);
+        user.LockoutEnd.ShouldBeNull();
+        user.IsLockedOut(now).ShouldBeFalse();
+    }
+
+    [Fact]
     public void AssignRole_WhenRoleNotAssigned_ShouldAddRole()
     {
         // Arrange

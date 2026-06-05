@@ -28,6 +28,15 @@ public static class InfrastructureModule
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IRefreshTokenFactory, RefreshTokenFactory>();
 
+        services
+            .AddOptions<LockoutSettings>()
+            .Bind(configuration.GetSection("Auth:Lockout"))
+            .Validate(s => s.MaxFailedAttempts > 0, "Auth:Lockout:MaxFailedAttempts must be greater than zero.")
+            .Validate(s => s.LockoutMinutes > 0, "Auth:Lockout:LockoutMinutes must be greater than zero.")
+            .ValidateOnStart();
+
+        services.AddSingleton<ILockoutPolicy, LockoutPolicy>();
+
         // Token issuance settings (Auth signs tokens). Validation of the shared secret
         // lives in the Kernel's AddJwtAuthentication; here we only guard the TTL.
         services
