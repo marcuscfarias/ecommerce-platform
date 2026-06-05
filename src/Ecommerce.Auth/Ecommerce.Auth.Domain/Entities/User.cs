@@ -14,9 +14,7 @@ public sealed class User(
     public string PasswordHash { get; private set; } = passwordHash;
     public string Name { get; private set; } = name;
     public bool IsActive { get; private set; } = isActive;
-
     public string SecurityStamp { get; private set; } = Guid.NewGuid().ToString("N");
-
     public int AccessFailedCount { get; private set; }
     public DateTimeOffset? LockoutEnd { get; private set; }
 
@@ -40,7 +38,7 @@ public sealed class User(
 
     public void RotateSecurityStamp() => SecurityStamp = Guid.NewGuid().ToString("N");
 
-    public bool IsLockedOut(DateTimeOffset now) => LockoutEnd is { } end && end > now;
+    public bool IsLockedOut(DateTimeOffset now) => LockoutEnd.HasValue && LockoutEnd.Value > now;
 
     public void RegisterFailedAccess(DateTimeOffset now, int maxAttempts, TimeSpan lockoutDuration)
     {
