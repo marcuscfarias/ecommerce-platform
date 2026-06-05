@@ -2,6 +2,7 @@ using Ecommerce.Auth.Api.Users.CreateUser;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Api.Users.ListUsers;
 using Ecommerce.Auth.Api.Users.ResetUserPassword;
+using Ecommerce.Auth.Api.Users.SetUserRoles;
 using Ecommerce.Auth.Api.Users.SetUserStatus;
 using Ecommerce.Auth.Api.Users.UpdateUser;
 using Ecommerce.Auth.Api.Authorization;
@@ -82,6 +83,22 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
     public async Task<IActionResult> ResetPassword(
         [FromRoute] int id,
         [FromBody] ResetUserPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/roles")]
+    [Authorize(Policy = AuthPolicies.CanManageUsers)]
+    [EndpointDescription("Replaces a user's roles.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SetRoles(
+        [FromRoute] int id,
+        [FromBody] SetUserRolesRequest request,
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
