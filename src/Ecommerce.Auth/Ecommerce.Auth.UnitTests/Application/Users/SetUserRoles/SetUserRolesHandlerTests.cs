@@ -50,6 +50,22 @@ public class SetUserRolesHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenRoleIsAdmin_ShouldThrowBusinessRuleValidationException()
+    {
+        // Arrange
+        var command = new SetUserRolesCommand(1, [RoleName.Admin]);
+        var user = new User(_faker.Internet.Email(), "hash", _faker.Name.FullName());
+        user.AssignRole(new Role(nameof(RoleName.Manager)));
+        _repository.GetByIdWithRolesAsync(command.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<BusinessRuleValidationException>();
+    }
+
+    [Fact]
     public async Task Handle_WhenRolesAreValid_ShouldReplaceUserRolesAndSave()
     {
         // Arrange

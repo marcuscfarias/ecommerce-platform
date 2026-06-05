@@ -114,4 +114,35 @@ public sealed class SetUserRolesIntegrationTests : BaseAuthIntegrationTest
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         body.ShouldNotBeNull();
     }
+
+    [Fact]
+    public async Task SetRoles_WhenTheRoleIsAdmin_ShouldReturn409WithProblemDetails()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var manager = new User("manager@example.com", "hash", "Manager User");
+        await SeedAsync(db =>
+        {
+            var adminRole = new Role(nameof(RoleName.Admin));
+            var managerRole = new Role(nameof(RoleName.Manager));
+            db.Roles.Add(adminRole);
+            db.Roles.Add(managerRole);
+            db.Users.Add(manager);
+            manager.AssignRole(managerRole);
+
+            return Task.CompletedTask;
+        });
+
+        // Act
+        string[] roles = ["Admin"];
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/{manager.Id}/roles", new { Roles = roles });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        body.ShouldNotBeNull();
+    }
 }

@@ -18,6 +18,9 @@ internal sealed class SetUserRolesHandler(IAuthRepository repository) : IRequest
         var isAdmin = user.Roles.Any(r => r.Name == nameof(RoleName.Admin));
         BusinessRule.Validate(new AdminCannotBeModifiedRule(isAdmin));
 
+        var settingUserAsAdmin = command.Roles.Any(r => r == RoleName.Admin);
+        BusinessRule.Validate(new OnlyOneAdminRule(settingUserAsAdmin));
+
         var roles = new List<Role>();
         foreach (var roleName in command.Roles)
             roles.Add((await repository.GetRoleByNameAsync(roleName, cancellationToken))!);
