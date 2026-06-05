@@ -34,6 +34,11 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(UserConsts.SecurityStampMaxLength);
 
+        builder.Property(u => u.AccessFailedCount)
+            .IsRequired();
+
+        builder.Property(u => u.LockoutEnd);
+
         builder.HasMany(u => u.Roles)
             .WithMany()
             .UsingEntity("UserRoles",
