@@ -1,0 +1,44 @@
+@inherits LayoutComponentBase
+@layout MainLayout
+@inject AuthenticationStateProvider AuthState
+@inject AuthApiClient AuthApi
+@inject NavigationManager Navigation
+
+<div class="shell">
+    <header class="shell__bar">
+        <div class="shell__bar-left">
+            <span class="wordmark wordmark--dark">ecommerce</span>
+            <nav class="shell__nav">
+                <NavLink class="shell__nav-link" href="" Match="NavLinkMatch.All">Dashboard</NavLink>
+                <NavLink class="shell__nav-link" href="categories">Catalog</NavLink>
+            </nav>
+        </div>
+        <div class="shell__bar-right">
+            <span class="shell__user">@_email</span>
+            <button type="button" class="shell__signout" @onclick="SignOutAsync">Sign out</button>
+        </div>
+    </header>
+
+    <main class="shell__body">
+        @Body
+    </main>
+</div>
+
+@code {
+    private string? _email;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        _email = state.User.FindFirst("email")?.Value
+            ?? state.User.Identity?.Name
+            ?? "Signed in";
+    }
+
+    private async Task SignOutAsync()
+    {
+        await AuthApi.LogoutAsync();
+        ((CookieAuthenticationStateProvider)AuthState).NotifyStateChanged();
+        Navigation.NavigateTo("login", replace: true);
+    }
+}

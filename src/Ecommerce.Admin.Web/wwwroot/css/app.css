@@ -14,6 +14,7 @@
 
     --ink: #0F1111;         /* primary text                 */
     --slate-60: #565959;    /* secondary text               */
+    --success: #007600;
     --border-gray: #D5D9D9;
     --border-strong: #888C8C;
     --divider: #E7E7E7;
@@ -372,6 +373,37 @@ body {
     background: var(--squid-ink);
 }
 
+.shell__bar-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.shell__nav {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.shell__nav-link {
+    font-size: .9rem;
+    font-weight: 600;
+    color: #C8D0D6;
+    text-decoration: none;
+    padding: .4rem .75rem;
+    border-radius: 6px;
+}
+
+.shell__nav-link:hover {
+    color: #fff;
+    background: var(--slate);
+}
+
+.shell__nav-link.active {
+    color: #fff;
+    background: var(--slate-soft);
+}
+
 .wordmark--dark {
     color: #fff;
 }
@@ -404,8 +436,7 @@ body {
 }
 
 .shell__body {
-    padding: clamp(2rem, 6vw, 4rem);
-    max-width: 720px;
+    padding: clamp(1.5rem, 4vw, 3rem);
 }
 
 .shell__body h1 {
@@ -419,6 +450,170 @@ body {
     color: var(--slate-60);
     line-height: 1.6;
     margin: 0;
+}
+
+/* ===================== Catalog management ============================ */
+.cat-page > * {
+    animation: rise .5s cubic-bezier(.2, .7, .2, 1) both;
+}
+
+.cat-page > *:nth-child(2) { animation-delay: .06s; }
+.cat-page > *:nth-child(3) { animation-delay: .12s; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    margin-bottom: 1.75rem;
+}
+
+.page-head h1 {
+    margin: 0 0 .3rem;
+}
+
+.page-head__sub {
+    margin: 0;
+    color: var(--slate-60);
+    font-size: .98rem;
+    max-width: 52ch;
+}
+
+/* --- Segmented status filter (separated from the table) --- */
+.seg {
+    display: inline-flex;
+    gap: .15rem;
+    padding: .25rem;
+    margin-bottom: 1rem;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-gray);
+    border-radius: 10px;
+}
+
+.seg__btn {
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--slate-60);
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: .4rem .95rem;
+    cursor: pointer;
+    transition: color .12s ease, background .12s ease;
+}
+
+.seg__btn:hover {
+    color: var(--ink);
+}
+
+.seg__btn.is-active {
+    color: var(--ink);
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(15, 17, 17, .12);
+}
+
+/* --- Table panel (single hairline surface, no nested cards) --- */
+.cat-panel {
+    background: var(--surface);
+    border: 1px solid var(--border-gray);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.cat-panel .mud-table-head th {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--slate-60);
+}
+
+/* Left-align every column; only Actions (last) sits right */
+.cat-panel .mud-table-cell {
+    text-align: left;
+}
+
+.cat-panel .mud-table-cell:last-child {
+    text-align: right;
+}
+
+/* --- Status indicator (dot + label) --- */
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.status__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--slate-60);
+}
+
+.status--active .status__dot { background: var(--success); }
+.status--inactive { color: var(--slate-60); }
+.status--inactive .status__dot { background: var(--border-strong); }
+
+/* --- Empty state --- */
+.cat-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+.cat-empty__title {
+    margin: 0 0 .35rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.cat-empty__hint {
+    margin: 0;
+    color: var(--slate-60);
+    font-size: .9rem;
+}
+
+/* --- Details dialog --- */
+.dlg-head {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.dlg-field__label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--slate-60);
+    margin-bottom: .35rem;
+}
+
+.dlg-field__value {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--ink);
+}
+
+.dlg-field__empty {
+    margin: 0;
+    color: var(--slate-60);
+    font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cat-page > * { animation: none; }
 }
 
 /* =========================== Responsive ============================== */
@@ -442,6 +637,30 @@ body {
 
     .login__brand-foot {
         display: none;
+    }
+
+    /* --- Protected shell on small screens --- */
+    .shell__bar {
+        flex-wrap: wrap;
+        gap: .75rem 1rem;
+        padding: .75rem 1rem;
+    }
+
+    .shell__bar-left {
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .shell__bar-right {
+        margin-left: auto;
+        min-width: 0;
+    }
+
+    .shell__user {
+        max-width: 45vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 

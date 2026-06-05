@@ -1,0 +1,57 @@
+<MudDialog>
+    <TitleContent>
+        <div class="dlg-head">
+            <MudText Typo="Typo.h6">@Category.Name</MudText>
+            <span class="status @(Category.IsActive ? "status--active" : "status--inactive")">
+                <span class="status__dot"></span>@(Category.IsActive ? "Active" : "Inactive")
+            </span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="dlg-field">
+            <span class="dlg-field__label">Description</span>
+            @if (string.IsNullOrWhiteSpace(Category.Description))
+            {
+                <p class="dlg-field__empty">No description provided.</p>
+            }
+            else
+            {
+                <p class="dlg-field__value">@Category.Description</p>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        @if (Category.IsActive)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Block" OnClick="Deactivate">
+                Deactivate
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Edit" OnClick="Edit">
+            Edit
+        </MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public CategoryDetail Category { get; set; } = null!;
+
+    public enum CategoryDetailAction
+    {
+        Edit,
+        Deactivate,
+    }
+
+    private void Edit() => MudDialog.Close(DialogResult.Ok(CategoryDetailAction.Edit));
+
+    private void Deactivate() => MudDialog.Close(DialogResult.Ok(CategoryDetailAction.Deactivate));
+
+    private void Cancel() => MudDialog.Cancel();
+}

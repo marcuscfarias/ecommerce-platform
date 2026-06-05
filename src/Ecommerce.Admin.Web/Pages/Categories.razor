@@ -1,0 +1,183 @@
+@page "/categories"
+@layout AppShell
+@attribute [Authorize]
+@inject CatalogApiClient Catalog
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Catalog · Ecommerce Backoffice</PageTitle>
+
+<div class="cat-page">
+    <header class="page-head">
+        <div>
+            <h1>Catalog</h1>
+            <p class="page-head__sub">Organize the categories shoppers browse across the store.</p>
+        </div>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateAsync">
+            New category
+        </MudButton>
+    </header>
+
+    <div class="seg" role="group" aria-label="Filter by status">
+        <button type="button" class="seg__btn @(_status == "All" ? "is-active" : null)"
+                @onclick='() => SetStatusAsync("All")'>All</button>
+        <button type="button" class="seg__btn @(_status == "Active" ? "is-active" : null)"
+                @onclick='() => SetStatusAsync("Active")'>Active</button>
+        <button type="button" class="seg__btn @(_status == "Inactive" ? "is-active" : null)"
+                @onclick='() => SetStatusAsync("Inactive")'>Inactive</button>
+    </div>
+
+    <div class="cat-panel">
+        <MudTable @ref="_table" T="CategoryListItem" ServerData="LoadAsync" Hover="true"
+                  RowsPerPage="ServerPageSize" Elevation="0">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Status">
+                    <span class="status @(context.IsActive ? "status--active" : "status--inactive")">
+                        <span class="status__dot"></span>@(context.IsActive ? "Active" : "Inactive")
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                               EndIcon="@Icons.Material.Filled.ChevronRight"
+                               OnClick="@(() => OpenDetailsAsync(context))">
+                        View
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="cat-empty">
+                    <p class="cat-empty__title">No categories to show</p>
+                    <p class="cat-empty__hint">Create a category to start organizing the catalog.</p>
+                </div>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText Class="pa-4">Loading categories…</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager RowsPerPageString="Per page" />
+            </PagerContent>
+        </MudTable>
+    </div>
+</div>
+
+@code {
+    private const int ServerPageSize = 10;
+
+    private MudTable<CategoryListItem> _table = null!;
+    private string _status = "All";
+
+    private bool? StatusFilter => _status switch
+    {
+        "Active" => true,
+        "Inactive" => false,
+        _ => null,
+    };
+
+    private async Task<TableData<CategoryListItem>> LoadAsync(TableState state, CancellationToken token)
+    {
+        var result = await Catalog.ListAsync(state.Page + 1, StatusFilter, token);
+
+        if (result is null)
+        {
+            Snackbar.Add("We couldn't load categories. Please try again.", Severity.Error);
+            return new TableData<CategoryListItem> { Items = [], TotalItems = 0 };
+        }
+
+        return new TableData<CategoryListItem> { Items = result.Data, TotalItems = result.TotalCount };
+    }
+
+    private async Task SetStatusAsync(string value)
+    {
+        if (_status == value)
+        {
+            return;
+        }
+
+        _status = value;
+        await _table.ReloadServerData();
+    }
+
+    private async Task OpenCreateAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CategoryFormDialog>("New category");
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Category created.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDetailsAsync(CategoryListItem item)
+    {
+        var detail = await Catalog.GetAsync(item.Id);
+        if (detail is null)
+        {
+            Snackbar.Add("We couldn't load that category. Please try again.", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters<CategoryDetailsDialog> { { x => x.Category, detail } };
+        var dialog = await DialogService.ShowAsync<CategoryDetailsDialog>("Category details", parameters);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false, Data: CategoryDetailsDialog.CategoryDetailAction action })
+        {
+            return;
+        }
+
+        if (action == CategoryDetailsDialog.CategoryDetailAction.Edit)
+        {
+            await EditAsync(detail);
+        }
+        else
+        {
+            await DeactivateAsync(detail);
+        }
+    }
+
+    private async Task EditAsync(CategoryDetail detail)
+    {
+        var parameters = new DialogParameters<CategoryFormDialog> { { x => x.Category, detail } };
+        var dialog = await DialogService.ShowAsync<CategoryFormDialog>("Edit category", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Category updated.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task DeactivateAsync(CategoryDetail detail)
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            "Deactivate category",
+            $"Deactivate \"{detail.Name}\"? It will no longer be active in the catalog.",
+            yesText: "Deactivate",
+            cancelText: "Cancel");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var outcome = await Catalog.DeactivateAsync(detail.Id);
+        if (!outcome.Succeeded)
+        {
+            Snackbar.Add(outcome.Error ?? "We couldn't deactivate the category.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Category deactivated.", Severity.Success);
+        await _table.ReloadServerData();
+    }
+}
