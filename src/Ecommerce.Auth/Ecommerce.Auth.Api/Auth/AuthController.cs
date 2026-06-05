@@ -7,6 +7,7 @@ using Ecommerce.Kernel.API.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Ecommerce.Auth.Api.Auth;
 
@@ -15,6 +16,7 @@ namespace Ecommerce.Auth.Api.Auth;
 public sealed class AuthController(IAuthModule module) : ControllerBase
 {
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Login)]
     [HttpPost("login")]
     [EndpointDescription("Authenticates a user, sets the access/refresh cookies, and returns the user summary.")]
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]

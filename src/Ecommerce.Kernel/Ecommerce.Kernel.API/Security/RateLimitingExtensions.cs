@@ -23,16 +23,40 @@ public static class RateLimitingExtensions
 
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-            // Tell a throttled client how long to wait before retrying.
+            // Tell a throttled client how long to wait, reading the rejecting limiter's own
+            // window so the hint is correct for both the global and the login policies.
             options.OnRejected = (context, _) =>
             {
+                var retryAfterSeconds = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+                    ? (int)retryAfter.TotalSeconds
+                    : settings.Global.WindowSeconds;
+
                 context.HttpContext.Response.Headers["Retry-After"] =
-                    settings.WindowSeconds.ToString(CultureInfo.InvariantCulture);
+                    retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
                 return ValueTask.CompletedTask;
             };
 
+            // Stricter, login-only policy. Registered even when disabled so endpoints
+            // referencing it never fault with "policy not found"; the partition is then a
+            // pass-through NoLimiter.
+            options.AddPolicy(RateLimitingPolicies.Login, context =>
+            {
+                if (!settings.Enabled)
+                    return RateLimitPartition.GetNoLimiter("disabled");
+
+                var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ =>
+                    new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = settings.Login.PermitLimit,
+                        Window = TimeSpan.FromSeconds(settings.Login.WindowSeconds),
+                        QueueLimit = settings.Login.QueueLimit,
+                    });
+            });
+
             // Disabled hosts (Development, tests) register the services but install no
-            // limiter, so UseRateLimiter() stays a safe pass-through.
+            // global limiter, so UseRateLimiter() stays a safe pass-through.
             if (!settings.Enabled)
             {
                 return;
@@ -47,9 +71,9 @@ public static class RateLimitingExtensions
                 return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ =>
                     new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = settings.PermitLimit,
-                        Window = TimeSpan.FromSeconds(settings.WindowSeconds),
-                        QueueLimit = settings.QueueLimit,
+                        PermitLimit = settings.Global.PermitLimit,
+                        Window = TimeSpan.FromSeconds(settings.Global.WindowSeconds),
+                        QueueLimit = settings.Global.QueueLimit,
                     });
             });
         });
