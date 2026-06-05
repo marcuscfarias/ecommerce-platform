@@ -113,5 +113,31 @@ public class GlobalExceptionHandlerTests
         capturedContext.ProblemDetails.Detail.ShouldBe(exception.Message);
     }
 
-    
+    [Fact]
+    public async Task TryHandleAsync_RetryAfterException_ShouldSetRetryAfterHeader()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        var exception = new FakeRetryAfterException(StatusCodes.Status401Unauthorized, "Invalid credentials", 600);
+
+        // Act
+        await _sut.TryHandleAsync(context, exception, CancellationToken.None);
+
+        // Assert
+        context.Response.Headers.RetryAfter.ToString().ShouldBe("600");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_AppExceptionWithoutRetryAfter_ShouldNotSetRetryAfterHeader()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        var exception = new FakeContractException(StatusCodes.Status401Unauthorized, "Invalid credentials");
+
+        // Act
+        await _sut.TryHandleAsync(context, exception, CancellationToken.None);
+
+        // Assert
+        context.Response.Headers.RetryAfter.Count.ShouldBe(0);
+    }
 }

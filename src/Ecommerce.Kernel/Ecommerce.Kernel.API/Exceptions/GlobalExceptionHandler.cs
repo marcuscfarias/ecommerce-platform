@@ -1,3 +1,4 @@
+using System.Globalization;
 using Ecommerce.Kernel.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +21,10 @@ public sealed partial class GlobalExceptionHandler(
 
         if (exception is not IExceptionContract)
             LogUnhandledException(logger, exception);
+
+        if (exception is IRetryAfter retryAfter)
+            httpContext.Response.Headers.RetryAfter =
+                retryAfter.RetryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
         return await ProblemDetailsWriter.WriteAsync(
             httpContext,
