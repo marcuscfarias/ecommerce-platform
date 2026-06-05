@@ -1,7 +1,7 @@
 using Ecommerce.Auth.Api.Users.CreateUser;
-using Ecommerce.Auth.Api.Users.DeleteUser;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Api.Users.ListUsers;
+using Ecommerce.Auth.Api.Users.SetUserStatus;
 using Ecommerce.Auth.Api.Users.UpdateUser;
 using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Application;
@@ -56,15 +56,18 @@ public sealed class UsersController(IAuthModule module) : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPut("{id:int}/status")]
     [Authorize(Policy = AuthPolicies.CanManageUsers)]
-    [EndpointDescription("Deletes a user by their ID.")]
+    [EndpointDescription("Activates or deactivates a user.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> SetStatus(
+        [FromRoute] int id,
+        [FromBody] SetUserStatusRequest request,
+        CancellationToken cancellationToken)
     {
-        await module.ExecuteCommandAsync(DeleteUserRequest.ToCommand(id), cancellationToken);
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
         return NoContent();
     }
 
