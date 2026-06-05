@@ -82,48 +82,6 @@ public class CreateUserRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WhenPasswordIsShorterThanMinimum_ShouldHaveErrorForPassword()
-    {
-        // Arrange
-        var request = ValidRequest(password: new string('A', 7));
-
-        // Act
-        var result = _sut.Validate(request);
-
-        // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "Password");
-    }
-
-    [Fact]
-    public void Validate_WhenPasswordGreaterThanMaximum_ShouldHaveErrorForPassword()
-    {
-        // Arrange
-        var request = ValidRequest(password: new string('A', 257));
-
-        // Act
-        var result = _sut.Validate(request);
-
-        // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "Password");
-    }
-
-    [Theory]
-    [InlineData("lowercase1")]   // missing uppercase letter
-    [InlineData("UPPERCASE1")]   // missing lowercase letter
-    [InlineData("NoDigitsHere")] // missing digit
-    public void Validate_WhenPasswordIsMissingRequiredCharClass_ShouldHaveErrorForPassword(string password)
-    {
-        // Arrange
-        var request = ValidRequest(password: password);
-
-        // Act
-        var result = _sut.Validate(request);
-
-        // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "Password");
-    }
-
-    [Fact]
     public void Validate_WhenNameIsEmpty_ShouldHaveErrorForName()
     {
         // Arrange

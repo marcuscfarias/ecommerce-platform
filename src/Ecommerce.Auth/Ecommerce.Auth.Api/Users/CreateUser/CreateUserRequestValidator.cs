@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Api.Users.Validation;
 using Ecommerce.Auth.Domain.Entities;
 using FluentValidation;
 
@@ -12,12 +13,7 @@ internal sealed class CreateUserRequestValidator : AbstractValidator<CreateUserR
             .EmailAddress()
             .MaximumLength(UserConsts.EmailMaxLength);
 
-        RuleFor(x => x.Password)
-            .NotEmpty()
-            .MinimumLength(UserConsts.PasswordMinLength)
-            .MaximumLength(UserConsts.PasswordHashMaxLength)
-            .Matches("(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])")
-            .WithMessage("'Password' must contain at least one lowercase letter, one uppercase letter, and one digit.");
+        RuleFor(x => x.Password).ValidPassword();
 
         RuleFor(x => x.Name)
             .NotEmpty()
