@@ -1,0 +1,118 @@
+@inject CatalogApiClient Catalog
+
+<MudDialog>
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_model.Name" Label="Name" Variant="Variant.Outlined"
+                          Immediate="true" Validation="NameValidation" MaxLength="30" />
+            <MudTextField @bind-Value="_model.Description" Label="Description (optional)"
+                          Variant="Variant.Outlined" Class="mt-4" Lines="3"
+                          Immediate="true" Validation="DescriptionValidation" MaxLength="100" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="SubmitAsync" Disabled="_submitting">
+            @(IsEdit ? "Save changes" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public CategoryDetail? Category { get; set; }
+
+    private MudForm _form = null!;
+    private readonly CategoryFormModel _model = new();
+    private bool _submitting;
+    private string? _error;
+
+    private bool IsEdit => Category is not null;
+
+    protected override void OnInitialized()
+    {
+        if (Category is not null)
+        {
+            _model.Name = Category.Name;
+            _model.Description = Category.Description ?? string.Empty;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        _submitting = true;
+        _error = null;
+
+        var name = _model.Name.Trim();
+        var description = string.IsNullOrWhiteSpace(_model.Description) ? null : _model.Description.Trim();
+
+        var outcome = IsEdit
+            ? await Catalog.UpdateAsync(Category!.Id, new UpdateCategoryRequest(name, description))
+            : await Catalog.CreateAsync(new CreateCategoryRequest(name, description));
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _submitting = false;
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private static readonly Func<string, IEnumerable<string>> NameValidation = ValidateName;
+    private static readonly Func<string, IEnumerable<string>> DescriptionValidation = ValidateDescription;
+
+    private static IEnumerable<string> ValidateName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "Enter a category name.";
+            yield break;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length < 3 || trimmed.Length > 30)
+        {
+            yield return "Name must be between 3 and 30 characters.";
+        }
+    }
+
+    private static IEnumerable<string> ValidateDescription(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield break;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length < 10 || trimmed.Length > 100)
+        {
+            yield return "Description must be between 10 and 100 characters.";
+        }
+    }
+
+    private sealed class CategoryFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+    }
+}
