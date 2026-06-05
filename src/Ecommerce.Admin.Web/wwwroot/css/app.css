@@ -372,6 +372,37 @@ body {
     background: var(--squid-ink);
 }
 
+.shell__bar-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.shell__nav {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.shell__nav-link {
+    font-size: .9rem;
+    font-weight: 600;
+    color: #C8D0D6;
+    text-decoration: none;
+    padding: .4rem .75rem;
+    border-radius: 6px;
+}
+
+.shell__nav-link:hover {
+    color: #fff;
+    background: var(--slate);
+}
+
+.shell__nav-link.active {
+    color: #fff;
+    background: var(--slate-soft);
+}
+
 .wordmark--dark {
     color: #fff;
 }
@@ -404,8 +435,7 @@ body {
 }
 
 .shell__body {
-    padding: clamp(2rem, 6vw, 4rem);
-    max-width: 720px;
+    padding: clamp(1.5rem, 4vw, 3rem);
 }
 
 .shell__body h1 {
@@ -442,6 +472,30 @@ body {
 
     .login__brand-foot {
         display: none;
+    }
+
+    /* --- Protected shell on small screens --- */
+    .shell__bar {
+        flex-wrap: wrap;
+        gap: .75rem 1rem;
+        padding: .75rem 1rem;
+    }
+
+    .shell__bar-left {
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .shell__bar-right {
+        margin-left: auto;
+        min-width: 0;
+    }
+
+    .shell__user {
+        max-width: 45vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 
