@@ -1,6 +1,7 @@
 using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.Api.Users.GetUserById;
 using Ecommerce.Auth.Domain.Entities;
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.IntegrationTests.Base;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,10 +22,13 @@ public sealed class GetUserByIdIntegrationTests : BaseAuthIntegrationTest
 
         // Arrange
         var seeded = new User("jane@example.com", "hash", "Jane Doe");
-        await SeedAsync(db =>
+        await SeedAsync(async db =>
         {
+            var manager = new Role(nameof(RoleName.Manager));
+            db.Roles.Add(manager);
+            await db.SaveChangesAsync();
+            seeded.AssignRole(manager);
             db.Users.Add(seeded);
-            return Task.CompletedTask;
         });
 
         // Act
@@ -39,6 +43,7 @@ public sealed class GetUserByIdIntegrationTests : BaseAuthIntegrationTest
         body.Email.ShouldBe("jane@example.com");
         body.Name.ShouldBe("Jane Doe");
         body.IsActive.ShouldBeTrue();
+        body.Roles.ShouldBe(["Manager"]);
     }
 
     [Fact]

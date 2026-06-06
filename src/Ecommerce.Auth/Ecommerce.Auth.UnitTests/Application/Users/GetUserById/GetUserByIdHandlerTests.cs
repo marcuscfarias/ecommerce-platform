@@ -1,5 +1,6 @@
 using Ecommerce.Auth.Application.Users.GetUserById;
 using Ecommerce.Auth.Domain.Entities;
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Kernel.Application.Exceptions;
 
@@ -21,7 +22,7 @@ public class GetUserByIdHandlerTests
         // Arrange
         User? user = null;
         var query = new GetUserByIdQuery(1);
-        _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
+        _repository.GetByIdWithRolesAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act
         var act = () => _handler.Handle(query, CancellationToken.None);
@@ -35,14 +36,18 @@ public class GetUserByIdHandlerTests
     {
         // Arrange
         var user = new User("jane@example.com", "hash", "Jane Doe");
+        user.AssignRole(new Role(nameof(RoleName.Manager)));
         var query = new GetUserByIdQuery(1);
-        _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
+        _repository.GetByIdWithRolesAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        var expected = new GetUserByIdResult(user.Id, user.Email, user.Name, user.IsActive);
-        result.ShouldBe(expected);
+        result.Id.ShouldBe(user.Id);
+        result.Email.ShouldBe(user.Email);
+        result.Name.ShouldBe(user.Name);
+        result.IsActive.ShouldBe(user.IsActive);
+        result.Roles.ShouldBe(["Manager"]);
     }
 }
