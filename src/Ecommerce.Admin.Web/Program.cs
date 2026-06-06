@@ -23,6 +23,9 @@ builder.Services.AddHttpClient<AuthApiClient>(client => client.BaseAddress = api
 builder.Services.AddHttpClient<CatalogApiClient>(client => client.BaseAddress = apiBaseAddress)
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
+builder.Services.AddHttpClient<UsersApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<CookieAuthenticationHandler>();
+
 // Bare client used only by the handler's refresh call (no handler -> no recursion).
 builder.Services.AddHttpClient(CookieAuthenticationHandler.RefreshClientName,
     client => client.BaseAddress = apiBaseAddress);

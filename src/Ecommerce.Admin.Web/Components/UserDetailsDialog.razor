@@ -1,0 +1,88 @@
+<MudDialog>
+    <TitleContent>
+        <div class="dlg-head">
+            <MudText Typo="Typo.h6">@User.Name</MudText>
+            <span class="status @(User.IsActive ? "status--active" : "status--inactive")">
+                <span class="status__dot"></span>@(User.IsActive ? "Active" : "Inactive")
+            </span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="dlg-field">
+            <span class="dlg-field__label">Email</span>
+            <p class="dlg-field__value">@User.Email</p>
+        </div>
+        <div class="dlg-field mt-4">
+            <span class="dlg-field__label">Roles</span>
+            @if (User.Roles.Count == 0)
+            {
+                <p class="dlg-field__empty">No roles assigned.</p>
+            }
+            else
+            {
+                <div class="dlg-chips">
+                    @foreach (var role in User.Roles)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@role</MudChip>
+                    }
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <AuthorizeView Roles="Admin">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Key" OnClick="ResetPassword">
+                Reset password
+            </MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AdminPanelSettings"
+                       OnClick="ManageRoles">
+                Manage roles
+            </MudButton>
+            @if (User.IsActive)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Block" OnClick="ToggleStatus">
+                    Deactivate
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ToggleStatus">
+                    Activate
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit" OnClick="Edit">
+                Edit
+            </MudButton>
+        </AuthorizeView>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public UserDetail User { get; set; } = null!;
+
+    public enum UserDetailAction
+    {
+        Edit,
+        ManageRoles,
+        ResetPassword,
+        ToggleStatus,
+    }
+
+    private void Edit() => MudDialog.Close(DialogResult.Ok(UserDetailAction.Edit));
+
+    private void ManageRoles() => MudDialog.Close(DialogResult.Ok(UserDetailAction.ManageRoles));
+
+    private void ResetPassword() => MudDialog.Close(DialogResult.Ok(UserDetailAction.ResetPassword));
+
+    private void ToggleStatus() => MudDialog.Close(DialogResult.Ok(UserDetailAction.ToggleStatus));
+
+    private void Cancel() => MudDialog.Cancel();
+}

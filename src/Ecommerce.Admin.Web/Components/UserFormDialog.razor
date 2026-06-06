@@ -1,0 +1,139 @@
+@inject UsersApiClient Users
+
+<MudDialog>
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_model.Email" Label="Email" Variant="Variant.Outlined"
+                          Immediate="true" Validation="EmailValidation" MaxLength="256"
+                          Disabled="IsEdit" InputType="InputType.Email" />
+            @if (!IsEdit)
+            {
+                <MudTextField @bind-Value="_model.Password" Label="Password" Variant="Variant.Outlined"
+                              Class="mt-4" Immediate="true" Validation="PasswordValidation"
+                              MaxLength="256" InputType="InputType.Password" />
+            }
+            <MudTextField @bind-Value="_model.Name" Label="Name" Variant="Variant.Outlined"
+                          Class="mt-4" Immediate="true" Validation="NameValidation" MaxLength="200" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="SubmitAsync" Disabled="_submitting">
+            @(IsEdit ? "Save changes" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public UserDetail? User { get; set; }
+
+    private MudForm _form = null!;
+    private readonly UserFormModel _model = new();
+    private bool _submitting;
+    private string? _error;
+
+    private bool IsEdit => User is not null;
+
+    protected override void OnInitialized()
+    {
+        if (User is not null)
+        {
+            _model.Email = User.Email;
+            _model.Name = User.Name;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        _submitting = true;
+        _error = null;
+
+        var name = _model.Name.Trim();
+
+        var outcome = IsEdit
+            ? await Users.UpdateAsync(User!.Id, new UpdateUserRequest(name))
+            : await Users.CreateAsync(new CreateUserRequest(_model.Email.Trim(), _model.Password, name));
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _submitting = false;
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private static readonly Func<string, IEnumerable<string>> EmailValidation = ValidateEmail;
+    private static readonly Func<string, IEnumerable<string>> PasswordValidation = ValidatePassword;
+    private static readonly Func<string, IEnumerable<string>> NameValidation = ValidateName;
+
+    private static IEnumerable<string> ValidateEmail(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "Enter an email address.";
+            yield break;
+        }
+
+        var parts = value.Trim().Split('@');
+        if (parts.Length != 2 || parts[0].Length == 0 || parts[1].Length == 0)
+        {
+            yield return "Enter a valid email address.";
+        }
+    }
+
+    private static IEnumerable<string> ValidatePassword(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "Enter a password.";
+            yield break;
+        }
+
+        if (value.Length < 8 || value.Length > 256)
+        {
+            yield return "Password must be between 8 and 256 characters.";
+        }
+
+        if (!value.Any(char.IsLower) || !value.Any(char.IsUpper) || !value.Any(char.IsDigit))
+        {
+            yield return "Password must contain at least one lowercase letter, one uppercase letter, and one digit.";
+        }
+    }
+
+    private static IEnumerable<string> ValidateName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "Enter a name.";
+        }
+    }
+
+    private sealed class UserFormModel
+    {
+        public string Email { get; set; } = string.Empty;
+
+        public string Password { get; set; } = string.Empty;
+
+        public string Name { get; set; } = string.Empty;
+    }
+}

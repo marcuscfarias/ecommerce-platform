@@ -452,13 +452,13 @@ body {
     margin: 0;
 }
 
-/* ===================== Catalog management ============================ */
-.cat-page > * {
+/* ===================== Management pages (shared) ===================== */
+.mgmt-page > * {
     animation: rise .5s cubic-bezier(.2, .7, .2, 1) both;
 }
 
-.cat-page > *:nth-child(2) { animation-delay: .06s; }
-.cat-page > *:nth-child(3) { animation-delay: .12s; }
+.mgmt-page > *:nth-child(2) { animation-delay: .06s; }
+.mgmt-page > *:nth-child(3) { animation-delay: .12s; }
 
 @keyframes rise {
     from { opacity: 0; transform: translateY(8px); }
@@ -520,14 +520,14 @@ body {
 }
 
 /* --- Table panel (single hairline surface, no nested cards) --- */
-.cat-panel {
+.mgmt-panel {
     background: var(--surface);
     border: 1px solid var(--border-gray);
     border-radius: 12px;
     overflow: hidden;
 }
 
-.cat-panel .mud-table-head th {
+.mgmt-panel .mud-table-head th {
     font-size: .75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -536,11 +536,11 @@ body {
 }
 
 /* Left-align every column; only Actions (last) sits right */
-.cat-panel .mud-table-cell {
+.mgmt-panel .mud-table-cell {
     text-align: left;
 }
 
-.cat-panel .mud-table-cell:last-child {
+.mgmt-panel .mud-table-cell:last-child {
     text-align: right;
 }
 
@@ -566,18 +566,18 @@ body {
 .status--inactive .status__dot { background: var(--border-strong); }
 
 /* --- Empty state --- */
-.cat-empty {
+.mgmt-empty {
     padding: 2.5rem 1rem;
     text-align: center;
 }
 
-.cat-empty__title {
+.mgmt-empty__title {
     margin: 0 0 .35rem;
     font-weight: 600;
     color: var(--ink);
 }
 
-.cat-empty__hint {
+.mgmt-empty__hint {
     margin: 0;
     color: var(--slate-60);
     font-size: .9rem;
@@ -612,8 +612,14 @@ body {
     font-style: italic;
 }
 
+.dlg-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .cat-page > * { animation: none; }
+    .mgmt-page > * { animation: none; }
 }
 
 /* =========================== Responsive ============================== */

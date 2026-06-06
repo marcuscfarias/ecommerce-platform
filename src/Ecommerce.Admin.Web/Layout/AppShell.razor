@@ -11,6 +11,9 @@
             <nav class="shell__nav">
                 <NavLink class="shell__nav-link" href="" Match="NavLinkMatch.All">Dashboard</NavLink>
                 <NavLink class="shell__nav-link" href="categories">Catalog</NavLink>
+                <AuthorizeView Roles="Admin,Owner">
+                    <NavLink class="shell__nav-link" href="users">Users</NavLink>
+                </AuthorizeView>
             </nav>
         </div>
         <div class="shell__bar-right">

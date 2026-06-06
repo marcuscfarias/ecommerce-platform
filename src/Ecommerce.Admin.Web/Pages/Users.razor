@@ -1,0 +1,192 @@
+@page "/users"
+@layout AppShell
+@attribute [Authorize(Roles = "Admin,Owner")]
+@inject UsersApiClient UsersApi
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Users · Ecommerce Backoffice</PageTitle>
+
+<div class="mgmt-page">
+    <header class="page-head">
+        <div>
+            <h1>Users</h1>
+            <p class="page-head__sub">Manage who can sign in to the backoffice and what they can do.</p>
+        </div>
+        <AuthorizeView Roles="Admin">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenCreateAsync">
+                New user
+            </MudButton>
+        </AuthorizeView>
+    </header>
+
+    <div class="mgmt-panel">
+        <MudTable @ref="_table" T="UserListItem" ServerData="LoadAsync" Hover="true"
+                  RowsPerPage="ServerPageSize" Elevation="0">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Status">
+                    <span class="status @(context.IsActive ? "status--active" : "status--inactive")">
+                        <span class="status__dot"></span>@(context.IsActive ? "Active" : "Inactive")
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                               EndIcon="@Icons.Material.Filled.ChevronRight"
+                               OnClick="@(() => OpenDetailsAsync(context))">
+                        View
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="mgmt-empty">
+                    <p class="mgmt-empty__title">No users to show</p>
+                    <p class="mgmt-empty__hint">Create a user to give someone access to the backoffice.</p>
+                </div>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText Class="pa-4">Loading users…</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager RowsPerPageString="Per page" />
+            </PagerContent>
+        </MudTable>
+    </div>
+</div>
+
+@code {
+    private const int ServerPageSize = 10;
+
+    private MudTable<UserListItem> _table = null!;
+
+    private async Task<TableData<UserListItem>> LoadAsync(TableState state, CancellationToken token)
+    {
+        var result = await UsersApi.ListAsync(state.Page + 1, token);
+
+        if (result is null)
+        {
+            Snackbar.Add("We couldn't load users. Please try again.", Severity.Error);
+            return new TableData<UserListItem> { Items = [], TotalItems = 0 };
+        }
+
+        return new TableData<UserListItem> { Items = result.Data, TotalItems = result.TotalCount };
+    }
+
+    private async Task OpenCreateAsync()
+    {
+        var dialog = await DialogService.ShowAsync<UserFormDialog>("New user");
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("User created.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDetailsAsync(UserListItem item)
+    {
+        var detail = await UsersApi.GetAsync(item.Id);
+        if (detail is null)
+        {
+            Snackbar.Add("We couldn't load that user. Please try again.", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters<UserDetailsDialog> { { x => x.User, detail } };
+        var dialog = await DialogService.ShowAsync<UserDetailsDialog>("User details", parameters);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false, Data: UserDetailsDialog.UserDetailAction action })
+        {
+            return;
+        }
+
+        switch (action)
+        {
+            case UserDetailsDialog.UserDetailAction.Edit:
+                await EditAsync(detail);
+                break;
+            case UserDetailsDialog.UserDetailAction.ManageRoles:
+                await ManageRolesAsync(detail);
+                break;
+            case UserDetailsDialog.UserDetailAction.ResetPassword:
+                await ResetPasswordAsync(detail);
+                break;
+            case UserDetailsDialog.UserDetailAction.ToggleStatus:
+                await ToggleStatusAsync(detail);
+                break;
+        }
+    }
+
+    private async Task EditAsync(UserDetail detail)
+    {
+        var parameters = new DialogParameters<UserFormDialog> { { x => x.User, detail } };
+        var dialog = await DialogService.ShowAsync<UserFormDialog>("Edit user", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("User updated.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ManageRolesAsync(UserDetail detail)
+    {
+        var parameters = new DialogParameters<UserRolesDialog> { { x => x.User, detail } };
+        var dialog = await DialogService.ShowAsync<UserRolesDialog>("Manage roles", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Roles updated.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ResetPasswordAsync(UserDetail detail)
+    {
+        var parameters = new DialogParameters<ResetPasswordDialog> { { x => x.UserId, detail.Id } };
+        var dialog = await DialogService.ShowAsync<ResetPasswordDialog>("Reset password", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Password reset.", Severity.Success);
+        }
+    }
+
+    private async Task ToggleStatusAsync(UserDetail detail)
+    {
+        var deactivating = detail.IsActive;
+        var confirmed = await DialogService.ShowMessageBox(
+            deactivating ? "Deactivate user" : "Activate user",
+            deactivating
+                ? $"Deactivate \"{detail.Name}\"? They will be signed out and unable to sign in."
+                : $"Activate \"{detail.Name}\"? They will be able to sign in again.",
+            yesText: deactivating ? "Deactivate" : "Activate",
+            cancelText: "Cancel");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var outcome = await UsersApi.SetStatusAsync(detail.Id, !detail.IsActive);
+        if (!outcome.Succeeded)
+        {
+            Snackbar.Add(outcome.Error ?? "We couldn't update the user's status.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add(deactivating ? "User deactivated." : "User activated.", Severity.Success);
+        await _table.ReloadServerData();
+    }
+}

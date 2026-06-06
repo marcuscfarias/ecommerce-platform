@@ -1,0 +1,79 @@
+@inject UsersApiClient Users
+
+<MudDialog>
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudText Typo="Typo.body2" Class="mb-2">
+            Select the roles for this user. The Admin role is seeded and can't be assigned here.
+        </MudText>
+        @foreach (var role in AssignableRoles)
+        {
+            <MudCheckBox T="bool" Value="_selected.Contains(role)"
+                         ValueChanged="@(value => Toggle(role, value))" Label="@role" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="SubmitAsync" Disabled="_submitting">
+            Save roles
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly string[] AssignableRoles = ["Owner", "Manager"];
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public UserDetail User { get; set; } = null!;
+
+    private readonly HashSet<string> _selected = new(StringComparer.Ordinal);
+    private bool _submitting;
+    private string? _error;
+
+    protected override void OnInitialized()
+    {
+        foreach (var role in User.Roles.Where(AssignableRoles.Contains))
+        {
+            _selected.Add(role);
+        }
+    }
+
+    private void Toggle(string role, bool isChecked)
+    {
+        if (isChecked)
+        {
+            _selected.Add(role);
+        }
+        else
+        {
+            _selected.Remove(role);
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        _submitting = true;
+        _error = null;
+
+        var outcome = await Users.SetRolesAsync(User.Id, _selected.ToArray());
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _submitting = false;
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
