@@ -4,6 +4,11 @@ services:
       - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - Cors__AllowedOrigins__0=https://localhost:8082
+    volumes:
+      - ${USERPROFILE}/.aspnet/https:/https:ro
+
+  ecommerce-web:
     volumes:
       - ${USERPROFILE}/.aspnet/https:/https:ro
 
