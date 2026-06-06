@@ -33,4 +33,9 @@ internal sealed class UserRepository(AuthDbContext context, IOptions<PaginationS
 
     public Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default)
         => Context.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+
+    public async Task<IReadOnlyCollection<RefreshToken>> GetActiveRefreshTokensForUserAsync(int userId, DateTimeOffset now, CancellationToken ct = default)
+        => await Context.RefreshTokens
+            .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > now)
+            .ToListAsync(ct);
 }

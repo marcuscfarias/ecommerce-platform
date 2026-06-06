@@ -9,13 +9,14 @@ internal sealed class GetUserByIdHandler(IAuthRepository repository)
 {
     public async Task<GetUserByIdResult> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
     {
-        var user = await repository.GetByIdAsync(query.Id, cancellationToken) ??
+        var user = await repository.GetByIdWithRolesAsync(query.Id, cancellationToken) ??
                    throw new ResourceNotFoundException("User", query.Id);
 
         return new GetUserByIdResult(
             user.Id,
             user.Email,
             user.Name,
-            user.IsActive);
+            user.IsActive,
+            user.Roles.Select(r => r.Name).ToArray());
     }
 }

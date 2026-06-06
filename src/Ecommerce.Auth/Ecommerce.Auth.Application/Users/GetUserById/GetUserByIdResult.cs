@@ -4,4 +4,5 @@ public sealed record GetUserByIdResult(
     int Id,
     string Email,
     string Name,
-    bool IsActive);
+    bool IsActive,
+    IReadOnlyCollection<string> Roles);
