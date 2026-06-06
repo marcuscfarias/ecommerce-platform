@@ -28,18 +28,19 @@ services:
 
   ecommerce-db:
     container_name: ecommerce-db
-    image: postgres:17
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD
+      - MSSQL_PID=Express
     volumes:
-      - ecommerce-db-data:/var/lib/postgresql/data
+      - ecommerce-db-data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q 'SELECT 1' -b"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     networks:
       - ecommerce-net
 
