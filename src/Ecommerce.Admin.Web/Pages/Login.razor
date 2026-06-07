@@ -1,9 +1,11 @@
+@page "/"
 @page "/login"
 @layout MainLayout
 @using System.ComponentModel.DataAnnotations
 @inject AuthApiClient AuthApi
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Sign in · Ecommerce Backoffice</PageTitle>
 
@@ -86,6 +88,7 @@
     private readonly LoginFormModel _model = new();
     private bool _revealPassword;
     private bool _submitting;
+    private bool _authenticated;
     private string? _error;
 
     [SupplyParameterFromQuery]
@@ -94,9 +97,18 @@
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState.GetAuthenticationStateAsync();
-        if (state.User.Identity?.IsAuthenticated == true)
+        _authenticated = state.User.Identity?.IsAuthenticated == true;
+        if (_authenticated)
         {
             Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_authenticated)
+        {
+            await JS.InvokeVoidAsync("focusById", "email");
         }
     }
 
@@ -124,7 +136,7 @@
     {
         if (string.IsNullOrWhiteSpace(ReturnUrl) || !ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//"))
         {
-            return "/";
+            return "/dashboard";
         }
 
         return ReturnUrl;

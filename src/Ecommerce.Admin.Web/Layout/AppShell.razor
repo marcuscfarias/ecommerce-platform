@@ -9,7 +9,7 @@
         <div class="shell__bar-left">
             <span class="wordmark wordmark--dark">ecommerce</span>
             <nav class="shell__nav">
-                <NavLink class="shell__nav-link" href="" Match="NavLinkMatch.All">Dashboard</NavLink>
+                <NavLink class="shell__nav-link" href="dashboard">Dashboard</NavLink>
                 <NavLink class="shell__nav-link" href="categories">Catalog</NavLink>
                 <AuthorizeView Roles="Admin,Owner">
                     <NavLink class="shell__nav-link" href="users">Users</NavLink>
@@ -42,6 +42,6 @@
     {
         await AuthApi.LogoutAsync();
         ((CookieAuthenticationStateProvider)AuthState).NotifyStateChanged();
-        Navigation.NavigateTo("login", replace: true);
+        Navigation.NavigateTo("", replace: true);
     }
 }
