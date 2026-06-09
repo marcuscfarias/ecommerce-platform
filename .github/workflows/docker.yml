@@ -55,31 +55,57 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    name: Deploy to Container Apps
-    needs: build
-    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      # Federated OIDC login: GitHub proves its identity to Entra ID and receives a
-      # short-lived token. No Azure client secret is stored in the repository.
-      - name: Azure login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Roll out new image
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            az containerapp update \
-              --name "${{ vars.ACA_APP_NAME }}" \
-              --resource-group "${{ vars.ACA_RESOURCE_GROUP }}" \
-              --image "${{ env.IMAGE_NAME }}:${{ github.sha }}"
+#  deploy:
+#    name: Deploy to Container Apps
+#    needs: build
+#    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 15
+#    permissions:
+#      id-token: write
+#      contents: read
+#    steps:
+#      # Federated OIDC login: GitHub proves its identity to Entra ID and receives a
+#      # short-lived token. No Azure client secret is stored in the repository.
+#      - name: Azure login (OIDC)
+#        uses: azure/login@v2
+#        with:
+#          client-id: ${{ vars.AZURE_CLIENT_ID }}
+#          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+#          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+#
+#      # Push the secret values (from GitHub Secrets) into the Container App. The pipeline
+#      # owns the full config so a missing/changed value is caught on every deploy.
+#      - name: Sync secrets
+#        uses: azure/cli@v2
+#        with:
+#          azcliversion: latest
+#          inlineScript: |
+#            az containerapp secret set \
+#              --name "${{ vars.ACA_APP_NAME }}" \
+#              --resource-group "${{ vars.ACA_RESOURCE_GROUP }}" \
+#              --secrets \
+#                connectionstrings-ecommercedb="${{ secrets.SQL_CONNECTION_STRING }}" \
+#                jwt-secretkey="${{ secrets.JWT_SECRET_KEY }}" \
+#                adminseed-password="${{ secrets.ADMIN_SEED_PASSWORD }}"
+#
+#      - name: Roll out new image and environment
+#        uses: azure/cli@v2
+#        with:
+#          azcliversion: latest
+#          inlineScript: |
+#            az containerapp update \
+#              --name "${{ vars.ACA_APP_NAME }}" \
+#              --resource-group "${{ vars.ACA_RESOURCE_GROUP }}" \
+#              --image "${{ env.IMAGE_NAME }}:${{ github.sha }}" \
+#              --set-env-vars \
+#                ConnectionStrings__EcommerceDb=secretref:connectionstrings-ecommercedb \
+#                Jwt__SecretKey=secretref:jwt-secretkey \
+#                Auth__AdminSeed__Password=secretref:adminseed-password \
+#                Jwt__Issuer=https://api.ecommerce.marcuscfarias.com \
+#                Jwt__Audience=https://api.ecommerce.marcuscfarias.com \
+#                Auth__AdminSeed__Email=admin@ecommerce.marcuscfarias.com \
+#                Auth__AdminSeed__Name=Admin \
+#                Cors__AllowedOrigins__0=https://admin.ecommerce.marcuscfarias.com \
+#                Cors__AllowedOrigins__1=https://ecommerce.marcuscfarias.com \
+#                ASPNETCORE_ENVIRONMENT=Production
