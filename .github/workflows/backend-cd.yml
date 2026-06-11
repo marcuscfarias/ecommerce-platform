@@ -57,3 +57,57 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Container Apps
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Binds the run to the GitHub "production" environment so approvals and
+    # environment-scoped variables can be added later without touching this file.
+    environment:
+      name: production
+    permissions:
+      id-token: write # mint the short-lived OIDC token for azure/login
+      contents: read
+    steps:
+      # OIDC federated login — no Azure secret stored in GitHub, just the IDs of the
+      # app registration. All environment-specific values are repo variables, never
+      # hardcoded, so the same workflow can target another environment by swapping them.
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # Pin the exact artifact by digest (not :latest), so the running revision is
+      # provably the image this run pushed. Migrations apply on container startup.
+      - name: Deploy image to ACA
+        run: |
+          az containerapp update \
+            --name "${{ vars.AZURE_CONTAINERAPP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ env.IMAGE_NAME }}@${{ needs.publish.outputs.digest }}"
+
+      # Fail the deploy if the new revision never serves /health (cold start + SQL
+      # Serverless resume can take a few seconds, hence the retry loop).
+      - name: Health check
+        run: |
+          fqdn=$(az containerapp show \
+            --name "${{ vars.AZURE_CONTAINERAPP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          url="https://$fqdn/health"
+          echo "Probing $url"
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
+            if [ "$code" = "200" ]; then
+              echo "Healthy."
+              exit 0
+            fi
+            echo "Attempt $i: got '$code', retrying in 15s..."
+            sleep 15
+          done
+          echo "::error::API did not become healthy in time."
+          exit 1
