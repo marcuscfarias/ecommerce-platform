@@ -113,12 +113,13 @@ jobs:
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
 
-  # Proves the API image still builds on the PR, before merge. Runs in parallel
-  # with the test job: the image recompiles inside Docker anyway, so it's
-  # independent of build-and-test. Validation only — never pushes. Backend CD will
+  # Proves the API image still builds on the PR, before merge. Gated on the test
+  # job: no point building an image whose code is already broken, and it saves
+  # runner minutes on a failing PR. Validation only — never pushes. Backend CD will
   # reuse this exact build to publish to ghcr.io on main.
   image:
     name: Image build
+    needs: build-and-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
