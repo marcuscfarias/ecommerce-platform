@@ -113,6 +113,33 @@ jobs:
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
 
+  # Blocks a PR that carries a NuGet package with a known CVE *right now*. This is
+  # the enforcement half of dependency hygiene; Dependabot is the proposal half.
+  # --include-transitive catches CVEs in indirect dependencies too.
+  vulnerable-deps:
+    name: Vulnerable dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: ./.github/actions/setup-dotnet
+
+      # `dotnet list package --vulnerable` always exits 0 (it just prints a report),
+      # so we scan its output and fail the job ourselves when something is flagged.
+      - name: Check for vulnerable packages
+        working-directory: src
+        run: |
+          report=$(dotnet list Ecommerce.slnx package --vulnerable --include-transitive)
+          echo "$report"
+          if echo "$report" | grep -q "has the following vulnerable"; then
+            echo "::error::Vulnerable NuGet packages detected — see the report above."
+            exit 1
+          fi
+          echo "No vulnerable packages found."
+
   # Proves the API image still builds on the PR, before merge. Gated on the test
   # job: no point building an image whose code is already broken, and it saves
   # runner minutes on a failing PR. Validation only — never pushes. Backend CD will
