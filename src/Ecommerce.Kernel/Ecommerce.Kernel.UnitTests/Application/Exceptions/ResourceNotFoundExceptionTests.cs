@@ -1,4 +1,4 @@
-﻿using Ecommerce.Kernel.Application.Exceptions;
+using Ecommerce.Kernel.Application.Exceptions;
 
 namespace Ecommerce.Kernel.UnitTests.Application.Exceptions;
 
@@ -9,9 +9,9 @@ public class ResourceNotFoundExceptionTests
     {
         //arrange 
         var ex = new ResourceNotFoundException("Entity", 1);
-        
+
         //act
-        
+
         //assert
         ex.StatusCode.ShouldBe(404);
     }
@@ -23,9 +23,9 @@ public class ResourceNotFoundExceptionTests
         string entity = "Entity";
         int id = 1;
         var ex = new ResourceNotFoundException(entity, id);
-        
+
         //act
-        
+
         //assert
         ex.Message.ShouldBe($"{entity} with Id {id} couldn't be found.");
     }

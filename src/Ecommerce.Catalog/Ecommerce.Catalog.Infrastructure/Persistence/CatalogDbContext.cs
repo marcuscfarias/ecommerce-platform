@@ -8,7 +8,7 @@ internal sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> option
 {
     internal const string Schema = "catalog";
 
-    public DbSet<Category> Categories { get; init; }
+    public DbSet<Category> Categories { get; init; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
