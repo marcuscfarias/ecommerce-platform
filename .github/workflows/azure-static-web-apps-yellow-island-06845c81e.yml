@@ -1,5 +1,6 @@
 name: Azure Static Web Apps CI/CD
 
+# RETIRED: frontend, out of backend CI/CD scope. Manual-only.
 on:
   workflow_dispatch:
 #on:

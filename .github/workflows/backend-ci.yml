@@ -1,0 +1,126 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/actions/setup-dotnet/**'
+
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/actions/setup-dotnet/**'
+
+# Least privilege: CI only ever reads the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  
+  commitlint:
+    name: Conventional Commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the action needs the full PR commit range, not a shallow clone
+
+      - name: Lint commits
+        uses: wagoid/commitlint-github-action@v6
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: ./.github/actions/setup-dotnet
+
+      - name: Verify formatting
+        working-directory: src
+        run: dotnet format Ecommerce.slnx --verify-no-changes --no-restore
+
+  # Lints the non-C# files the .NET toolchain doesn't see: workflow YAML (actionlint
+  # catches broken Actions syntax), JSON, and Markdown. C# is left to the analyzers.
+  lint-files:
+    name: Lint config files
+    # Run after commitlint: a good commit message is the cheapest gate, so reject a
+    # bad message before spending time linting files. On push events commitlint is
+    # skipped (no PR), and this still runs — it only blocks on a real commitlint failure.
+    needs: commitlint
+    if: ${{ !cancelled() && needs.commitlint.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # Super-Linter diffs against the base to lint only changed files
+
+      - name: Super-Linter
+        uses: super-linter/super-linter/slim@v7
+        env:
+          DEFAULT_BRANCH: main
+          VALIDATE_ALL_CODEBASE: false # only changed files, so pre-existing issues don't block PRs
+          VALIDATE_YAML: true
+          VALIDATE_JSON: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_GITHUB_ACTIONS: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # The core correctness gate: one build (warnings are errors, so analyzer
+  # violations fail here), then unit tests, then integration tests.
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: ./.github/actions/setup-dotnet
+
+      # Build once and reuse the output for both test runs (--no-build below).
+      - name: Build
+        working-directory: src
+        run: dotnet build Ecommerce.slnx -c Release --no-restore
+
+      # Fast, Docker-free logic checks run first so cheap failures surface early.
+      - name: Unit tests
+        working-directory: src
+        run: >
+          dotnet test Ecommerce.slnx -c Release --no-build
+          --filter "FullyQualifiedName~UnitTests"
+          --logger trx --results-directory TestResults/unit
+
+      - name: Integration tests
+        working-directory: src
+        run: >
+          dotnet test Ecommerce.slnx -c Release --no-build
+          --filter "FullyQualifiedName~IntegrationTests"
+          --logger trx --results-directory TestResults/integration
+
+      # Publish the .trx files on success and failure alike so results are always
+      # inspectable; skipped only when the job is cancelled.
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-test-results
+          path: src/TestResults/**/*.trx
+          if-no-files-found: ignore

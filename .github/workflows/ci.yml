@@ -1,15 +1,9 @@
 name: Build & Test
 
+# RETIRED: superseded by backend-ci.yml. Kept as a manual fallback during the
+# CI/CD rebuild; will be deleted once the new pipeline is proven.
 on:
-  push:
-    paths:
-      - 'src/**'
-      - '.github/workflows/ci.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - '.github/workflows/ci.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read

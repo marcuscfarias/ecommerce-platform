@@ -1,15 +1,9 @@
 name: API Image
 
+# RETIRED: superseded by backend-ci.yml (build validation) and backend-cd.yml
+# (push + deploy). Kept as a manual fallback during the rebuild; deleted later.
 on:
-  push:
-    paths:
-      - 'src/**'
-      - '.github/workflows/docker.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - '.github/workflows/docker.yml'
+  workflow_dispatch:
 
 concurrency:
   group: docker-${{ github.ref }}
