@@ -38,7 +38,7 @@ public static class ApiModule
         {
             options.ConditionalRules = ConditionalRulesMode.Include;
         });
-        
+
         services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;

@@ -16,7 +16,8 @@ internal static class ModulesRegistry
 
     internal static void RegisterModules(this WebApplication app)
     {
-        app.UseCatalogModule(applyMigrations: app.Environment.IsDevelopment());
-        app.UseAuthModule(applyMigrations: app.Environment.IsDevelopment());
+        var applyMigrations = app.Configuration.GetValue("Database:ApplyMigrationsOnStartup", true);
+        app.UseCatalogModule(applyMigrations);
+        app.UseAuthModule(applyMigrations);
     }
 }

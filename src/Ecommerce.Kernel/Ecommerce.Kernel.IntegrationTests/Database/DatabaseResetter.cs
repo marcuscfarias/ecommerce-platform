@@ -1,20 +1,20 @@
-using Npgsql;
+using Microsoft.Data.SqlClient;
 using Respawn;
 
 namespace Ecommerce.Kernel.IntegrationTests.Database;
 
 public sealed class DatabaseResetter(string connectionString, string[] schemas) : IAsyncDisposable
 {
-    private NpgsqlConnection _connection = null!;
+    private SqlConnection _connection = null!;
     private Respawner _respawner = null!;
 
     public async Task InitializeAsync()
     {
-        _connection = new NpgsqlConnection(connectionString);
+        _connection = new SqlConnection(connectionString);
         await _connection.OpenAsync();
         _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
         {
-            DbAdapter = DbAdapter.Postgres,
+            DbAdapter = DbAdapter.SqlServer,
             SchemasToInclude = schemas
         });
     }

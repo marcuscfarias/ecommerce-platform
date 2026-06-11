@@ -1,4 +1,4 @@
-﻿using Ecommerce.Kernel.Domain.Exceptions;
+using Ecommerce.Kernel.Domain.Exceptions;
 
 namespace Ecommerce.Kernel.UnitTests.Domain.Exceptions;
 
@@ -10,9 +10,9 @@ public class BusinessRuleValidationExceptionTests
     {
         //arrange
         var ex = new BusinessRuleValidationException("any message");
-        
+
         //act
-        
+
         //assert
         ex.StatusCode.ShouldBe(409);
     }

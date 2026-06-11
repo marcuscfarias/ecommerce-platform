@@ -1,0 +1,31 @@
+version: 2
+
+# Opens scheduled PRs that bump dependencies to patched versions. Pairs with the
+# CI gates: every bump still has to pass build, tests, and the image build before
+# it can merge. Grouping keeps the noise to a few PRs a week, not dozens.
+updates:
+  # .NET packages across every backend project under src/.
+  - package-ecosystem: nuget
+    directory: /src
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      nuget-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+          
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /src/Ecommerce.AppHost
+    schedule:
+      interval: weekly

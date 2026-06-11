@@ -35,8 +35,8 @@ public static class KernelPersistenceModule
                 ?? throw new InvalidOperationException(
                     $"Connection string '{ConnectionStringName}' is not configured.");
 
-            options.UseNpgsql(connectionString,
-                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", schema));
+            options.UseSqlServer(connectionString,
+                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", schema));
         });
 
         return services;

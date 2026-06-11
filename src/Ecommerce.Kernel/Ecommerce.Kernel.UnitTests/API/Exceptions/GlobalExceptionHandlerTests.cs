@@ -62,7 +62,7 @@ public class GlobalExceptionHandlerTests
         // Assert
         _logger.ReceivedCalls().ShouldNotBeEmpty();
     }
-    
+
     [Fact]
     public async Task TryHandleAsync_AppException_ShouldNotLogError()
     {
@@ -82,7 +82,7 @@ public class GlobalExceptionHandlerTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        int statusCode =  StatusCodes.Status409Conflict;
+        int statusCode = StatusCodes.Status409Conflict;
         var exception = new FakeContractException(statusCode, "some rule violated");
 
         // Act
@@ -97,7 +97,7 @@ public class GlobalExceptionHandlerTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        int statusCode  =  StatusCodes.Status409Conflict;
+        int statusCode = StatusCodes.Status409Conflict;
         var exception = new FakeContractException(statusCode, "some rule violated");
         ProblemDetailsContext? capturedContext = null;
 

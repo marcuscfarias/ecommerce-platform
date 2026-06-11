@@ -1,4 +1,4 @@
-﻿using Ecommerce.Kernel.Domain.BusinessRules;
+using Ecommerce.Kernel.Domain.BusinessRules;
 
 namespace Ecommerce.Auth.Application.Users.Rules;
 
