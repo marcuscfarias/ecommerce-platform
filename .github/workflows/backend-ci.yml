@@ -112,3 +112,27 @@ jobs:
           dotnet test Ecommerce.slnx -c Release --no-build
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
+
+  # Proves the API image still builds on the PR, before merge. Runs in parallel
+  # with the test job: the image recompiles inside Docker anyway, so it's
+  # independent of build-and-test. Validation only — never pushes. Backend CD will
+  # reuse this exact build to publish to ghcr.io on main.
+  image:
+    name: Image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: src
+          file: src/Ecommerce.AppHost/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
