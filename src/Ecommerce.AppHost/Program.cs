@@ -22,6 +22,7 @@ internal static class Program
         builder.Services.AddGlobalRateLimiting(builder.Configuration);
         builder.Services.AddSpaCors(builder.Configuration);
         builder.Services.AddModules(builder.Configuration);
+        builder.Services.AddHealthChecks();
         builder.Services.AddOpenApi(options =>
         {
             options.AddFluentValidationRules();
@@ -62,6 +63,7 @@ internal static class Program
         app.UseApiModule();
         app.RegisterModules();
         app.MapControllers();
+        app.MapHealthChecks("/health");
 
         app.Run();
     }
