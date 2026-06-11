@@ -113,6 +113,23 @@ jobs:
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
 
+  # Scans the commits for leaked secrets (API keys, connection strings, tokens)
+  # before they reach main. gitleaks-action is free on public repos — no license.
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # scan the whole commit range under review, not just the tip
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # Blocks a PR that carries a NuGet package with a known CVE *right now*. This is
   # the enforcement half of dependency hygiene; Dependabot is the proposal half.
   # --include-transitive catches CVEs in indirect dependencies too.
