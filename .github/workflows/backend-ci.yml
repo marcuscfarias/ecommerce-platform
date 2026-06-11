@@ -23,8 +23,14 @@ concurrency:
   group: backend-ci-${{ github.ref }}
   cancel-in-progress: true
 
+# All jobs run in parallel for the fastest feedback (public repo = unlimited
+# Actions minutes). The only real ordering is the two `needs:` below — everything
+# else is grouped by category purely for readability.
 jobs:
-  
+  # ── Quality gates ───────────────────────────────────────────────────────────
+
+  # Conventional Commits keep history machine-readable (drives versioning later).
+  # PR-only: a branch push has no commit range to lint.
   commitlint:
     name: Conventional Commits
     if: github.event_name == 'pull_request'
@@ -39,6 +45,8 @@ jobs:
       - name: Lint commits
         uses: wagoid/commitlint-github-action@v6
 
+  # Style gate. EnforceCodeStyleInBuild covers most rules at build time; this is
+  # the reliable check for whitespace, using-ordering, and the rest.
   format:
     name: Format
     runs-on: ubuntu-latest
@@ -54,11 +62,11 @@ jobs:
         working-directory: src
         run: dotnet format Ecommerce.slnx --verify-no-changes --no-restore
 
+  # Lints the non-C# files the .NET toolchain doesn't see (YAML, JSON, Markdown,
+  # Actions syntax). Runs after commitlint: reject a bad message — the cheapest
+  # gate — before linting files. On push, commitlint is skipped and this still runs.
   lint-files:
     name: Lint config files
-    # Run after commitlint: a good commit message is the cheapest gate, so reject a
-    # bad message before spending time linting files. On push events commitlint is
-    # skipped (no PR), and this still runs — it only blocks on a real commitlint failure.
     needs: commitlint
     if: ${{ !cancelled() && needs.commitlint.result != 'failure' }}
     runs-on: ubuntu-latest
@@ -79,6 +87,54 @@ jobs:
           VALIDATE_MARKDOWN: true
           VALIDATE_GITHUB_ACTIONS: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Security gates ──────────────────────────────────────────────────────────
+
+  # Scans the commits for leaked secrets (API keys, connection strings, tokens)
+  # before they reach main. gitleaks-action is free on public repos — no license.
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # scan the whole commit range under review, not just the tip
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Blocks a PR that carries a NuGet package with a known CVE *right now* (Dependabot
+  # is the proposal half; this is the enforcement half). --include-transitive
+  # catches CVEs in indirect dependencies too.
+  vulnerable-deps:
+    name: Vulnerable dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: ./.github/actions/setup-dotnet
+
+      # `dotnet list package --vulnerable` always exits 0 (it just prints a report),
+      # so we scan its output and fail the job ourselves when something is flagged.
+      - name: Check for vulnerable packages
+        working-directory: src
+        run: |
+          report=$(dotnet list Ecommerce.slnx package --vulnerable --include-transitive)
+          echo "$report"
+          if echo "$report" | grep -q "has the following vulnerable"; then
+            echo "::error::Vulnerable NuGet packages detected — see the report above."
+            exit 1
+          fi
+          echo "No vulnerable packages found."
+
+  # ── Build, test & package ───────────────────────────────────────────────────
 
   # The core correctness gate: one build (warnings are errors, so analyzer
   # violations fail here), then unit tests, then integration tests.
@@ -113,54 +169,9 @@ jobs:
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
 
-  # Scans the commits for leaked secrets (API keys, connection strings, tokens)
-  # before they reach main. gitleaks-action is free on public repos — no license.
-  secrets:
-    name: Secret scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # scan the whole commit range under review, not just the tip
-
-      - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Blocks a PR that carries a NuGet package with a known CVE *right now*. This is
-  # the enforcement half of dependency hygiene; Dependabot is the proposal half.
-  # --include-transitive catches CVEs in indirect dependencies too.
-  vulnerable-deps:
-    name: Vulnerable dependencies
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup .NET
-        uses: ./.github/actions/setup-dotnet
-
-      # `dotnet list package --vulnerable` always exits 0 (it just prints a report),
-      # so we scan its output and fail the job ourselves when something is flagged.
-      - name: Check for vulnerable packages
-        working-directory: src
-        run: |
-          report=$(dotnet list Ecommerce.slnx package --vulnerable --include-transitive)
-          echo "$report"
-          if echo "$report" | grep -q "has the following vulnerable"; then
-            echo "::error::Vulnerable NuGet packages detected — see the report above."
-            exit 1
-          fi
-          echo "No vulnerable packages found."
-
-  # Proves the API image still builds on the PR, before merge. Gated on the test
-  # job: no point building an image whose code is already broken, and it saves
-  # runner minutes on a failing PR. Validation only — never pushes. Backend CD will
-  # reuse this exact build to publish to ghcr.io on main.
+  # Proves the API image still builds before merge. Gated on the tests: no point
+  # building an image whose code is already broken. Validation only — never pushes;
+  # Backend CD reuses this exact build to publish to ghcr.io on main.
   image:
     name: Image build
     needs: build-and-test
