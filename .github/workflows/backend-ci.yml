@@ -54,8 +54,6 @@ jobs:
         working-directory: src
         run: dotnet format Ecommerce.slnx --verify-no-changes --no-restore
 
-  # Lints the non-C# files the .NET toolchain doesn't see: workflow YAML (actionlint
-  # catches broken Actions syntax), JSON, and Markdown. C# is left to the analyzers.
   lint-files:
     name: Lint config files
     # Run after commitlint: a good commit message is the cheapest gate, so reject a
@@ -69,7 +67,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # Super-Linter diffs against the base to lint only changed files
+          fetch-depth: 0
 
       - name: Super-Linter
         uses: super-linter/super-linter/slim@v7
@@ -114,13 +112,3 @@ jobs:
           dotnet test Ecommerce.slnx -c Release --no-build
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
-
-      # Publish the .trx files on success and failure alike so results are always
-      # inspectable; skipped only when the job is cancelled.
-      - name: Upload test results
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: backend-test-results
-          path: src/TestResults/**/*.trx
-          if-no-files-found: ignore
