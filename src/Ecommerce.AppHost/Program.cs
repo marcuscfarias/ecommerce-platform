@@ -34,22 +34,20 @@ internal static class Program
 
         app.UseProxyForwardedHeaders();
 
-        if (app.Environment.IsDevelopment())
-        {
-            app.MapOpenApi();
-            app.MapScalarApiReference(options =>
-                {
-                    options.WithTitle("Ecommerce API Documentation")
-                        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http);
+        app.MapOpenApi();
+        app.MapScalarApiReference(options =>
+            {
+                options.WithTitle("Ecommerce API Documentation")
+                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http);
 
-                    options.DotNetFlag = true;
-                    options.HideModels = true;
-                    options.HideClientButton = true;
-                    options.DefaultOpenAllTags = false;
-                }
-            );
-        }
-        else
+                options.DotNetFlag = true;
+                options.HideModels = true;
+                options.HideClientButton = true;
+                options.DefaultOpenAllTags = false;
+            }
+        );
+
+        if (!app.Environment.IsDevelopment())
         {
             app.UseHsts();
         }
