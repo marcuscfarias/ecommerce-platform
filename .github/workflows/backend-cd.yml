@@ -63,10 +63,6 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Binds the run to the GitHub "production" environment so approvals and
-    # environment-scoped variables can be added later without touching this file.
-    environment:
-      name: production
     permissions:
       id-token: write # mint the short-lived OIDC token for azure/login
       contents: read
@@ -77,9 +73,9 @@ jobs:
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       # Pin the exact artifact by digest (not :latest), so the running revision is
       # provably the image this run pushed. Migrations apply on container startup.
