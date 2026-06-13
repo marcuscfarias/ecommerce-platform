@@ -96,14 +96,14 @@ jobs:
             --query properties.configuration.ingress.fqdn -o tsv)
           url="https://$fqdn/health"
           echo "Probing $url"
-          for i in $(seq 1 10); do
+          for i in $(seq 1 3); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
             if [ "$code" = "200" ]; then
               echo "Healthy."
               exit 0
             fi
             echo "Attempt $i: got '$code', retrying in 15s..."
-            sleep 15
+            sleep 10
           done
           echo "::error::API did not become healthy in time."
           exit 1
