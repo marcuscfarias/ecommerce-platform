@@ -15,17 +15,6 @@ services:
     networks:
       - ecommerce-net
 
-  ecommerce-web:
-    container_name: ecommerce-web
-    image: ecommerce-web
-    build:
-      context: .
-      dockerfile: Ecommerce.Admin.Web/Dockerfile
-    ports:
-      - "8082:443"
-    networks:
-      - ecommerce-net
-
   ecommerce-db:
     container_name: ecommerce-db
     image: mcr.microsoft.com/mssql/server:2022-latest
