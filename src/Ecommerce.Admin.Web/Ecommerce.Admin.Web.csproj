@@ -13,4 +13,10 @@
     <PackageReference Include="MudBlazor" Version="8.13.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\appsettings.Production.json">
+      <DependentUpon>appsettings.json</DependentUpon>
+    </Content>
+  </ItemGroup>
+
 </Project>
