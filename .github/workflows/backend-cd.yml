@@ -86,8 +86,9 @@ jobs:
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --image "${{ env.IMAGE_NAME }}@${{ needs.publish.outputs.digest }}"
 
-      # Fail the deploy if the new revision never serves /health (cold start + SQL
-      # Serverless resume can take a few seconds, hence the retry loop).
+      # Fail the deploy if the new revision never serves /health. A cold start
+      # (scale-from-zero + SQL Serverless resume + EF migrations) can take a
+      # couple of minutes, so the loop waits up to ~3 min before giving up.
       - name: Health check
         run: |
           fqdn=$(az containerapp show \
@@ -96,14 +97,14 @@ jobs:
             --query properties.configuration.ingress.fqdn -o tsv)
           url="https://$fqdn/health"
           echo "Probing $url"
-          for i in $(seq 1 3); do
+          for i in $(seq 1 12); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
             if [ "$code" = "200" ]; then
               echo "Healthy."
               exit 0
             fi
             echo "Attempt $i: got '$code', retrying in 15s..."
-            sleep 10
+            sleep 15
           done
           echo "::error::API did not become healthy in time."
           exit 1
