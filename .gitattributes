@@ -1,0 +1,7 @@
+# Normalize line endings on commit; check out with the platform's native style.
+* text=auto
+
+# Files the toolchain requires to be LF regardless of platform.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
