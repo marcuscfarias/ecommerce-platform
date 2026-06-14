@@ -3,17 +3,9 @@ name: Backend CI
 on:
   pull_request:
     branches: [main]
-    paths:
-      - 'src/**'
-      - '.github/workflows/backend-ci.yml'
-      - '.github/actions/setup-dotnet/**'
 
   push:
     branches-ignore: [main]
-    paths:
-      - 'src/**'
-      - '.github/workflows/backend-ci.yml'
-      - '.github/actions/setup-dotnet/**'
 
 # Least privilege: CI only ever reads the repository.
 permissions:
