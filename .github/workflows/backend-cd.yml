@@ -16,8 +16,15 @@ env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ecommerce-api
 
 jobs:
+  # Gate the deploy on the exact main commit passing build + tests — the same
+  # reusable gate CI runs on PRs, so a merge result (or a direct push) can't ship
+  # untested. No image is built or pushed until this is green.
+  build-and-test:
+    uses: ./.github/workflows/backend-test.yml
+
   publish:
     name: Build & push image
+    needs: build-and-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

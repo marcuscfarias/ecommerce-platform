@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - '!src/Ecommerce.Admin.Web/**'
       - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/backend-test.yml'
       - '.github/actions/setup-dotnet/action.yml'
 
   push:
@@ -16,6 +17,7 @@ on:
       - 'src/**'
       - '!src/Ecommerce.Admin.Web/**'
       - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/backend-test.yml'
       - '.github/actions/setup-dotnet/action.yml'
 
 # Least privilege: CI only ever reads the repository.
@@ -27,37 +29,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Build once (warnings=errors), then unit tests, then integration tests.
+  # Shared build + test gate — the same one Backend CD runs before it deploys.
   build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup .NET
-        uses: ./.github/actions/setup-dotnet
-
-      # Build once; both test runs reuse it via --no-build.
-      - name: Build
-        working-directory: src
-        run: dotnet build Ecommerce.slnx -c Release --no-restore
-
-      # Unit tests first so cheap failures surface early.
-      - name: Unit tests
-        working-directory: src
-        run: >
-          dotnet test Ecommerce.slnx -c Release --no-build
-          --filter "FullyQualifiedName~UnitTests"
-          --logger trx --results-directory TestResults/unit
-
-      - name: Integration tests
-        working-directory: src
-        run: >
-          dotnet test Ecommerce.slnx -c Release --no-build
-          --filter "FullyQualifiedName~IntegrationTests"
-          --logger trx --results-directory TestResults/integration
+    uses: ./.github/workflows/backend-test.yml
 
   # Validation-only image build (never pushes); gated on the tests passing.
   image:
