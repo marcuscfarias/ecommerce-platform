@@ -1,0 +1,45 @@
+name: Backend Build & Test
+
+# Reusable build + test gate. Called by Backend CI (on PRs) and Backend CD (on the
+# main commit it is about to ship), so the artifact that deploys is verified by the
+# same checks as the PR — not just the PR head. No triggers of its own: it runs only
+# when another workflow calls it.
+on:
+  workflow_call:
+
+# Least privilege: build + test only ever reads the repository.
+permissions:
+  contents: read
+
+jobs:
+  # Build once (warnings=errors), then unit tests, then integration tests.
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: ./.github/actions/setup-dotnet
+
+      # Build once; both test runs reuse it via --no-build.
+      - name: Build
+        working-directory: src
+        run: dotnet build Ecommerce.slnx -c Release --no-restore
+
+      # Unit tests first so cheap failures surface early.
+      - name: Unit tests
+        working-directory: src
+        run: >
+          dotnet test Ecommerce.slnx -c Release --no-build
+          --filter "FullyQualifiedName~UnitTests"
+          --logger trx --results-directory TestResults/unit
+
+      - name: Integration tests
+        working-directory: src
+        run: >
+          dotnet test Ecommerce.slnx -c Release --no-build
+          --filter "FullyQualifiedName~IntegrationTests"
+          --logger trx --results-directory TestResults/integration
