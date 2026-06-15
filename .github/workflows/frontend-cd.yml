@@ -37,7 +37,7 @@ jobs:
         id: swa
         run: |
           token=$(az staticwebapp secrets list \
-            --name "${{ vars.AZURE_SWA_NAME }}" \
+            --name "${{ vars.AZURE_SWA_ADMIN }}" \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --query "properties.apiKey" -o tsv)
           echo "::add-mask::$token"
