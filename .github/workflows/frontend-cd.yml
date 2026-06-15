@@ -1,0 +1,52 @@
+name: Frontend CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Ecommerce.Admin.Web/**'
+      - '.github/workflows/frontend-cd.yml'
+  workflow_dispatch: # manual redeploy / rollback
+
+concurrency:
+  group: frontend-cd
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Static Web Apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write # mint the short-lived OIDC token for azure/login
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # OIDC login — same app registration as Backend CD; no Azure secret stored.
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # Fetch the SWA deployment token just-in-time via OIDC instead of storing it.
+      - name: Fetch SWA deployment token
+        id: swa
+        run: |
+          token=$(az staticwebapp secrets list \
+            --name "${{ vars.AZURE_SWA_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query "properties.apiKey" -o tsv)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: src/Ecommerce.Admin.Web
+          output_location: wwwroot

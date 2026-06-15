@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - '.github/workflows/backend-cd.yml'
+  workflow_dispatch: # manual redeploy / rollback
 
 concurrency:
   group: backend-cd
@@ -23,8 +24,7 @@ jobs:
       contents: read
       packages: write # required to push to ghcr.io
     
-    # Exposes the pushed image digest so the deploy job can pin the exact artifact
-    # (an immutable @sha256:... reference, not the movable :latest tag).
+    # Exposes the image digest so deploy can pin the exact artifact (not :latest).
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
@@ -41,10 +41,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Same Dockerfile/context as Backend CI's validation build, and the same gha
-      # cache — so this push reuses the layers CI already compiled on the PR.
-      # :${{ github.sha }} is the immutable, traceable tag; :latest is a convenience
-      # pointer for humans and the ACA first-deploy.
+      # Reuses CI's gha cache; :sha is the immutable tag, :latest a convenience pointer.
       - name: Build & push
         id: build
         uses: docker/build-push-action@v7
@@ -67,9 +64,7 @@ jobs:
       id-token: write # mint the short-lived OIDC token for azure/login
       contents: read
     steps:
-      # OIDC federated login — no Azure secret stored in GitHub, just the IDs of the
-      # app registration. All environment-specific values are repo variables, never
-      # hardcoded, so the same workflow can target another environment by swapping them.
+      # OIDC login — no Azure secret stored; IDs come from repo variables.
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -77,8 +72,7 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      # Pin the exact artifact by digest (not :latest), so the running revision is
-      # provably the image this run pushed. Migrations apply on container startup.
+      # Pin by digest so the revision is provably this run's image; migrations run on startup.
       - name: Deploy image to ACA
         run: |
           az containerapp update \
@@ -86,9 +80,7 @@ jobs:
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --image "${{ env.IMAGE_NAME }}@${{ needs.publish.outputs.digest }}"
 
-      # Fail the deploy if the new revision never serves /health. A cold start
-      # (scale-from-zero + SQL Serverless resume + EF migrations) can take a
-      # couple of minutes, so the loop waits up to ~3 min before giving up.
+      # Fail if /health never returns 200; waits ~3 min for cold start (scale-from-zero + migrations).
       - name: Health check
         run: |
           fqdn=$(az containerapp show \
