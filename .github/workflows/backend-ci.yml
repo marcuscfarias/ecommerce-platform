@@ -1,11 +1,22 @@
 name: Backend CI
 
+# Path-filtered: a frontend-only change skips the (slow) integration suite.
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - '!src/Ecommerce.Admin.Web/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/actions/setup-dotnet/action.yml'
 
   push:
     branches-ignore: [main]
+    paths:
+      - 'src/**'
+      - '!src/Ecommerce.Admin.Web/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/actions/setup-dotnet/action.yml'
 
 # Least privilege: CI only ever reads the repository.
 permissions:
@@ -15,121 +26,8 @@ concurrency:
   group: backend-ci-${{ github.ref }}
   cancel-in-progress: true
 
-# All jobs run in parallel for the fastest feedback (public repo = unlimited
-# Actions minutes). The only real ordering is the two `needs:` below — everything
-# else is grouped by category purely for readability.
 jobs:
-  # ── Quality gates ───────────────────────────────────────────────────────────
-
-  # Conventional Commits keep history machine-readable (drives versioning later).
-  # PR-only: a branch push has no commit range to lint.
-  commitlint:
-    name: Conventional Commits
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # the action needs the full PR commit range, not a shallow clone
-
-      - name: Lint commits
-        uses: wagoid/commitlint-github-action@v6
-
-  # Style gate. EnforceCodeStyleInBuild covers most rules at build time; this is
-  # the reliable check for whitespace, using-ordering, and the rest.
-  format:
-    name: Format
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup .NET
-        uses: ./.github/actions/setup-dotnet
-
-      - name: Verify formatting
-        working-directory: src
-        run: dotnet format Ecommerce.slnx --verify-no-changes --no-restore
-
-  # Lints the non-C# files the .NET toolchain doesn't see (YAML, JSON, Markdown,
-  # Actions syntax). Runs after commitlint: reject a bad message — the cheapest
-  # gate — before linting files. On push, commitlint is skipped and this still runs.
-  lint-files:
-    name: Lint config files
-    needs: commitlint
-    if: ${{ !cancelled() && needs.commitlint.result != 'failure' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Super-Linter
-        uses: super-linter/super-linter/slim@v7
-        env:
-          DEFAULT_BRANCH: main
-          VALIDATE_ALL_CODEBASE: false # only changed files, so pre-existing issues don't block PRs
-          VALIDATE_YAML: true
-          VALIDATE_JSON: true
-          VALIDATE_MARKDOWN: true
-          VALIDATE_GITHUB_ACTIONS: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ── Security gates ──────────────────────────────────────────────────────────
-
-  # Scans the commits for leaked secrets (API keys, connection strings, tokens)
-  # before they reach main. gitleaks-action is free on public repos — no license.
-  secrets:
-    name: Secret scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # scan the whole commit range under review, not just the tip
-
-      - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Blocks a PR that carries a NuGet package with a known CVE *right now* (Dependabot
-  # is the proposal half; this is the enforcement half). --include-transitive
-  # catches CVEs in indirect dependencies too.
-  vulnerable-deps:
-    name: Vulnerable dependencies
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup .NET
-        uses: ./.github/actions/setup-dotnet
-
-      # `dotnet list package --vulnerable` always exits 0 (it just prints a report),
-      # so we scan its output and fail the job ourselves when something is flagged.
-      - name: Check for vulnerable packages
-        working-directory: src
-        run: |
-          report=$(dotnet list Ecommerce.slnx package --vulnerable --include-transitive)
-          echo "$report"
-          if echo "$report" | grep -q "has the following vulnerable"; then
-            echo "::error::Vulnerable NuGet packages detected — see the report above."
-            exit 1
-          fi
-          echo "No vulnerable packages found."
-
-  # ── Build, test & package ───────────────────────────────────────────────────
-
-  # The core correctness gate: one build (warnings are errors, so analyzer
-  # violations fail here), then unit tests, then integration tests.
+  # Build once (warnings=errors), then unit tests, then integration tests.
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
@@ -141,12 +39,12 @@ jobs:
       - name: Setup .NET
         uses: ./.github/actions/setup-dotnet
 
-      # Build once and reuse the output for both test runs (--no-build below).
+      # Build once; both test runs reuse it via --no-build.
       - name: Build
         working-directory: src
         run: dotnet build Ecommerce.slnx -c Release --no-restore
 
-      # Fast, Docker-free logic checks run first so cheap failures surface early.
+      # Unit tests first so cheap failures surface early.
       - name: Unit tests
         working-directory: src
         run: >
@@ -161,9 +59,7 @@ jobs:
           --filter "FullyQualifiedName~IntegrationTests"
           --logger trx --results-directory TestResults/integration
 
-  # Proves the API image still builds before merge. Gated on the tests: no point
-  # building an image whose code is already broken. Validation only — never pushes;
-  # Backend CD reuses this exact build to publish to ghcr.io on main.
+  # Validation-only image build (never pushes); gated on the tests passing.
   image:
     name: Image build
     needs: build-and-test
