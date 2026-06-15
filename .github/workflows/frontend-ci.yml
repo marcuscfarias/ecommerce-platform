@@ -1,0 +1,41 @@
+name: Frontend CI
+
+# Validates the SPA compiles before Frontend CD publishes it. Path-filtered to the SPA.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Ecommerce.Admin.Web/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/actions/setup-dotnet/action.yml'
+
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'src/Ecommerce.Admin.Web/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/actions/setup-dotnet/action.yml'
+
+# Least privilege: CI only ever reads the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: ./.github/actions/setup-dotnet
+
+      - name: Publish
+        working-directory: src
+        run: dotnet publish Ecommerce.Admin.Web/Ecommerce.Admin.Web.csproj -c Release --no-restore
