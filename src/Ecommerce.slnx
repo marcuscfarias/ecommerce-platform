@@ -4,9 +4,11 @@
     <File Path="compose.override.yaml" />
     <File Path="compose.prod.yaml" />
     <File Path="../.github/actions/setup-dotnet/action.yml" />
-    <File Path="../.github/workflows/azure-static-web-apps-agreeable-meadow-0179d5e1e.yml" />
     <File Path="../.github/workflows/backend-cd.yml" />
     <File Path="../.github/workflows/backend-ci.yml" />
+    <File Path="../.github/workflows/ci.yml" />
+    <File Path="../.github/workflows/frontend-cd.yml" />
+    <File Path="../.github/workflows/frontend-ci.yml" />
     <File Path="../README.md" />
     <File Path=".editorconfig" />
     <File Path=".env.example" />
