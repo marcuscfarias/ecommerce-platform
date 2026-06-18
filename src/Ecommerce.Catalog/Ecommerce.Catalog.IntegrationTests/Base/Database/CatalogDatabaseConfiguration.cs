@@ -1,6 +1,6 @@
 using Ecommerce.Kernel.IntegrationTests.Database;
 
-namespace Ecommerce.Catalog.IntegrationTests.Base;
+namespace Ecommerce.Catalog.IntegrationTests.Base.Database;
 
 public sealed class CatalogDatabaseConfiguration(string connectionString) : IDatabaseConfiguration
 {
