@@ -1,13 +1,18 @@
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Ecommerce.Catalog.Application;
 using Ecommerce.Catalog.Domain.Repositories;
+using Ecommerce.Catalog.Domain.Storage;
 using Ecommerce.Catalog.Infrastructure.Mediation;
 using Ecommerce.Catalog.Infrastructure.Persistence;
 using Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
+using Ecommerce.Catalog.Infrastructure.Persistence.Storage;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Ecommerce.Catalog.Infrastructure;
 
@@ -23,7 +28,20 @@ public static class InfrastructureModule
         services.AddScoped<ICatalogRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
 
+        services.Configure<ProductImageStorageOptions>(configuration.GetSection(ProductImageStorageOptions.SectionName));
+        services.AddSingleton(CreateBlobServiceClient);
+        services.AddScoped<IProductImageStorage, AzureBlobProductImageStorage>();
+
         return services;
+    }
+
+    private static BlobServiceClient CreateBlobServiceClient(IServiceProvider provider)
+    {
+        var options = provider.GetRequiredService<IOptions<ProductImageStorageOptions>>().Value;
+
+        return string.IsNullOrWhiteSpace(options.ConnectionString)
+            ? new BlobServiceClient(new Uri(options.ServiceUri!), new DefaultAzureCredential())
+            : new BlobServiceClient(options.ConnectionString);
     }
 
     public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app, bool applyMigrations = false)
