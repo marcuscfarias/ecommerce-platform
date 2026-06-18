@@ -1,3 +1,4 @@
+using Ecommerce.Auth.IntegrationTests.Base.Database;
 using Ecommerce.Kernel.IntegrationTests;
 using Ecommerce.Kernel.IntegrationTests.Database;
 

@@ -1,4 +1,4 @@
-using Ecommerce.Auth.IntegrationTests.Base;
+using Ecommerce.Auth.IntegrationTests.Base.RateLimited;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth.Login;
 
