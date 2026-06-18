@@ -21,6 +21,7 @@ public static class InfrastructureModule
 
         services.AddScoped<ICatalogModule, CatalogModule>();
         services.AddScoped<ICatalogRepository, CategoryRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         return services;
     }
