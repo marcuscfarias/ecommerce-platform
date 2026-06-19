@@ -2,6 +2,7 @@ using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Products.CreateProduct;
 using Ecommerce.Catalog.Api.Products.GetProductById;
 using Ecommerce.Catalog.Api.Products.ListProducts;
+using Ecommerce.Catalog.Api.Products.SetProductStatus;
 using Ecommerce.Catalog.Api.Products.UpdateProduct;
 using Ecommerce.Catalog.Application;
 using Microsoft.AspNetCore.Authorization;
@@ -62,6 +63,20 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
     public async Task<IActionResult> Update(
         [FromRoute] int id,
         [FromBody] UpdateProductRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/status")]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
+    [EndpointDescription("Activates or deactivates a product.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetStatus(
+        [FromRoute] int id,
+        [FromBody] SetProductStatusRequest request,
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
