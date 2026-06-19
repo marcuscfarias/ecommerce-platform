@@ -1,0 +1,176 @@
+@inject CatalogApiClient Catalog
+@inject ProductsApiClient Products
+
+<MudDialog>
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_model.Name" Label="Name" Variant="Variant.Outlined"
+                          Immediate="true" Validation="NameValidation" MaxLength="200" />
+            <MudTextField @bind-Value="_model.Sku" Label="SKU" Variant="Variant.Outlined" Class="mt-4"
+                          Immediate="true" Validation="SkuValidation" MaxLength="50" />
+            <MudSelect T="int" @bind-Value="_model.CategoryId" Label="Category" Variant="Variant.Outlined"
+                       Class="mt-4" Validation="CategoryValidation">
+                @foreach (var category in _categories)
+                {
+                    <MudSelectItem T="int" Value="category.Id">@category.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <div class="d-flex gap-4 mt-4">
+                <MudNumericField @bind-Value="_model.Price" Label="Price" Variant="Variant.Outlined"
+                                 Min="0" Format="F2" Adornment="Adornment.Start" AdornmentText="$" />
+                <MudNumericField @bind-Value="_model.StockQuantity" Label="Stock" Variant="Variant.Outlined"
+                                 Min="0" />
+            </div>
+            <MudTextField @bind-Value="_model.Description" Label="Description (optional)"
+                          Variant="Variant.Outlined" Class="mt-4" Lines="3"
+                          Immediate="true" Validation="DescriptionValidation" MaxLength="2000" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="SubmitAsync" Disabled="_submitting">
+            @(IsEdit ? "Save changes" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public ProductDetail? Product { get; set; }
+
+    private MudForm _form = null!;
+    private readonly ProductFormModel _model = new();
+    private IReadOnlyList<CategoryListItem> _categories = [];
+    private bool _submitting;
+    private string? _error;
+
+    private bool IsEdit => Product is not null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await Catalog.ListAllAsync(isActive: true);
+
+        if (Product is not null)
+        {
+            _model.Name = Product.Name;
+            _model.Sku = Product.Sku;
+            _model.CategoryId = Product.CategoryId;
+            _model.Price = Product.Price;
+            _model.StockQuantity = Product.StockQuantity;
+            _model.Description = Product.Description ?? string.Empty;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        _submitting = true;
+        _error = null;
+
+        var name = _model.Name.Trim();
+        var sku = _model.Sku.Trim();
+        var description = string.IsNullOrWhiteSpace(_model.Description) ? null : _model.Description.Trim();
+
+        var outcome = IsEdit
+            ? await Products.UpdateAsync(Product!.Id, new UpdateProductRequest(
+                name, _model.Price, sku, _model.CategoryId, _model.StockQuantity, description))
+            : await Products.CreateAsync(new CreateProductRequest(
+                name, _model.Price, sku, _model.CategoryId, _model.StockQuantity, description));
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _submitting = false;
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private static readonly Func<string, IEnumerable<string>> NameValidation = ValidateName;
+    private static readonly Func<string, IEnumerable<string>> SkuValidation = ValidateSku;
+    private static readonly Func<string, IEnumerable<string>> DescriptionValidation = ValidateDescription;
+    private static readonly Func<int, IEnumerable<string>> CategoryValidation = ValidateCategory;
+
+    private static IEnumerable<string> ValidateName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "Enter a product name.";
+            yield break;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length < 3 || trimmed.Length > 200)
+        {
+            yield return "Name must be between 3 and 200 characters.";
+        }
+    }
+
+    private static IEnumerable<string> ValidateSku(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "Enter a SKU.";
+            yield break;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length < 3 || trimmed.Length > 50)
+        {
+            yield return "SKU must be between 3 and 50 characters.";
+        }
+    }
+
+    private static IEnumerable<string> ValidateDescription(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield break;
+        }
+
+        if (value.Trim().Length > 2000)
+        {
+            yield return "Description must be at most 2000 characters.";
+        }
+    }
+
+    private static IEnumerable<string> ValidateCategory(int value)
+    {
+        if (value <= 0)
+        {
+            yield return "Select a category.";
+        }
+    }
+
+    private sealed class ProductFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Sku { get; set; } = string.Empty;
+
+        public int CategoryId { get; set; }
+
+        public decimal Price { get; set; }
+
+        public int StockQuantity { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+    }
+}

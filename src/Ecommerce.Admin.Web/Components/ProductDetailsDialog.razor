@@ -1,0 +1,113 @@
+@inject ProductsApiClient Products
+
+<MudDialog>
+    <TitleContent>
+        <div class="dlg-head">
+            <MudText Typo="Typo.h6">@Product.Name</MudText>
+            <span class="status @(Product.IsActive ? "status--active" : "status--inactive")">
+                <span class="status__dot"></span>@(Product.IsActive ? "Active" : "Inactive")
+            </span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="product-media">
+            @if (string.IsNullOrWhiteSpace(Product.ImageUrl) || _imageFailed)
+            {
+                <div class="product-media__empty">
+                    <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Size="Size.Large" />
+                    <span>No image</span>
+                </div>
+            }
+            else
+            {
+                <img class="product-media__img" src="@Products.ResolveImageUrl(Product.ImageUrl)"
+                     alt="@Product.Name" @onerror="OnImageError" />
+            }
+        </div>
+
+        <div class="dlg-grid">
+            <div class="dlg-field">
+                <span class="dlg-field__label">SKU</span>
+                <p class="dlg-field__value">@Product.Sku</p>
+            </div>
+            <div class="dlg-field">
+                <span class="dlg-field__label">Category</span>
+                <p class="dlg-field__value">@CategoryName</p>
+            </div>
+            <div class="dlg-field">
+                <span class="dlg-field__label">Price</span>
+                <p class="dlg-field__value">@Product.Price.ToString("F2", CultureInfo.InvariantCulture) @Product.Currency</p>
+            </div>
+            <div class="dlg-field">
+                <span class="dlg-field__label">Stock</span>
+                <p class="dlg-field__value">@Product.StockQuantity.ToString(CultureInfo.InvariantCulture)</p>
+            </div>
+        </div>
+
+        <div class="dlg-field mt-4">
+            <span class="dlg-field__label">Description</span>
+            @if (string.IsNullOrWhiteSpace(Product.Description))
+            {
+                <p class="dlg-field__empty">No description provided.</p>
+            }
+            else
+            {
+                <p class="dlg-field__value">@Product.Description</p>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Image" OnClick="ManageImage">
+            Image
+        </MudButton>
+        @if (Product.IsActive)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Block" OnClick="ToggleStatus">
+                Deactivate
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ToggleStatus">
+                Activate
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Edit" OnClick="Edit">
+            Edit
+        </MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public ProductDetail Product { get; set; } = null!;
+
+    [Parameter]
+    public string CategoryName { get; set; } = "—";
+
+    private bool _imageFailed;
+
+    public enum ProductDetailAction
+    {
+        Edit,
+        ToggleStatus,
+        ManageImage,
+    }
+
+    private void Edit() => MudDialog.Close(DialogResult.Ok(ProductDetailAction.Edit));
+
+    private void ToggleStatus() => MudDialog.Close(DialogResult.Ok(ProductDetailAction.ToggleStatus));
+
+    private void ManageImage() => MudDialog.Close(DialogResult.Ok(ProductDetailAction.ManageImage));
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void OnImageError() => _imageFailed = true;
+}
