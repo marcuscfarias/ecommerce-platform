@@ -22,7 +22,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # OIDC login — same app registration as Backend CD; no Azure secret stored.
       - name: Azure login (OIDC)
