@@ -18,23 +18,6 @@ public class UpdateProductHandlerTests
         _handler = new UpdateProductHandler(_repository);
     }
 
-    private static UpdateProductCommand ValidCommand() => new(
-        Faker.Random.Int(1, 1000),
-        Faker.Commerce.ProductName(),
-        Faker.Lorem.Sentence(),
-        Faker.Random.Decimal(1, 1000),
-        Faker.Commerce.Ean13(),
-        Faker.Random.Int(1, 1000),
-        Faker.Random.Int(0, 500));
-
-    private static Product ExistingProduct() => new(
-        Faker.Commerce.ProductName(),
-        Faker.Lorem.Sentence(),
-        new Money(Faker.Random.Decimal(1, 1000)),
-        Faker.Commerce.Ean13(),
-        Faker.Random.Int(1, 1000),
-        Faker.Random.Int(0, 500));
-
     [Fact]
     public async Task Handle_WhenProductNotFound_ShouldThrowResourceNotFound()
     {
@@ -103,4 +86,21 @@ public class UpdateProductHandlerTests
         _repository.Received(1).Update(product);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
+
+    private static UpdateProductCommand ValidCommand() => new(
+        Faker.Random.Int(1, 1000),
+        Faker.Commerce.ProductName(),
+        Faker.Lorem.Sentence(),
+        Faker.Random.Decimal(1, 1000),
+        Faker.Commerce.Ean13(),
+        Faker.Random.Int(1, 1000),
+        Faker.Random.Int(0, 500));
+
+    private static Product ExistingProduct() => new(
+        Faker.Commerce.ProductName(),
+        Faker.Lorem.Sentence(),
+        new Money(Faker.Random.Decimal(1, 1000)),
+        Faker.Commerce.Ean13(),
+        Faker.Random.Int(1, 1000),
+        Faker.Random.Int(0, 500));
 }

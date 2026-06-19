@@ -6,15 +6,6 @@ public class UpdateProductRequestValidatorTests
 {
     private readonly UpdateProductRequestValidator _sut = new();
 
-    private static UpdateProductRequest ValidRequest(
-        string name = "Mechanical Keyboard",
-        decimal price = 129.99m,
-        string sku = "KB-75-HS",
-        int categoryId = 1,
-        int stockQuantity = 50,
-        string? description = "A hot-swappable 75% mechanical keyboard.") =>
-        new(name, price, sku, categoryId, stockQuantity, description);
-
     [Fact]
     public void Validate_WhenRequestIsValid_ShouldHaveNoErrors()
     {
@@ -170,4 +161,13 @@ public class UpdateProductRequestValidatorTests
         // Assert
         result.Errors.ShouldContain(e => e.PropertyName == "Description");
     }
+
+    private static UpdateProductRequest ValidRequest(
+        string name = "Mechanical Keyboard",
+        decimal price = 129.99m,
+        string sku = "KB-75-HS",
+        int categoryId = 1,
+        int stockQuantity = 50,
+        string? description = "A hot-swappable 75% mechanical keyboard.") =>
+        new(name, price, sku, categoryId, stockQuantity, description);
 }

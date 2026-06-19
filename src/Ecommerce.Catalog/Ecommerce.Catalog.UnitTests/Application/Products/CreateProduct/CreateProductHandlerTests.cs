@@ -17,14 +17,6 @@ public class CreateProductHandlerTests
         _handler = new CreateProductHandler(_repository);
     }
 
-    private static CreateProductCommand ValidCommand() => new(
-        Faker.Commerce.ProductName(),
-        Faker.Lorem.Sentence(),
-        Faker.Random.Decimal(1, 1000),
-        Faker.Commerce.Ean13(),
-        Faker.Random.Int(1, 1000),
-        Faker.Random.Int(0, 500));
-
     [Fact]
     public async Task Handle_WhenCommandIsValid_ShouldAddProductAndSaveChanges()
     {
@@ -72,4 +64,12 @@ public class CreateProductHandlerTests
         // Assert
         await act.ShouldThrowAsync<SkuConflictException>();
     }
+
+    private static CreateProductCommand ValidCommand() => new(
+        Faker.Commerce.ProductName(),
+        Faker.Lorem.Sentence(),
+        Faker.Random.Decimal(1, 1000),
+        Faker.Commerce.Ean13(),
+        Faker.Random.Int(1, 1000),
+        Faker.Random.Int(0, 500));
 }
