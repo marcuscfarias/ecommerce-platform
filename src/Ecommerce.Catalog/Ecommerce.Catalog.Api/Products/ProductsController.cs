@@ -4,6 +4,7 @@ using Ecommerce.Catalog.Api.Products.GetProductById;
 using Ecommerce.Catalog.Api.Products.ListProducts;
 using Ecommerce.Catalog.Api.Products.SetProductStatus;
 using Ecommerce.Catalog.Api.Products.UpdateProduct;
+using Ecommerce.Catalog.Api.Products.UploadProductImage;
 using Ecommerce.Catalog.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -63,6 +64,22 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
     public async Task<IActionResult> Update(
         [FromRoute] int id,
         [FromBody] UpdateProductRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/image")]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
+    [Consumes("multipart/form-data")]
+    [EndpointDescription("Uploads or replaces the product's image.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadImage(
+        [FromRoute] int id,
+        [FromForm] UploadProductImageRequest request,
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
