@@ -2,6 +2,7 @@ using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Products.CreateProduct;
 using Ecommerce.Catalog.Api.Products.GetProductById;
 using Ecommerce.Catalog.Api.Products.ListProducts;
+using Ecommerce.Catalog.Api.Products.RemoveProductImage;
 using Ecommerce.Catalog.Api.Products.SetProductStatus;
 using Ecommerce.Catalog.Api.Products.UpdateProduct;
 using Ecommerce.Catalog.Api.Products.UploadProductImage;
@@ -83,6 +84,17 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}/image")]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
+    [EndpointDescription("Removes the product's image.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveImage([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(RemoveProductImageRequest.ToCommand(id), cancellationToken);
         return NoContent();
     }
 
