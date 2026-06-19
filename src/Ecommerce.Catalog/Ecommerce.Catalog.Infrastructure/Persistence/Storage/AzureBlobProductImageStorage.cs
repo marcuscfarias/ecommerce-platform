@@ -13,7 +13,7 @@ internal sealed class AzureBlobProductImageStorage(
 
     public async Task<string> UploadAsync(Stream content, string contentType, CancellationToken ct = default)
     {
-        await _container.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: ct);
+        await _container.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: ct);
 
         var blobName = $"{Guid.NewGuid():N}{ResolveExtension(contentType)}";
         var blob = _container.GetBlobClient(blobName);
