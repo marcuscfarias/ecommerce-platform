@@ -1,6 +1,7 @@
 using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Products.CreateProduct;
 using Ecommerce.Catalog.Api.Products.GetProductById;
+using Ecommerce.Catalog.Api.Products.ListProducts;
 using Ecommerce.Catalog.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,18 @@ namespace Ecommerce.Catalog.Api.Products;
 [Route("api/v1/products")]
 public sealed class ProductsController(ICatalogModule module) : ControllerBase
 {
+    [HttpGet]
+    [Authorize(Policy = CatalogPolicies.CanViewCatalog)]
+    [EndpointDescription("Returns a paginated list of products.")]
+    [ProducesResponseType<ListProductsResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List(
+        [FromQuery] ListProductsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteQueryAsync(request.ToQuery(), cancellationToken);
+        return Ok(ListProductsResponse.FromResult(result));
+    }
+
     [HttpPost]
     [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
     [EndpointDescription("Creates a new product.")]
