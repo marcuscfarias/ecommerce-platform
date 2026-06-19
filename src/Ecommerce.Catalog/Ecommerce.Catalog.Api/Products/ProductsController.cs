@@ -2,6 +2,7 @@ using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Products.CreateProduct;
 using Ecommerce.Catalog.Api.Products.GetProductById;
 using Ecommerce.Catalog.Api.Products.ListProducts;
+using Ecommerce.Catalog.Api.Products.UpdateProduct;
 using Ecommerce.Catalog.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -49,5 +50,21 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
     {
         var result = await module.ExecuteQueryAsync(GetProductByIdRequest.ToQuery(id), cancellationToken);
         return Ok(GetProductByIdResponse.FromResult(result));
+    }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = CatalogPolicies.CanManageCatalog)]
+    [EndpointDescription("Updates an existing product.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(
+        [FromRoute] int id,
+        [FromBody] UpdateProductRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
+        return NoContent();
     }
 }
