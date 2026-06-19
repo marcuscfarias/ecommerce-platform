@@ -1,0 +1,11 @@
+title = "ecommerce-platform gitleaks config"
+
+# Inherit all of gitleaks' default rules; only add the allowlist below.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Azurite's well-known public emulator account key (documented by Microsoft, identical on every machine — not a real secret)."
+regexes = [
+  '''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''',
+]

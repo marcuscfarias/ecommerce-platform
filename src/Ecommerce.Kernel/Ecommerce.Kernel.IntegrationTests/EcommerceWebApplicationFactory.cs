@@ -1,5 +1,6 @@
 using Ecommerce.AppHost;
 using Ecommerce.Kernel.IntegrationTests.Database;
+using Ecommerce.Kernel.IntegrationTests.JwtToken;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;

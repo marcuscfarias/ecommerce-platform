@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Ecommerce.Kernel.IntegrationTests.Database;
+using Ecommerce.Kernel.IntegrationTests.JwtToken;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,7 +18,7 @@ public abstract class BaseIntegrationFixture<TFactory> : IAsyncLifetime
     protected abstract TFactory CreateFactory(DatabaseContainerFixture container);
     protected abstract string[] Schemas { get; }
 
-    public async Task InitializeAsync()
+    public virtual async Task InitializeAsync()
     {
         await _container.InitializeAsync();
         Factory = CreateFactory(_container);
@@ -50,7 +51,7 @@ public abstract class BaseIntegrationFixture<TFactory> : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    public async Task DisposeAsync()
+    public virtual async Task DisposeAsync()
     {
         Client.Dispose();
         await Factory.DisposeAsync();

@@ -1,6 +1,6 @@
 using Ecommerce.Kernel.IntegrationTests.Database;
 
-namespace Ecommerce.Auth.IntegrationTests.Base;
+namespace Ecommerce.Auth.IntegrationTests.Base.Database;
 
 public sealed class AuthDatabaseConfiguration(string connectionString) : IDatabaseConfiguration
 {

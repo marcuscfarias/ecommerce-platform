@@ -3,6 +3,7 @@ using Ecommerce.Auth.Api.Authorization;
 using Ecommerce.Auth.IntegrationTests.Base;
 using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.IntegrationTests;
+using Ecommerce.Kernel.IntegrationTests.JwtToken;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth;
 

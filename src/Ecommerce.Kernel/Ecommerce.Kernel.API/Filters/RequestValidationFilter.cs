@@ -12,16 +12,18 @@ public class RequestValidationFilter(IServiceProvider serviceProvider) : IAsyncA
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var bodyParameter = context.ActionDescriptor.Parameters
-            .FirstOrDefault(p => p.BindingInfo?.BindingSource == BindingSource.Body && p.ParameterType.IsClass);
+        var validatableParameter = context.ActionDescriptor.Parameters
+            .FirstOrDefault(p => p.ParameterType.IsClass
+                && p.BindingInfo?.BindingSource is { } source // not null + capture
+                && (source == BindingSource.Body || source == BindingSource.Form));
 
-        if (bodyParameter is not null)
+        if (validatableParameter is not null)
         {
-            var validatorType = typeof(IValidator<>).MakeGenericType(bodyParameter.ParameterType);
+            var validatorType = typeof(IValidator<>).MakeGenericType(validatableParameter.ParameterType);
             var validator = serviceProvider.GetService(validatorType);
 
             if (validator is not null
-                && context.ActionArguments.TryGetValue(bodyParameter.Name, out var parameterValue)
+                && context.ActionArguments.TryGetValue(validatableParameter.Name, out var parameterValue)
                 && parameterValue is not null)
             {
                 var validateMethod = validatorType.GetMethod("ValidateAsync")!;

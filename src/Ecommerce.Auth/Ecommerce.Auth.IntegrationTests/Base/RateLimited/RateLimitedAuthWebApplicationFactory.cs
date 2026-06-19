@@ -1,10 +1,11 @@
 using System.Globalization;
+using Ecommerce.Auth.IntegrationTests.Base.Database;
 using Ecommerce.Kernel.IntegrationTests;
 using Ecommerce.Kernel.IntegrationTests.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 
-namespace Ecommerce.Auth.IntegrationTests.Base;
+namespace Ecommerce.Auth.IntegrationTests.Base.RateLimited;
 
 // Boots a host with rate limiting enabled and a tiny login window so the throttling
 // behaviour can be asserted; the shared functional host keeps the limiter disabled.

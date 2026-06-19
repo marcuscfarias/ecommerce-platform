@@ -3,6 +3,7 @@ using Ecommerce.Auth.Api.Auth.GetMe;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.IntegrationTests.Base;
 using Ecommerce.Kernel.IntegrationTests;
+using Ecommerce.Kernel.IntegrationTests.JwtToken;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth;
 

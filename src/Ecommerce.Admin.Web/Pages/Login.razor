@@ -136,7 +136,7 @@
     {
         if (string.IsNullOrWhiteSpace(ReturnUrl) || !ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//"))
         {
-            return "/dashboard";
+            return "/home";
         }
 
         return ReturnUrl;

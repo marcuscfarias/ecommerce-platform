@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Ecommerce.Kernel.IntegrationTests;
+namespace Ecommerce.Kernel.IntegrationTests.JwtToken;
 
 // The host validates Jwt:* on startup, so every bounded-context's test host needs these
 // values present to boot. Injecting them also gives tests a known signing key, so

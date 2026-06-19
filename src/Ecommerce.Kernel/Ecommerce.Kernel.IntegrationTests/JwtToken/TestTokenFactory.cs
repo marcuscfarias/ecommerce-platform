@@ -5,7 +5,7 @@ using System.Text;
 using Ecommerce.Kernel.Application.Security;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Ecommerce.Kernel.IntegrationTests;
+namespace Ecommerce.Kernel.IntegrationTests.JwtToken;
 
 // Mints bearer tokens the test host will accept, carrying the given permission claims.
 // Lives in the shared base so every module's tests can authenticate without referencing
