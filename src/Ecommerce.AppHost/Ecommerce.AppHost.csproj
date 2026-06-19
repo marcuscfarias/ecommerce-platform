@@ -6,8 +6,8 @@
 
     <ItemGroup>
         <PackageReference Include="MicroElements.AspNetCore.OpenApi.FluentValidation" Version="7.1.7-beta.3" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.16.4" />
     </ItemGroup>
 
     <ItemGroup>
