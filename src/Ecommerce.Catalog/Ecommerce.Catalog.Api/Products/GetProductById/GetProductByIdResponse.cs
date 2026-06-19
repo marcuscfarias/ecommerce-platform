@@ -25,5 +25,5 @@ public sealed record GetProductByIdResponse(
             result.CategoryId,
             result.StockQuantity,
             result.IsActive,
-            result.ImageUrl);
+            result.ImageUrl is null ? null : $"api/v1/products/{result.Id}/image");
 }

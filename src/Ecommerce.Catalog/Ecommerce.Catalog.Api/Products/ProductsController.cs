@@ -1,6 +1,7 @@
 using Ecommerce.Catalog.Api.Authorization;
 using Ecommerce.Catalog.Api.Products.CreateProduct;
 using Ecommerce.Catalog.Api.Products.GetProductById;
+using Ecommerce.Catalog.Api.Products.GetProductImage;
 using Ecommerce.Catalog.Api.Products.ListProducts;
 using Ecommerce.Catalog.Api.Products.RemoveProductImage;
 using Ecommerce.Catalog.Api.Products.SetProductStatus;
@@ -69,6 +70,17 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
     {
         await module.ExecuteCommandAsync(request.ToCommand(id), cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("{id:int}/image")]
+    [Authorize(Policy = CatalogPolicies.CanViewCatalog)]
+    [EndpointDescription("Returns the product's image.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetImage([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteQueryAsync(GetProductImageRequest.ToQuery(id), cancellationToken);
+        return File(result.Content, result.ContentType);
     }
 
     [HttpPost("{id:int}/image")]
