@@ -34,6 +34,33 @@ public sealed class CatalogApiClient(HttpClient httpClient)
         }
     }
 
+    public async Task<IReadOnlyList<CategoryListItem>> ListAllAsync(
+        bool? isActive,
+        CancellationToken cancellationToken = default)
+    {
+        var items = new List<CategoryListItem>();
+        var pageNumber = 1;
+
+        while (true)
+        {
+            var page = await ListAsync(pageNumber, isActive, cancellationToken);
+            if (page is null)
+            {
+                return [];
+            }
+
+            items.AddRange(page.Data);
+            if (pageNumber >= page.TotalPages || page.Data.Count == 0)
+            {
+                break;
+            }
+
+            pageNumber++;
+        }
+
+        return items;
+    }
+
     public async Task<CategoryDetail?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         try

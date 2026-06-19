@@ -1,0 +1,222 @@
+@page "/products"
+@layout AppShell
+@attribute [Authorize]
+@inject ProductsApiClient ProductsApi
+@inject CatalogApiClient Catalog
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Products · Ecommerce Backoffice</PageTitle>
+
+<div class="mgmt-page">
+    <header class="page-head">
+        <div>
+            <h1>Products</h1>
+            <p class="page-head__sub">Manage the products shoppers can buy across the store.</p>
+        </div>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateAsync">
+            New product
+        </MudButton>
+    </header>
+
+    <div class="seg" role="group" aria-label="Filter by status">
+        <button type="button" class="seg__btn @(_status == "All" ? "is-active" : null)"
+                @onclick='() => SetStatusAsync("All")'>All</button>
+        <button type="button" class="seg__btn @(_status == "Active" ? "is-active" : null)"
+                @onclick='() => SetStatusAsync("Active")'>Active</button>
+        <button type="button" class="seg__btn @(_status == "Inactive" ? "is-active" : null)"
+                @onclick='() => SetStatusAsync("Inactive")'>Inactive</button>
+    </div>
+
+    <div class="mgmt-panel">
+        <MudTable @ref="_table" T="ProductListItem" ServerData="LoadAsync" Hover="true"
+                  RowsPerPage="ServerPageSize" Elevation="0">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Price</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Price">@context.Price.ToString("F2", CultureInfo.InvariantCulture)</MudTd>
+                <MudTd DataLabel="Status">
+                    <span class="status @(context.IsActive ? "status--active" : "status--inactive")">
+                        <span class="status__dot"></span>@(context.IsActive ? "Active" : "Inactive")
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                               EndIcon="@Icons.Material.Filled.ChevronRight"
+                               OnClick="@(() => OpenDetailsAsync(context))">
+                        View
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="mgmt-empty">
+                    <p class="mgmt-empty__title">No products to show</p>
+                    <p class="mgmt-empty__hint">Create a product to start filling the catalog.</p>
+                </div>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText Class="pa-4">Loading products…</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager RowsPerPageString="Per page" />
+            </PagerContent>
+        </MudTable>
+    </div>
+</div>
+
+@code {
+    private const int ServerPageSize = 10;
+
+    private MudTable<ProductListItem> _table = null!;
+    private string _status = "All";
+    private IReadOnlyDictionary<int, string>? _categoryNames;
+
+    private bool? StatusFilter => _status switch
+    {
+        "Active" => true,
+        "Inactive" => false,
+        _ => null,
+    };
+
+    private async Task<TableData<ProductListItem>> LoadAsync(TableState state, CancellationToken token)
+    {
+        var result = await ProductsApi.ListAsync(state.Page + 1, StatusFilter, token);
+
+        if (result is null)
+        {
+            Snackbar.Add("We couldn't load products. Please try again.", Severity.Error);
+            return new TableData<ProductListItem> { Items = [], TotalItems = 0 };
+        }
+
+        return new TableData<ProductListItem> { Items = result.Data, TotalItems = result.TotalCount };
+    }
+
+    private async Task SetStatusAsync(string value)
+    {
+        if (_status == value)
+        {
+            return;
+        }
+
+        _status = value;
+        await _table.ReloadServerData();
+    }
+
+    private async Task OpenCreateAsync()
+    {
+        var dialog = await DialogService.ShowAsync<ProductFormDialog>("New product");
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Product created.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDetailsAsync(ProductListItem item)
+    {
+        var detail = await ProductsApi.GetAsync(item.Id);
+        if (detail is null)
+        {
+            Snackbar.Add("We couldn't load that product. Please try again.", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters<ProductDetailsDialog>
+        {
+            { x => x.Product, detail },
+            { x => x.CategoryName, await ResolveCategoryNameAsync(detail.CategoryId) },
+        };
+        var dialog = await DialogService.ShowAsync<ProductDetailsDialog>("Product details", parameters);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false, Data: ProductDetailsDialog.ProductDetailAction action })
+        {
+            return;
+        }
+
+        switch (action)
+        {
+            case ProductDetailsDialog.ProductDetailAction.Edit:
+                await EditAsync(detail);
+                break;
+            case ProductDetailsDialog.ProductDetailAction.ToggleStatus:
+                await ToggleStatusAsync(detail);
+                break;
+            case ProductDetailsDialog.ProductDetailAction.ManageImage:
+                await ManageImageAsync(detail);
+                break;
+        }
+    }
+
+    private async Task EditAsync(ProductDetail detail)
+    {
+        var parameters = new DialogParameters<ProductFormDialog> { { x => x.Product, detail } };
+        var dialog = await DialogService.ShowAsync<ProductFormDialog>("Edit product", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Product updated.", Severity.Success);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ToggleStatusAsync(ProductDetail detail)
+    {
+        var deactivating = detail.IsActive;
+        var confirmed = await DialogService.ShowMessageBox(
+            deactivating ? "Deactivate product" : "Activate product",
+            deactivating
+                ? $"Deactivate \"{detail.Name}\"? It will no longer be available in the catalog."
+                : $"Activate \"{detail.Name}\"? It will be available in the catalog again.",
+            yesText: deactivating ? "Deactivate" : "Activate",
+            cancelText: "Cancel");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var outcome = await ProductsApi.SetStatusAsync(detail.Id, !detail.IsActive);
+        if (!outcome.Succeeded)
+        {
+            Snackbar.Add(outcome.Error ?? "We couldn't update the product's status.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add(deactivating ? "Product deactivated." : "Product activated.", Severity.Success);
+        await _table.ReloadServerData();
+    }
+
+    private async Task ManageImageAsync(ProductDetail detail)
+    {
+        var parameters = new DialogParameters<ProductImageDialog>
+        {
+            { x => x.ProductId, detail.Id },
+            { x => x.CurrentImageUrl, detail.ImageUrl },
+        };
+        var dialog = await DialogService.ShowAsync<ProductImageDialog>("Product image", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Snackbar.Add("Product image updated.", Severity.Success);
+        }
+    }
+
+    private async Task<string> ResolveCategoryNameAsync(int categoryId)
+    {
+        _categoryNames ??= (await Catalog.ListAllAsync(isActive: null))
+            .ToDictionary(c => c.Id, c => c.Name);
+
+        return _categoryNames.TryGetValue(categoryId, out var name) ? name : $"#{categoryId}";
+    }
+}

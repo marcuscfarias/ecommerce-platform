@@ -1,0 +1,160 @@
+@inject ProductsApiClient Products
+
+<MudDialog>
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <div class="product-media">
+            @if (_selectedPreview is not null)
+            {
+                <img class="product-media__img" src="@_selectedPreview" alt="Selected image" />
+            }
+            else if (!string.IsNullOrWhiteSpace(CurrentImageUrl) && !_imageFailed)
+            {
+                <img class="product-media__img" src="@Products.ResolveImageUrl(CurrentImageUrl)"
+                     alt="Current image" @onerror="OnImageError" />
+            }
+            else
+            {
+                <div class="product-media__empty">
+                    <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Size="Size.Large" />
+                    <span>No image</span>
+                </div>
+            }
+        </div>
+
+        <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelectedAsync"
+                       Accept="image/png, image/jpeg" MaximumFileCount="1" Class="mt-4">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                    Choose image
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+
+        @if (_selectedFileName is not null)
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">@_selectedFileName</MudText>
+        }
+
+        <MudText Typo="Typo.caption" Class="mt-2 d-block">JPEG or PNG, up to 2 MB.</MudText>
+    </DialogContent>
+    <DialogActions>
+        @if (!string.IsNullOrWhiteSpace(CurrentImageUrl))
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete" OnClick="RemoveAsync" Disabled="_busy">
+                Remove
+            </MudButton>
+        }
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="UploadAsync" Disabled="@(_busy || _selectedContent is null)">
+            Upload
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const long MaxSizeBytes = 2 * 1024 * 1024;
+    private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png"];
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public int ProductId { get; set; }
+
+    [Parameter]
+    public string? CurrentImageUrl { get; set; }
+
+    private byte[]? _selectedContent;
+    private string? _selectedContentType;
+    private string? _selectedFileName;
+    private string? _selectedPreview;
+    private bool _busy;
+    private bool _imageFailed;
+    private string? _error;
+
+    private void OnImageError() => _imageFailed = true;
+
+    private async Task OnFileSelectedAsync(IBrowserFile? file)
+    {
+        _error = null;
+        _selectedContent = null;
+        _selectedPreview = null;
+        _selectedFileName = null;
+
+        if (file is null)
+        {
+            return;
+        }
+
+        if (!AllowedContentTypes.Contains(file.ContentType))
+        {
+            _error = "Choose a JPEG or PNG image.";
+            return;
+        }
+
+        if (file.Size > MaxSizeBytes)
+        {
+            _error = "The image must be 2 MB or smaller.";
+            return;
+        }
+
+        using var stream = file.OpenReadStream(MaxSizeBytes);
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer);
+
+        _selectedContent = buffer.ToArray();
+        _selectedContentType = file.ContentType;
+        _selectedFileName = file.Name;
+        _selectedPreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(_selectedContent)}";
+    }
+
+    private async Task UploadAsync()
+    {
+        if (_selectedContent is null || _selectedContentType is null)
+        {
+            return;
+        }
+
+        _busy = true;
+        _error = null;
+
+        using var content = new MemoryStream(_selectedContent);
+        var outcome = await Products.UploadImageAsync(
+            ProductId, content, _selectedContentType, _selectedFileName ?? "image");
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _busy = false;
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task RemoveAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var outcome = await Products.RemoveImageAsync(ProductId);
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _busy = false;
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

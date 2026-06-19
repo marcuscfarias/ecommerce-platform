@@ -23,6 +23,9 @@ builder.Services.AddHttpClient<AuthApiClient>(client => client.BaseAddress = api
 builder.Services.AddHttpClient<CatalogApiClient>(client => client.BaseAddress = apiBaseAddress)
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
+builder.Services.AddHttpClient<ProductsApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<CookieAuthenticationHandler>();
+
 builder.Services.AddHttpClient<UsersApiClient>(client => client.BaseAddress = apiBaseAddress)
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 

@@ -20,4 +20,7 @@ public abstract class BaseCatalogIntegrationTest
         _fixture.CreateAuthenticatedClient(permissions);
 
     internal Task SeedAsync(Func<CatalogDbContext, Task> seed) => _fixture.SeedAsync(seed);
+
+    internal Task<string> UploadImageAsync(byte[] content, string contentType) =>
+        _fixture.UploadImageAsync(content, contentType);
 }

@@ -175,6 +175,33 @@ public sealed class ProductsAuthorizationIntegrationTests(CatalogIntegrationFixt
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
+    [Fact]
+    public async Task GetImage_WhenNoToken_ShouldReturn401()
+    {
+        await ResetDatabaseAsync();
+
+        // Act
+        var response = await Client.GetAsync($"{Endpoint}/1/image");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetImage_WhenTokenLacksPermission_ShouldReturn403()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var client = CreateAuthenticatedClient("unrelated:permission");
+
+        // Act
+        var response = await client.GetAsync($"{Endpoint}/1/image");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
     private static object ProductBody() => new
     {
         name = "Wireless Mouse",
