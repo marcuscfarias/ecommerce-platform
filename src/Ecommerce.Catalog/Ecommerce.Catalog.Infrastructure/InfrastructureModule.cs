@@ -39,9 +39,15 @@ public static class InfrastructureModule
     {
         var options = provider.GetRequiredService<IOptions<ProductImageStorageOptions>>().Value;
 
-        return string.IsNullOrWhiteSpace(options.ConnectionString)
-            ? new BlobServiceClient(new Uri(options.ServiceUri!), new DefaultAzureCredential())
-            : new BlobServiceClient(options.ConnectionString);
+        if (!string.IsNullOrWhiteSpace(options.ConnectionString))
+            return new BlobServiceClient(options.ConnectionString);
+
+        if (string.IsNullOrWhiteSpace(options.ServiceUri))
+            throw new InvalidOperationException(
+                $"{ProductImageStorageOptions.SectionName}: either 'ConnectionString' (local/Azurite) or " +
+                "'ServiceUri' (managed identity) must be configured.");
+
+        return new BlobServiceClient(new Uri(options.ServiceUri), new DefaultAzureCredential());
     }
 
     public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app, bool applyMigrations = false)

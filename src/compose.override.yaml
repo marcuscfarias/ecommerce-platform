@@ -6,6 +6,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTPS_PORTS=8081
       - Cors__AllowedOrigins__0=https://localhost:7777
+      - "ProductImageStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+    depends_on:
+      azurite:
+        condition: service_started
     volumes:
       - ${USERPROFILE}/.aspnet/https:/https:ro
 
@@ -14,3 +18,17 @@ services:
       - .env
     ports:
       - "1433:1433"
+
+  azurite:
+    container_name: ecommerce-azurite
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000"
+    ports:
+      - "10000:10000"
+    volumes:
+      - ecommerce-azurite-data:/data
+    networks:
+      - ecommerce-net
+
+volumes:
+  ecommerce-azurite-data:
