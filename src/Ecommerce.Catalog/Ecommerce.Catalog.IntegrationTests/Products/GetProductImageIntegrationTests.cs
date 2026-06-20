@@ -37,6 +37,53 @@ public sealed class GetProductImageIntegrationTests : BaseCatalogIntegrationTest
     }
 
     [Fact]
+    public async Task Get_WhenProductHasImage_ShouldReturnCacheControlAndEtagHeaders()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var content = new byte[256];
+        Random.Shared.NextBytes(content);
+        var imageKey = await UploadImageAsync(content, "image/jpeg");
+        var product = await SeedProductAsync(imageKey);
+
+        // Act
+        var response = await _client.GetAsync($"{Endpoint}/{product.Id}/image");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl!.Private.ShouldBeTrue();
+        response.Headers.CacheControl.NoCache.ShouldBeTrue();
+        response.Headers.ETag.ShouldNotBeNull();
+        response.Headers.ETag!.Tag.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Get_WhenIfNoneMatchMatchesEtag_ShouldReturn304NotModified()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var content = new byte[256];
+        Random.Shared.NextBytes(content);
+        var imageKey = await UploadImageAsync(content, "image/jpeg");
+        var product = await SeedProductAsync(imageKey);
+        var firstResponse = await _client.GetAsync($"{Endpoint}/{product.Id}/image");
+        var etag = firstResponse.Headers.ETag!;
+
+        // Act
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{Endpoint}/{product.Id}/image");
+        request.Headers.IfNoneMatch.Add(etag);
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+        var body = await response.Content.ReadAsByteArrayAsync();
+        body.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Get_WhenProductHasNoImage_ShouldReturn404WithProblemDetails()
     {
         await ResetDatabaseAsync();
