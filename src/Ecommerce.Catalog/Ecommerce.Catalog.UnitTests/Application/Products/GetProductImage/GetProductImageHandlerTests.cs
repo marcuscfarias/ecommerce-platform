@@ -74,10 +74,12 @@ public class GetProductImageHandlerTests
         var imageKey = $"{Faker.Random.Guid():N}.jpg";
         var product = NewProduct();
         product.SetImageKey(imageKey);
-        var content = Faker.Random.Bytes(256);
+        using var content = new MemoryStream(Faker.Random.Bytes(256));
+        var contentLength = content.Length;
+        var etag = Faker.Random.Guid().ToString();
         _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>()).Returns(product);
         _imageStorage.DownloadAsync(imageKey, Arg.Any<CancellationToken>())
-            .Returns(new ProductImageDownload(content, "image/jpeg"));
+            .Returns(new ProductImageDownload(content, "image/jpeg", contentLength, etag));
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -85,6 +87,8 @@ public class GetProductImageHandlerTests
         // Assert
         result.Content.ShouldBe(content);
         result.ContentType.ShouldBe("image/jpeg");
+        result.ContentLength.ShouldBe(contentLength);
+        result.ETag.ShouldBe(etag);
         await _repository.Received(1).GetByIdAsync(query.Id, Arg.Any<CancellationToken>());
         await _imageStorage.Received(1).DownloadAsync(imageKey, Arg.Any<CancellationToken>());
     }

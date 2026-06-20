@@ -23,6 +23,6 @@ internal sealed class GetProductImageHandler(
             throw new ResourceNotFoundException("Product image", query.Id);
         }
 
-        return new GetProductImageResult(image.Content, image.ContentType);
+        return new GetProductImageResult(image.Content, image.ContentType, image.ContentLength, image.ETag);
     }
 }
