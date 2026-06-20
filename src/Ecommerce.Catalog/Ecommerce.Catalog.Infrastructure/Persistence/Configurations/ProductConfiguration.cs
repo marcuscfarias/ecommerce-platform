@@ -26,8 +26,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => p.Sku)
             .IsUnique();
 
-        builder.Property(p => p.ImageUrl)
-            .HasMaxLength(2048);
+        builder.Property(p => p.ImageKey)
+            .HasMaxLength(ProductConsts.ImageKeyMaxLength);
 
         builder.OwnsOne(p => p.Price, price =>
         {

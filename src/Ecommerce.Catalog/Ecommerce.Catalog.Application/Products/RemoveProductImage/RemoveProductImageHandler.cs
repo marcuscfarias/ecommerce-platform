@@ -14,10 +14,10 @@ internal sealed class RemoveProductImageHandler(
         var product = await repository.GetByIdAsync(command.Id, cancellationToken) ??
                       throw new ResourceNotFoundException("Product", command.Id);
 
-        if (product.ImageUrl is null)
+        if (product.ImageKey is null)
             return;
 
-        await imageStorage.DeleteAsync(product.ImageUrl, cancellationToken);
+        await imageStorage.DeleteAsync(product.ImageKey, cancellationToken);
         product.RemoveImage();
 
         repository.Update(product);

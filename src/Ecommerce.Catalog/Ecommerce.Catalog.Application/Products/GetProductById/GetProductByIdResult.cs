@@ -10,4 +10,4 @@ public sealed record GetProductByIdResult(
     int CategoryId,
     int StockQuantity,
     bool IsActive,
-    string? ImageUrl);
+    string? ImageKey);

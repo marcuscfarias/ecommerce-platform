@@ -62,7 +62,7 @@ public class GetProductByIdHandlerTests
             product.CategoryId,
             product.StockQuantity,
             product.IsActive,
-            product.ImageUrl);
+            product.ImageKey);
         result.ShouldBe(expected);
     }
 }

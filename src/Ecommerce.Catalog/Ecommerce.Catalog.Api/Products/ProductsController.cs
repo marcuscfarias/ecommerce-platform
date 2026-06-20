@@ -80,6 +80,7 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
     public async Task<IActionResult> GetImage([FromRoute] int id, CancellationToken cancellationToken)
     {
         var result = await module.ExecuteQueryAsync(GetProductImageRequest.ToQuery(id), cancellationToken);
+        Response.ContentLength = result.ContentLength;
         return File(result.Content, result.ContentType);
     }
 

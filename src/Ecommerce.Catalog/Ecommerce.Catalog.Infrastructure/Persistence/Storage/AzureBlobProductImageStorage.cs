@@ -21,28 +21,29 @@ internal sealed class AzureBlobProductImageStorage(
         var headers = new BlobHttpHeaders { ContentType = contentType };
         await blob.UploadAsync(content, new BlobUploadOptions { HttpHeaders = headers }, ct);
 
-        return blob.Uri.ToString();
+        return blob.Name;
     }
 
-    public async Task<ProductImageDownload?> DownloadAsync(string imageUrl, CancellationToken ct = default)
+    public async Task<ProductImageDownload?> DownloadAsync(string imageKey, CancellationToken ct = default)
     {
-        var blobName = new Uri(imageUrl).Segments[^1];
-        var blob = _container.GetBlobClient(blobName);
+        var blob = _container.GetBlobClient(imageKey);
 
         var imageMissing = !await blob.ExistsAsync(ct);
         if (imageMissing)
             return null;
 
-        var download = await blob.DownloadContentAsync(ct);
+        var download = await blob.DownloadStreamingAsync(cancellationToken: ct);
+        var details = download.Value.Details;
         return new ProductImageDownload(
-            download.Value.Content.ToArray(),
-            download.Value.Details.ContentType);
+            download.Value.Content,
+            details.ContentType,
+            details.ContentLength,
+            details.ETag.ToString());
     }
 
-    public Task DeleteAsync(string imageUrl, CancellationToken ct = default)
+    public Task DeleteAsync(string imageKey, CancellationToken ct = default)
     {
-        var blobName = new Uri(imageUrl).Segments[^1];
-        var blob = _container.GetBlobClient(blobName);
+        var blob = _container.GetBlobClient(imageKey);
 
         return blob.DeleteIfExistsAsync(cancellationToken: ct);
     }

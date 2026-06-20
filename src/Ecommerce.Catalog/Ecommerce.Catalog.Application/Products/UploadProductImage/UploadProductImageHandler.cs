@@ -14,11 +14,11 @@ internal sealed class UploadProductImageHandler(
         var product = await repository.GetByIdAsync(command.Id, cancellationToken) ??
                       throw new ResourceNotFoundException("Product", command.Id);
 
-        if (product.ImageUrl is not null)
-            await imageStorage.DeleteAsync(product.ImageUrl, cancellationToken);
+        if (product.ImageKey is not null)
+            await imageStorage.DeleteAsync(product.ImageKey, cancellationToken);
 
-        var imageUrl = await imageStorage.UploadAsync(command.Content, command.ContentType, cancellationToken);
-        product.SetImageUrl(imageUrl);
+        var imageKey = await imageStorage.UploadAsync(command.Content, command.ContentType, cancellationToken);
+        product.SetImageKey(imageKey);
 
         repository.Update(product);
         await repository.SaveChangesAsync(cancellationToken);

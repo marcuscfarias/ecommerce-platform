@@ -34,21 +34,21 @@ public class RemoveProductImageHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenProductHasImage_ShouldDeleteBlobAndClearUrl()
+    public async Task Handle_WhenProductHasImage_ShouldDeleteBlobAndClearKey()
     {
         // Arrange
         var command = NewCommand();
-        var existingUrl = Faker.Internet.Url();
+        var existingKey = $"{Faker.Random.Guid():N}.jpg";
         var product = NewProduct();
-        product.SetImageUrl(existingUrl);
+        product.SetImageKey(existingKey);
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(product);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        product.ImageUrl.ShouldBeNull();
-        await _imageStorage.Received(1).DeleteAsync(existingUrl, Arg.Any<CancellationToken>());
+        product.ImageKey.ShouldBeNull();
+        await _imageStorage.Received(1).DeleteAsync(existingKey, Arg.Any<CancellationToken>());
         _repository.Received(1).Update(product);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
@@ -65,7 +65,7 @@ public class RemoveProductImageHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        product.ImageUrl.ShouldBeNull();
+        product.ImageKey.ShouldBeNull();
     }
 
     private static RemoveProductImageCommand NewCommand() => new(Faker.Random.Int(1, 1000));
