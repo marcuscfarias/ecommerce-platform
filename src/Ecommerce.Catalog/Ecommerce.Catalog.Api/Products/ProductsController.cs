@@ -11,6 +11,7 @@ using Ecommerce.Catalog.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace Ecommerce.Catalog.Api.Products;
 
@@ -76,12 +77,17 @@ public sealed class ProductsController(ICatalogModule module) : ControllerBase
     [Authorize(Policy = CatalogPolicies.CanViewCatalog)]
     [EndpointDescription("Returns the product's image.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetImage([FromRoute] int id, CancellationToken cancellationToken)
     {
         var result = await module.ExecuteQueryAsync(GetProductImageRequest.ToQuery(id), cancellationToken);
+
+        Response.Headers.CacheControl = "private, no-cache";
+        var entityTag = new EntityTagHeaderValue($"\"{result.ETag.Trim('"')}\"");
+
         Response.ContentLength = result.ContentLength;
-        return File(result.Content, result.ContentType);
+        return File(result.Content, result.ContentType, lastModified: null, entityTag: entityTag);
     }
 
     [HttpPost("{id:int}/image")]
