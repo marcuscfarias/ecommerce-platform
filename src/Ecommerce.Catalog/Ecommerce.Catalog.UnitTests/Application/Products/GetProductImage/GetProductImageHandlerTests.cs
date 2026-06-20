@@ -53,11 +53,11 @@ public class GetProductImageHandlerTests
     {
         // Arrange
         var query = NewQuery();
-        var imageUrl = Faker.Internet.Url();
+        var imageKey = $"{Faker.Random.Guid():N}.jpg";
         var product = NewProduct();
-        product.SetImageUrl(imageUrl);
+        product.SetImageKey(imageKey);
         _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>()).Returns(product);
-        _imageStorage.DownloadAsync(imageUrl, Arg.Any<CancellationToken>()).Returns((ProductImageDownload?)null);
+        _imageStorage.DownloadAsync(imageKey, Arg.Any<CancellationToken>()).Returns((ProductImageDownload?)null);
 
         // Act
         var act = () => _handler.Handle(query, CancellationToken.None);
@@ -71,12 +71,12 @@ public class GetProductImageHandlerTests
     {
         // Arrange
         var query = NewQuery();
-        var imageUrl = Faker.Internet.Url();
+        var imageKey = $"{Faker.Random.Guid():N}.jpg";
         var product = NewProduct();
-        product.SetImageUrl(imageUrl);
+        product.SetImageKey(imageKey);
         var content = Faker.Random.Bytes(256);
         _repository.GetByIdAsync(query.Id, Arg.Any<CancellationToken>()).Returns(product);
-        _imageStorage.DownloadAsync(imageUrl, Arg.Any<CancellationToken>())
+        _imageStorage.DownloadAsync(imageKey, Arg.Any<CancellationToken>())
             .Returns(new ProductImageDownload(content, "image/jpeg"));
 
         // Act
@@ -86,7 +86,7 @@ public class GetProductImageHandlerTests
         result.Content.ShouldBe(content);
         result.ContentType.ShouldBe("image/jpeg");
         await _repository.Received(1).GetByIdAsync(query.Id, Arg.Any<CancellationToken>());
-        await _imageStorage.Received(1).DownloadAsync(imageUrl, Arg.Any<CancellationToken>());
+        await _imageStorage.Received(1).DownloadAsync(imageKey, Arg.Any<CancellationToken>());
     }
 
     private static GetProductImageQuery NewQuery() => new(Faker.Random.Int(1, 1000));

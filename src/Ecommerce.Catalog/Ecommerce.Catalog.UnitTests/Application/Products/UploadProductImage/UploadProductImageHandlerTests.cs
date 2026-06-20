@@ -34,43 +34,43 @@ public class UploadProductImageHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenProductHasNoImage_ShouldUploadAndStoreUrl()
+    public async Task Handle_WhenProductHasNoImage_ShouldUploadAndStoreKey()
     {
         // Arrange
         var command = NewCommand();
         var product = NewProduct();
-        var uploadedUrl = Faker.Internet.Url();
+        var uploadedKey = $"{Faker.Random.Guid():N}.jpg";
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(product);
-        _imageStorage.UploadAsync(command.Content, command.ContentType, Arg.Any<CancellationToken>()).Returns(uploadedUrl);
+        _imageStorage.UploadAsync(command.Content, command.ContentType, Arg.Any<CancellationToken>()).Returns(uploadedKey);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        product.ImageUrl.ShouldBe(uploadedUrl);
+        product.ImageKey.ShouldBe(uploadedKey);
         await _imageStorage.Received(1).UploadAsync(command.Content, command.ContentType, Arg.Any<CancellationToken>());
         _repository.Received(1).Update(product);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_WhenProductAlreadyHasImage_ShouldDeleteOldBlobBeforeStoringNewUrl()
+    public async Task Handle_WhenProductAlreadyHasImage_ShouldDeleteOldBlobBeforeStoringNewKey()
     {
         // Arrange
         var command = NewCommand();
-        var existingUrl = Faker.Internet.Url();
+        var existingKey = $"{Faker.Random.Guid():N}.jpg";
         var product = NewProduct();
-        product.SetImageUrl(existingUrl);
-        var uploadedUrl = Faker.Internet.Url();
+        product.SetImageKey(existingKey);
+        var uploadedKey = $"{Faker.Random.Guid():N}.jpg";
         _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(product);
-        _imageStorage.UploadAsync(command.Content, command.ContentType, Arg.Any<CancellationToken>()).Returns(uploadedUrl);
+        _imageStorage.UploadAsync(command.Content, command.ContentType, Arg.Any<CancellationToken>()).Returns(uploadedKey);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        product.ImageUrl.ShouldBe(uploadedUrl);
-        await _imageStorage.Received(1).DeleteAsync(existingUrl, Arg.Any<CancellationToken>());
+        product.ImageKey.ShouldBe(uploadedKey);
+        await _imageStorage.Received(1).DeleteAsync(existingKey, Arg.Any<CancellationToken>());
         await _imageStorage.Received(1).UploadAsync(command.Content, command.ContentType, Arg.Any<CancellationToken>());
         _repository.Received(1).Update(product);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());

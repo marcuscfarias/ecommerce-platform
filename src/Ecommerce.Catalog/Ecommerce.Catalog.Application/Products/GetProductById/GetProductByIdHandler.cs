@@ -22,6 +22,6 @@ internal sealed class GetProductByIdHandler(IProductRepository repository)
             product.CategoryId,
             product.StockQuantity,
             product.IsActive,
-            product.ImageUrl);
+            product.ImageKey);
     }
 }

@@ -31,7 +31,7 @@ public sealed class Product : Entity
     public int CategoryId { get; private set; }
     public int StockQuantity { get; private set; }
     public bool IsActive { get; private set; }
-    public string? ImageUrl { get; private set; }
+    public string? ImageKey { get; private set; }
 
     public void Update(string name, string? description, Money price, string sku, int categoryId, int stockQuantity)
     {
@@ -49,7 +49,7 @@ public sealed class Product : Entity
 
     public void Deactivate() => IsActive = false;
 
-    public void SetImageUrl(string imageUrl) => ImageUrl = imageUrl;
+    public void SetImageKey(string imageKey) => ImageKey = imageKey;
 
-    public void RemoveImage() => ImageUrl = null;
+    public void RemoveImage() => ImageKey = null;
 }

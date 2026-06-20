@@ -22,8 +22,8 @@ public sealed class GetProductImageIntegrationTests : BaseCatalogIntegrationTest
         // Arrange
         var content = new byte[256];
         Random.Shared.NextBytes(content);
-        var imageUrl = await UploadImageAsync(content, "image/jpeg");
-        var product = await SeedProductAsync(imageUrl);
+        var imageKey = await UploadImageAsync(content, "image/jpeg");
+        var product = await SeedProductAsync(imageKey);
 
         // Act
         var response = await _client.GetAsync($"{Endpoint}/{product.Id}/image");
@@ -71,7 +71,7 @@ public sealed class GetProductImageIntegrationTests : BaseCatalogIntegrationTest
         body.ShouldNotBeNull();
     }
 
-    private async Task<Product> SeedProductAsync(string? imageUrl = null)
+    private async Task<Product> SeedProductAsync(string? imageKey = null)
     {
         var category = new Category("Electronics", null);
         await SeedAsync(db =>
@@ -81,8 +81,8 @@ public sealed class GetProductImageIntegrationTests : BaseCatalogIntegrationTest
         });
 
         var product = new Product("Mechanical Keyboard", null, new Money(129.99m), "KB-75-HS", category.Id, 50);
-        if (imageUrl is not null)
-            product.SetImageUrl(imageUrl);
+        if (imageKey is not null)
+            product.SetImageKey(imageKey);
 
         await SeedAsync(db =>
         {

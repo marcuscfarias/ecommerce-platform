@@ -37,7 +37,7 @@ public sealed class UploadProductImageIntegrationTests : BaseCatalogIntegrationT
         await ResetDatabaseAsync();
 
         // Arrange
-        var product = await SeedProductAsync(imageUrl: "http://127.0.0.1:10000/devstoreaccount1/product-images/old.jpg");
+        var product = await SeedProductAsync(imageKey: "old.jpg");
         using var form = ImageForm(new byte[256], "image/png", "keyboard.png");
 
         // Act
@@ -108,7 +108,7 @@ public sealed class UploadProductImageIntegrationTests : BaseCatalogIntegrationT
         body.ShouldNotBeNull();
     }
 
-    private async Task<Product> SeedProductAsync(string? imageUrl = null)
+    private async Task<Product> SeedProductAsync(string? imageKey = null)
     {
         var category = new Category("Electronics", null);
         await SeedAsync(db =>
@@ -118,8 +118,8 @@ public sealed class UploadProductImageIntegrationTests : BaseCatalogIntegrationT
         });
 
         var product = new Product("Mechanical Keyboard", null, new Money(129.99m), "KB-75-HS", category.Id, 50);
-        if (imageUrl is not null)
-            product.SetImageUrl(imageUrl);
+        if (imageKey is not null)
+            product.SetImageKey(imageKey);
 
         await SeedAsync(db =>
         {

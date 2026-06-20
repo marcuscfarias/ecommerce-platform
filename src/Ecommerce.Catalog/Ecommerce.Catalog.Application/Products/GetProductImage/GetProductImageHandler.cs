@@ -14,9 +14,9 @@ internal sealed class GetProductImageHandler(
         var product = await repository.GetByIdAsync(query.Id, cancellationToken) ??
                       throw new ResourceNotFoundException("Product", query.Id);
 
-        var image = product.ImageUrl is null
+        var image = product.ImageKey is null
             ? null
-            : await imageStorage.DownloadAsync(product.ImageUrl, cancellationToken);
+            : await imageStorage.DownloadAsync(product.ImageKey, cancellationToken);
 
         if (image is null)
         {

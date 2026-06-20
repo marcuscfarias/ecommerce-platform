@@ -30,7 +30,7 @@ public class ProductTests
         product.CategoryId.ShouldBe(categoryId);
         product.StockQuantity.ShouldBe(stockQuantity);
         product.IsActive.ShouldBeTrue();
-        product.ImageUrl.ShouldBeNull();
+        product.ImageKey.ShouldBeNull();
     }
 
     [Fact]
@@ -106,31 +106,31 @@ public class ProductTests
     }
 
     [Fact]
-    public void SetImageUrl_ShouldStoreTheUrl()
+    public void SetImageKey_ShouldStoreTheKey()
     {
         // Arrange
         var product = CreateProduct();
-        var imageUrl = Faker.Internet.Url();
+        var imageKey = $"{Faker.Random.Guid():N}.jpg";
 
         // Act
-        product.SetImageUrl(imageUrl);
+        product.SetImageKey(imageKey);
 
         // Assert
-        product.ImageUrl.ShouldBe(imageUrl);
+        product.ImageKey.ShouldBe(imageKey);
     }
 
     [Fact]
-    public void RemoveImage_ShouldClearTheUrl()
+    public void RemoveImage_ShouldClearTheKey()
     {
         // Arrange
         var product = CreateProduct();
-        product.SetImageUrl(Faker.Internet.Url());
+        product.SetImageKey($"{Faker.Random.Guid():N}.jpg");
 
         // Act
         product.RemoveImage();
 
         // Assert
-        product.ImageUrl.ShouldBeNull();
+        product.ImageKey.ShouldBeNull();
     }
 
     private static Product CreateProduct(int stockQuantity = 5) => new(
