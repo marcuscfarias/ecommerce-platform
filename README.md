@@ -25,11 +25,16 @@
 
 ## 1. About this project
 
-Ecommerce is a personal portfolio project built in ASP.NET Core to practice new trends and technologies in modern
-backend development. It is **UNDER CONSTRUCTION** and intentionally **evolutionary**, shipped today as a **modular
-monolith open for expansion**. The project offers hands-on experience with modern tools, patterns and methodologies,
-promoting growth and adaptability, exploring efficient coding practices, clear architectural decisions and project
-management skills that enhance my ability to deliver high-quality software solutions.
+Ecommerce is a personal portfolio project I use to practice modern full-stack development on .NET. It's built as a
+**modular monolith** in ASP.NET Core 10, with a **Blazor WebAssembly** admin SPA on top, and it runs **live on Azure**
+(Container Apps, Static Web Apps, Azure SQL, Blob Storage and Key Vault).
+
+The project is **evolutionary by design**: instead of a one-shot build, it grows feature by feature — each as a vertical
+slice with its own tests — so the architectural decisions stay visible in the commit history.
+
+The first milestone, the **backoffice**, is complete: catalog management (categories and products, including image
+upload and delivery) and user management (authentication, authorization, roles and account lifecycle). This is the
+operational backbone the upcoming customer-facing storefront will build on.
 
 ## 2. Screenshots or Demo
 
