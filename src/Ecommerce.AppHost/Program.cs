@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Ecommerce.AppHost.Authorization;
 using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
@@ -15,6 +16,17 @@ internal static class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        if (builder.Environment.IsProduction())
+        {
+            var vaultUri = builder.Configuration["KeyVault:VaultUri"];
+            if (string.IsNullOrWhiteSpace(vaultUri))
+            {
+                throw new InvalidOperationException("KeyVault:VaultUri must be set in Production.");
+            }
+
+            builder.Configuration.AddAzureKeyVault(new Uri(vaultUri), new DefaultAzureCredential());
+        }
 
         builder.Services.AddKernelInfrastructure(builder.Configuration);
         builder.Services.AddApiModule(builder.Configuration);
