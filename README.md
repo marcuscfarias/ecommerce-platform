@@ -38,7 +38,25 @@ operational backbone the upcoming customer-facing storefront will build on.
 
 ## 2. Screenshots or Demo
 
-_Coming soon._
+The project is live:
+
+* **Admin SPA** — [admin-ecommerce.marcuscfarias.com](https://admin-ecommerce.marcuscfarias.com)
+* **API docs (Scalar)** — [api-ecommerce.marcuscfarias.com/scalar](https://api-ecommerce.marcuscfarias.com/scalar)
+
+> ⚠️ **Cold start.** To keep hosting costs near zero, the API scales to zero when idle. The first time you open the site
+> after an idle period, it takes around **1m30s** to spin everything back up — after that it responds normally.
+
+### Demo logins
+
+Sign in to the Admin SPA with one of the seeded profiles to explore how the UI adapts to each role's permissions:
+
+| Role        | Email                   | Password      | Can do                                      |
+|:------------|:------------------------|:--------------|:--------------------------------------------|
+| **Admin**   | `admin@ecommerce.com`   | `Admin@123`   | Manage users and the catalog (full access)  |
+| **Owner**   | `owner@ecommerce.com`   | `Owner@123`   | View users, manage the catalog              |
+| **Manager** | `manager@ecommerce.com` | `Manager@123` | Manage the catalog                          |
+
+A YouTube walkthrough is planned to make it easier to get familiar with the project. _(Coming soon.)_
 
 ## 3. Getting started
 
