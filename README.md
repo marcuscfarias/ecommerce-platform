@@ -64,33 +64,65 @@ A YouTube walkthrough is planned to make it easier to get familiar with the proj
 * [.NET 10 SDK](https://dotnet.microsoft.com/download)
 * [Docker](https://www.docker.com/) with Docker Compose
 
-### Run locally with Docker Compose
+> The local dev stack is Windows-oriented — it mounts the dev HTTPS certificate from `%USERPROFILE%`.
 
-1. Clone the repository.
-2. Create a `.env` file under `src/` from the provided example:
+### 1. Clone the repository
 
-   ```bash
-   cd src
-   cp .env.example .env
-   ```
+```bash
+git clone https://github.com/marcuscfarias/ecommerce-platform.git
+cd ecommerce-platform
+```
 
-   Edit `.env` and set `POSTGRES_PASSWORD` (and the matching password inside `ConnectionStrings__EcommerceDb`) to
-   something other than the default.
+### 2. Trust a local HTTPS certificate
 
-3. Bring the stack up:
+The API serves over HTTPS on port `8081`, and the SPA calls it from the browser — so Kestrel needs a TLS certificate the
+container can load and your browser will trust. Export the .NET dev certificate to a password-protected `.pfx` (the
+compose file mounts this folder into the API container), then trust it:
 
-   ```bash
-   docker compose up --build
-   ```
+```powershell
+dotnet dev-certs https -ep $env:USERPROFILE\.aspnet\https\ecommerce.pfx -p <cert-password>
+dotnet dev-certs https --trust
+```
 
-   This boots two containers:
+The `-p` password must match `ASPNETCORE_Kestrel__Certificates__Default__Password` in the `.env` you create next.
 
-    * `ecommerce-db` — PostgreSQL 17 with a persistent volume.
-    * `ecommerce-api` — the API (`Ecommerce.AppHost`) listening on `http://localhost:8080` and `https://localhost:8081`.
+### 3. Configure the environment
 
-   EF Core migrations are applied on startup so the database is ready as soon as the API answers.
+```bash
+cd src
+cp .env.example .env
+```
 
-4. Open the **Scalar UI** at [`http://localhost:8080/scalar/v1`](http://localhost:8080/scalar/v1) to explore endpoints.
+Edit `.env`:
+
+* `MSSQL_SA_PASSWORD` — a strong SA password, mirrored inside `ConnectionStrings__EcommerceDb`.
+* `ASPNETCORE_Kestrel__Certificates__Default__Password` — the `<cert-password>` you chose in step 2.
+
+### 4. Run the backend
+
+```bash
+docker compose up --build
+```
+
+This boots three containers:
+
+* `ecommerce-db` — SQL Server 2022 with a persistent volume.
+* `ecommerce-azurite` — local Azure Blob Storage emulator for product images.
+* `ecommerce-api` — the API (`Ecommerce.AppHost`) on [`https://localhost:8081`](https://localhost:8081).
+
+EF Core migrations are applied and the default roles, admin and demo users (see [Demo logins](#demo-logins)) are seeded
+on startup, so the API is ready as soon as it answers.
+
+Open the **Scalar UI** at [`https://localhost:8081/scalar`](https://localhost:8081/scalar) to explore the endpoints.
+
+### 5. Run the Admin SPA
+
+```bash
+dotnet run --project Ecommerce.Admin.Web
+```
+
+The Blazor WebAssembly admin opens at [`https://localhost:7777`](https://localhost:7777) and talks to the API on port
+`8081`. Sign in with any of the [Demo logins](#demo-logins).
 
 ### Run tests
 
