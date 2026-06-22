@@ -50,11 +50,10 @@ The project is live:
 
 Sign in to the Admin SPA with one of the seeded profiles to explore how the UI adapts to each role's permissions:
 
-| Role        | Email                   | Password      | Can do                                      |
-|:------------|:------------------------|:--------------|:--------------------------------------------|
-| **Admin**   | `admin@ecommerce.com`   | `Admin@123`   | Manage users and the catalog (full access)  |
-| **Owner**   | `owner@ecommerce.com`   | `Owner@123`   | View users, manage the catalog              |
-| **Manager** | `manager@ecommerce.com` | `Manager@123` | Manage the catalog                          |
+| Role        | Email                   | Password      | Can do                          |
+|:------------|:------------------------|:--------------|:--------------------------------|
+| **Owner**   | `owner@ecommerce.com`   | `Owner@123`   | View users, manage the catalog  |
+| **Manager** | `manager@ecommerce.com` | `Manager@123` | Manage the catalog              |
 
 A YouTube walkthrough is planned to make it easier to get familiar with the project. _(Coming soon.)_
 
