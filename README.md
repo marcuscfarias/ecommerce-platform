@@ -135,32 +135,51 @@ Integration tests require Docker to be running. See [5.4 Integration Tests](#54-
 
 ## 4. Functionalities
 
-Each module groups one or more features. Cross-cutting items are not tied to a single
-module.
+Features are grouped by delivery phase. The **backoffice** (admin-facing) milestone is shipped; the **storefront**
+(customer-facing) phase is next. **Cross-cutting** concerns span both. Each feature is expanded in
+[5. Implementation details](#5-implementation-details).
 
-<div align="center">
+### 4.1 Backoffice — ✅ shipped
 
-| Id |         Module         |               Feature               |     Status     |
-|:--:|:----------------------:|:-----------------------------------:|:--------------:|
-| 1  |        Catalog         |         Category Management         |    🟢 Done     |
-| 2  |          Auth          |           User Management           |    🟢 Done     |
-| 3  |          Auth          |   Authentication & Authorization    | 🟡 In progress |
-| 4  |        Catalog         |         Product Management          |    🔴 To do    |
-| 5  |         Orders         |                  —                  |    🔴 To do    |
-| 6  |        Shipping        |                  —                  |    🔴 To do    |
-| 7  | Payment (Microservice) |                  —                  |    🔴 To do    |
-| 8  |     Notifications      |                  —                  |    🔴 To do    |
-| 9  |     Cross-cutting      |         Request Validation          |    🟢 Done     |
-| 10 |     Cross-cutting      |      Global Exception Handling      |    🟢 Done     |
-| 11 |     Cross-cutting      |          API Documentation          |    🟢 Done     |
-| 12 |     Cross-cutting      |       CI/CD (GitHub Actions)        | 🟡 In progress |
-| 13 |     Cross-cutting      |      Deployment & Environments      |    🔴 To do    |
-| 14 |     Cross-cutting      |            Observability            |    🔴 To do    |
-| 15 |     Cross-cutting      |            Rate Limiting            |    🟢 Done     |
-| 16 |     Cross-cutting      |       Domain Validation Rules       |    🔴 To do    |
-| 17 |     Cross-cutting      | Integration Tests (Test Containers) |    🟢 Done     |
+The admin-facing operations that run the store.
 
-</div>
+| Module    | Feature                        | Status  |
+|:----------|:-------------------------------|:-------:|
+| Catalog   | Category Management            | 🟢 Done |
+| Catalog   | Product Management             | 🟢 Done |
+| Auth      | User Management                | 🟢 Done |
+| Auth      | Authentication & Authorization | 🟢 Done |
+| Admin Web | Blazor WASM SPA                | 🟢 Done |
+
+### 4.2 Storefront — 🔜 planned
+
+The customer-facing shop, built on top of the backoffice backbone.
+
+| Module        | Feature                   |  Status  |
+|:--------------|:--------------------------|:--------:|
+| Catalog       | Product browsing & search | 🔴 To do |
+| Orders        | Cart & checkout           | 🔴 To do |
+| Orders        | Order management          | 🔴 To do |
+| Payment       | Payment (microservice)    | 🔴 To do |
+| Shipping      | Shipping & fulfillment    | 🔴 To do |
+| Notifications | Customer notifications    | 🔴 To do |
+
+### 4.3 Cross-cutting
+
+Platform concerns not tied to a single module.
+
+| Feature                            |  Status  |
+|:-----------------------------------|:--------:|
+| Request Validation                 | 🟢 Done  |
+| Global Exception Handling          | 🟢 Done  |
+| API Documentation (Scalar)         | 🟢 Done  |
+| Rate Limiting                      | 🟢 Done  |
+| Integration Tests (Testcontainers) | 🟢 Done  |
+| CI/CD (GitHub Actions)             | 🟢 Done  |
+| Deployment & Environments (Azure)  | 🟢 Done  |
+| Logging                            | 🔴 To do |
+| Observability                      | 🔴 To do |
+| Infrastructure as Code (IaC)       | 🔴 To do |
 
 ## 5. Implementation details
 
