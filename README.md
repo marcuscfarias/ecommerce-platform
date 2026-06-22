@@ -25,7 +25,8 @@
 
 ## 1. About this project
 
-Ecommerce is a personal portfolio project I use to practice modern full-stack development on .NET. It's built as a
+Ecommerce is a personal portfolio project I use to practice modern full-stack development on .NET (focused on backend).
+It's built as a
 **modular monolith** in ASP.NET Core 10, with a **Blazor WebAssembly** admin SPA on top, and it runs **live on Azure**
 (Container Apps, Static Web Apps, Azure SQL, Blob Storage and Key Vault).
 
@@ -50,10 +51,10 @@ The project is live:
 
 Sign in to the Admin SPA with one of the seeded profiles to explore how the UI adapts to each role's permissions:
 
-| Role        | Email                   | Password      | Can do                          |
-|:------------|:------------------------|:--------------|:--------------------------------|
-| **Owner**   | `owner@ecommerce.com`   | `Owner@123`   | View users, manage the catalog  |
-| **Manager** | `manager@ecommerce.com` | `Manager@123` | Manage the catalog              |
+| Role        | Email                   | Password      | Can do                         |
+|:------------|:------------------------|:--------------|:-------------------------------|
+| **Owner**   | `owner@ecommerce.com`   | `Owner@123`   | View users, manage the catalog |
+| **Manager** | `manager@ecommerce.com` | `Manager@123` | Manage the catalog             |
 
 A YouTube walkthrough is planned to make it easier to get familiar with the project. _(Coming soon.)_
 
@@ -131,7 +132,8 @@ cd src
 dotnet test
 ```
 
-Integration tests require Docker to be running. See [5.4 Integration Tests](#54-integration-tests) for the composition.
+Integration tests require Docker to be running. See [5.7 Integration testing](#57-integration-testing) for the
+composition.
 
 ## 4. Functionalities
 
@@ -183,10 +185,10 @@ Platform concerns not tied to a single module.
 
 ## 5. Implementation details
 
-This section expands on the Functionalities table — pick a row above and find it here for the technologies, patterns and
-reasoning behind it.
+This section explains how the more interesting parts work — the technologies, patterns and reasoning behind the
+Functionalities above.
 
-### 5.0 Tech stack
+### 5.1 Tech stack
 
 * **.NET 10 / ASP.NET Core 10 / C#** — API runtime and framework.
 * **SQL Server** with **Entity Framework Core** — relational store, migrations and data access.
@@ -201,82 +203,70 @@ reasoning behind it.
 * **Azure** — Container Apps, Static Web Apps, Azure SQL, Blob Storage, Key Vault.
 * **Blazor WebAssembly** + **MudBlazor** — admin SPA.
 
-### 5.1 Modules
+### 5.2 Architecture
 
-`Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods —
-`Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked
-uniformly by `ModulesRegistry.AddModules` / `RegisterModules`.
+`Ecommerce.AppHost` is the composition root. Each bounded context is a **module** (Catalog, Auth) split into
+Domain / Application / Infrastructure / Api layers and registered uniformly through `Add{Module}Module` /
+`Use{Module}Module` via `ModulesRegistry`.
 
-Modules never reference each other directly: cross-module communication goes through `IModule` in
-`Ecommerce.Kernel.Application` and per-module contracts in
-`{Module}.Application` (e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`); the implementing module ships an
-internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed contract instead of
-`ISender`.
+Modules never reference each other directly: cross-module calls go through `IModule` (Kernel) and per-module contracts
+(e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`), implemented by an internal mediator-backed adapter
+(`MediatorModuleBase`) so consumers see a typed contract instead of `ISender`. Domain invariants are enforced with a
+small `BusinessRule` abstraction in the Kernel.
 
-### 5.2 API Validation
+### 5.3 Request pipeline
 
-```mermaid
-flowchart LR
-    Req[HTTP Request] --> Filter[RequestValidationFilter]
-    Filter -- valid --> Ctrl[Controller / Handler]
-    Filter -- invalid --> PDW[ProblemDetailsWriter<br/>400 ValidationProblemDetails]
-    Ctrl -- IExceptionContract thrown --> Handler[GlobalExceptionHandler]
-    Ctrl -- unhandled exception --> Handler
-    Handler -- has IExceptionContract --> PDW2[ProblemDetailsWriter<br/>StatusCode + Detail]
-    Handler -- no contract --> PDW3[ProblemDetailsWriter<br/>500 generic]
-    Ctrl -- success --> Res[HTTP Response]
-    PDW --> Res
-    PDW2 --> Res
-    PDW3 --> Res
-```
+Every request resolves to one consistent error contract — an [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)
+`ProblemDetails` written by a single `ProblemDetailsWriter`, so the response shape never drifts:
 
-Two complementary paths produce a [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) `ProblemDetails` response —
-one for invalid input, one for thrown exceptions. Both go through a single writer (`ProblemDetailsWriter`) so the
-response shape stays consistent.
+* **Validation** — `RequestValidationFilter` (registered globally) resolves the request's `IValidator<T>` and, on
+  failure, short-circuits with a `400 ValidationProblemDetails` before the controller action runs.
+* **Exceptions** — handlers throw exceptions implementing `IExceptionContract` (e.g. `ResourceNotFoundException` →
+  `404`, `BusinessRuleValidationException` → `409`); `GlobalExceptionHandler` maps them through the same writer.
+  Anything else falls back to a generic `500` with no internal leakage.
 
-1. **Request body validation.** `RequestValidationFilter` is registered globally in `ApiModule.AddApiModule`. For each
-   request DTO, it resolves the matching `IValidator<T>` from DI, calls `ValidateAsync`, and on failure short-circuits
-   the pipeline with a `400 ValidationProblemDetails` written by `ProblemDetailsWriter` — the controller action never
-   runs.
-2. **Controlled exceptions.** Handlers throw exceptions that implement `IExceptionContract` (e.g.
-   `ResourceNotFoundException` → `404`, `BusinessRuleValidationException` → `409`). `GlobalExceptionHandler` (
-   `IExceptionHandler`) picks up the contract, reads `StatusCode` and `Message`, and produces a `ProblemDetails` through
-   the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of
-   internal details.
+### 5.4 Authentication, authorization & security
 
-### 5.4 Integration Tests
+Auth issues **JWT access tokens** (signed inside the Auth module) delivered as **httpOnly cookies**, with
+**refresh-token rotation** and logout revocation; passwords are hashed with **BCrypt**. Login is guarded by **account
+lockout** and **per-endpoint rate limiting**.
 
-Integration tests run against a real PostgreSQL 17 instance — Testcontainers spins up a container per fixture, EF
-migrations are applied through a `WebApplicationFactory` during host startup, and `Respawner` clears the schema between
-tests so each one starts from a known state. The stack composes a few small pieces, each with one responsibility:
+Authorization is **permission-based**: each module declares its own permissions and protects endpoints with
+`RequireClaim("permission", …)` (no role checks). The `RolePermissionMap` lives in the composition root, so the Auth
+module never learns other modules' permissions. The API also sets **security headers** and **HSTS**, a **CORS
+allowlist** for the SPA origin, and honors **forwarded headers** behind the Azure ingress.
 
-* **`DatabaseContainerFixture`** boots a `postgres:17` container via Testcontainers and exposes its connection string.
-* **`BaseIntegrationFixture<TFactory>`** (Kernel) owns the container, instantiates the per-module
-  `WebApplicationFactory`, calls `CreateClient` (which applies EF migrations during host startup), and then constructs a
-  `DatabaseResetter` over the schemas the module declares.
-* **`EcommerceWebApplicationFactory`** is an abstract base over `WebApplicationFactory<IApiMarker>`. Its
-  `ConfigureWebHost` injects the container connection string into in-memory configuration so the API points at the test
-  database. Each module supplies a concrete factory (e.g. `CatalogWebApplicationFactory`).
-* **`DatabaseResetter`** wraps `Respawner` with `DbAdapter.Postgres` and only the module-owned schemas, giving each test
-  a clean slate via `ResetAsync`.
-* **`CatalogTestCollection`** is an xUnit `[CollectionDefinition]` with `ICollectionFixture<CatalogIntegrationFixture>`
-  so the fixture (and its container) is shared across the whole test class set. `BaseCatalogIntegrationTest` hides the
-  wiring and exposes `Client`, `ResetDatabaseAsync()` and `SeedAsync<CatalogDbContext>()` to test classes.
+### 5.5 Data, persistence & seeding
 
-### 5.5 CI/CD (GitHub Actions)
+_(Coming soon.)_
 
-Three workflows live under `.github/workflows/`:
+### 5.6 Product images: storage & delivery
 
-* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
-  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
-  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
-  hash.
-* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
-  does not push — it validates that the image still builds.
-* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
-  `commitlint.config.cjs`, `commitlinterrc.json`).
+_(Coming soon.)_
 
-What is still open: deployment workflows (Azure) and a release pipeline.
+### 5.7 Integration testing
+
+Integration tests run against a real **SQL Server** container (`Testcontainers.MsSql`); EF migrations are applied
+through a `WebApplicationFactory` on host startup, and **Respawn** resets the schema between tests so each one starts
+from a known state. Each module owns a thin fixture over a shared base (e.g. `CatalogIntegrationFixture`) that exposes
+`Client`, `ResetDatabaseAsync()` and `SeedAsync<TDbContext>()`, keeping the wiring out of the test classes. Unit tests
+use **xUnit + NSubstitute + Bogus + Shouldly**.
+
+### 5.8 CI/CD & deployment
+
+Six GitHub Actions workflows split shared gates from per-stack pipelines:
+
+* **`ci.yml`** — shared gates on every push/PR: Conventional Commits, `dotnet format`, config-file lint,
+  vulnerable-dependency check and secret scan (gitleaks).
+* **`backend-ci.yml`** (+ reusable **`backend-test.yml`**) — restore, build in Release, unit + integration tests
+  (Testcontainers) and a Docker image build validation.
+* **`frontend-ci.yml`** — builds the Blazor WebAssembly SPA.
+* **`backend-cd.yml`** — publishes the API image and deploys it to **Azure Container Apps** via OIDC, gated on tests and
+  a `/health` check.
+* **`frontend-cd.yml`** — deploys the SPA to **Azure Static Web Apps** via OIDC.
+
+Production secrets come from **Azure Key Vault** (system-assigned managed identity) and product images from **private
+Blob Storage** proxied through the API. Two environments only: local (Docker Compose) and Production.
 
 ## 6. Contributing
 
