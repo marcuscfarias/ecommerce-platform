@@ -12,7 +12,7 @@
 
 <!-- TOC -->
 
-* [Summary](#Summary)
+* [Summary](#summary)
 * [1. About this project](#1-about-this-project)
 * [2. Screenshots or Demo](#2-screenshots-or-demo)
 * [3. Getting started](#3-getting-started)
