@@ -189,14 +189,17 @@ reasoning behind it.
 ### 5.0 Tech stack
 
 * **.NET 10 / ASP.NET Core 10 / C#** — API runtime and framework.
-* **PostgreSQL 17** with **Entity Framework Core** — relational store, migrations and data access.
+* **SQL Server** with **Entity Framework Core** — relational store, migrations and data access.
 * **MediatR** — CQRS dispatch for commands and queries.
 * **FluentValidation** — declarative request validation.
-* **Scalar UI** (over OpenAPI) — interactive API documentation.
-* **xUnit**, **NSubstitute**, **Bogus**, **Shouldly**, **Testcontainers**, **Respawner** — testing toolchain.
+* **JWT bearer** + **BCrypt.Net** — token authentication and password hashing.
+* **Scalar** (over OpenAPI) — interactive API documentation.
+* **Unit testing** — xUnit, NSubstitute, Bogus, Shouldly.
+* **Integration testing** — Testcontainers (SQL Server + Azurite), Respawn, WebApplicationFactory.
 * **Docker** + **Docker Compose** — containerization.
-* **GitHub Actions** — CI (build, unit tests, integration tests, Docker image validation, commit message linting).
-* **Azure** — target cloud for deployment (App Service / Container Apps + Azure Database for PostgreSQL).
+* **GitHub Actions** — CI/CD.
+* **Azure** — Container Apps, Static Web Apps, Azure SQL, Blob Storage, Key Vault.
+* **Blazor WebAssembly** + **MudBlazor** — admin SPA.
 
 ### 5.1 Modules
 
