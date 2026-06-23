@@ -57,7 +57,21 @@ public static class InfrastructureModule
             .Validate(s => !string.IsNullOrWhiteSpace(s.Name), "Auth:AdminSeed:Name is required.")
             .ValidateOnStart();
 
+        services
+            .AddOptions<SeedUsersSettings>()
+            .Bind(configuration.GetSection("Auth:SeedUsers"))
+            .Validate(s => s.Users.TrueForAll(u => !string.IsNullOrWhiteSpace(u.Email)),
+                "Auth:SeedUsers:Email is required.")
+            .Validate(s => s.Users.TrueForAll(u => !string.IsNullOrWhiteSpace(u.Password)),
+                "Auth:SeedUsers:Password is required.")
+            .Validate(s => s.Users.TrueForAll(u => !string.IsNullOrWhiteSpace(u.Name)),
+                "Auth:SeedUsers:Name is required.")
+            .Validate(s => s.Users.TrueForAll(u => Enum.IsDefined(u.Role)),
+                "Auth:SeedUsers:Role must be a valid role name.")
+            .ValidateOnStart();
+
         services.AddHostedService<AdminSeedService>();
+        services.AddHostedService<UserSeedService>();
 
         return services;
     }

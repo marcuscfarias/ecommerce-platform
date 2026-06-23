@@ -12,7 +12,7 @@
 
 <!-- TOC -->
 
-* [Summary](#Summary)
+* [Summary](#summary)
 * [1. About this project](#1-about-this-project)
 * [2. Screenshots or Demo](#2-screenshots-or-demo)
 * [3. Getting started](#3-getting-started)
@@ -25,15 +25,38 @@
 
 ## 1. About this project
 
-Ecommerce is a personal portfolio project built in ASP.NET Core to practice new trends and technologies in modern
-backend development. It is **UNDER CONSTRUCTION** and intentionally **evolutionary**, shipped today as a **modular
-monolith open for expansion**. The project offers hands-on experience with modern tools, patterns and methodologies,
-promoting growth and adaptability, exploring efficient coding practices, clear architectural decisions and project
-management skills that enhance my ability to deliver high-quality software solutions.
+Ecommerce is a personal portfolio project I use to practice modern full-stack development on .NET (focused on backend).
+It's built as a
+**modular monolith** in ASP.NET Core 10, with a **Blazor WebAssembly** admin SPA on top, and it runs **live on Azure**
+(Container Apps, Static Web Apps, Azure SQL, Blob Storage and Key Vault).
+
+The project is **evolutionary by design**: instead of a one-shot build, it grows feature by feature — each as a vertical
+slice with its own tests — so the architectural decisions stay visible in the commit history.
+
+The first milestone, the **backoffice**, is complete: catalog management (categories and products, including image
+upload and delivery) and user management (authentication, authorization, roles and account lifecycle). This is the
+operational backbone the upcoming customer-facing storefront will build on.
 
 ## 2. Screenshots or Demo
 
-_Coming soon._
+The project is live:
+
+* **Admin SPA** — [admin-ecommerce.marcuscfarias.com](https://admin-ecommerce.marcuscfarias.com)
+* **API docs (Scalar)** — [api-ecommerce.marcuscfarias.com/scalar](https://api-ecommerce.marcuscfarias.com/scalar)
+
+> ⚠️ **Cold start.** To keep hosting costs near zero, the API scales to zero when idle. The first time you open the site
+> after an idle period, it takes around **1m30s** to spin everything back up — after that it responds normally.
+
+### Demo logins
+
+Sign in to the Admin SPA with one of the seeded profiles to explore how the UI adapts to each role's permissions:
+
+| Role        | Email                   | Password      | Can do                         |
+|:------------|:------------------------|:--------------|:-------------------------------|
+| **Owner**   | `owner@ecommerce.com`   | `Owner@123`   | View users, manage the catalog |
+| **Manager** | `manager@ecommerce.com` | `Manager@123` | Manage the catalog             |
+
+A YouTube walkthrough is planned to make it easier to get familiar with the project. _(Coming soon.)_
 
 ## 3. Getting started
 
@@ -42,33 +65,65 @@ _Coming soon._
 * [.NET 10 SDK](https://dotnet.microsoft.com/download)
 * [Docker](https://www.docker.com/) with Docker Compose
 
-### Run locally with Docker Compose
+> The local dev stack is Windows-oriented — it mounts the dev HTTPS certificate from `%USERPROFILE%`.
 
-1. Clone the repository.
-2. Create a `.env` file under `src/` from the provided example:
+### 1. Clone the repository
 
-   ```bash
-   cd src
-   cp .env.example .env
-   ```
+```bash
+git clone https://github.com/marcuscfarias/ecommerce-platform.git
+cd ecommerce-platform
+```
 
-   Edit `.env` and set `POSTGRES_PASSWORD` (and the matching password inside `ConnectionStrings__EcommerceDb`) to
-   something other than the default.
+### 2. Trust a local HTTPS certificate
 
-3. Bring the stack up:
+The API serves over HTTPS on port `8081`, and the SPA calls it from the browser — so Kestrel needs a TLS certificate the
+container can load and your browser will trust. Export the .NET dev certificate to a password-protected `.pfx` (the
+compose file mounts this folder into the API container), then trust it:
 
-   ```bash
-   docker compose up --build
-   ```
+```powershell
+dotnet dev-certs https -ep $env:USERPROFILE\.aspnet\https\ecommerce.pfx -p <cert-password>
+dotnet dev-certs https --trust
+```
 
-   This boots two containers:
+The `-p` password must match `ASPNETCORE_Kestrel__Certificates__Default__Password` in the `.env` you create next.
 
-    * `ecommerce-db` — PostgreSQL 17 with a persistent volume.
-    * `ecommerce-api` — the API (`Ecommerce.AppHost`) listening on `http://localhost:8080` and `https://localhost:8081`.
+### 3. Configure the environment
 
-   EF Core migrations are applied on startup so the database is ready as soon as the API answers.
+```bash
+cd src
+cp .env.example .env
+```
 
-4. Open the **Scalar UI** at [`http://localhost:8080/scalar/v1`](http://localhost:8080/scalar/v1) to explore endpoints.
+Edit `.env`:
+
+* `MSSQL_SA_PASSWORD` — a strong SA password, mirrored inside `ConnectionStrings__EcommerceDb`.
+* `ASPNETCORE_Kestrel__Certificates__Default__Password` — the `<cert-password>` you chose in step 2.
+
+### 4. Run the backend
+
+```bash
+docker compose up --build
+```
+
+This boots three containers:
+
+* `ecommerce-db` — SQL Server 2022 with a persistent volume.
+* `ecommerce-azurite` — local Azure Blob Storage emulator for product images.
+* `ecommerce-api` — the API (`Ecommerce.AppHost`) on [`https://localhost:8081`](https://localhost:8081).
+
+EF Core migrations are applied and the default roles, admin and demo users (see [Demo logins](#demo-logins)) are seeded
+on startup, so the API is ready as soon as it answers.
+
+Open the **Scalar UI** at [`https://localhost:8081/scalar`](https://localhost:8081/scalar) to explore the endpoints.
+
+### 5. Run the Admin SPA
+
+```bash
+dotnet run --project Ecommerce.Admin.Web
+```
+
+The Blazor WebAssembly admin opens at [`https://localhost:7777`](https://localhost:7777) and talks to the API on port
+`8081`. Sign in with any of the [Demo logins](#demo-logins).
 
 ### Run tests
 
@@ -77,130 +132,145 @@ cd src
 dotnet test
 ```
 
-Integration tests require Docker to be running. See [5.4 Integration Tests](#54-integration-tests) for the composition.
+Integration tests require Docker to be running. See [5.6 Integration testing](#56-integration-testing) for the
+composition.
 
 ## 4. Functionalities
 
-Each module groups one or more features. Cross-cutting items are not tied to a single
-module.
+Features are grouped by delivery phase. The **backoffice** (admin-facing) milestone is shipped; the **storefront**
+(customer-facing) phase is next. **Cross-cutting** concerns span both. Each feature is expanded in
+[5. Implementation details](#5-implementation-details).
 
-<div align="center">
+### 4.1 Backoffice — ✅ shipped
 
-| Id |         Module         |               Feature               |     Status     |
-|:--:|:----------------------:|:-----------------------------------:|:--------------:|
-| 1  |        Catalog         |         Category Management         |    🟢 Done     |
-| 2  |          Auth          |           User Management           |    🟢 Done     |
-| 3  |          Auth          |   Authentication & Authorization    | 🟡 In progress |
-| 4  |        Catalog         |         Product Management          |    🔴 To do    |
-| 5  |         Orders         |                  —                  |    🔴 To do    |
-| 6  |        Shipping        |                  —                  |    🔴 To do    |
-| 7  | Payment (Microservice) |                  —                  |    🔴 To do    |
-| 8  |     Notifications      |                  —                  |    🔴 To do    |
-| 9  |     Cross-cutting      |         Request Validation          |    🟢 Done     |
-| 10 |     Cross-cutting      |      Global Exception Handling      |    🟢 Done     |
-| 11 |     Cross-cutting      |          API Documentation          |    🟢 Done     |
-| 12 |     Cross-cutting      |       CI/CD (GitHub Actions)        | 🟡 In progress |
-| 13 |     Cross-cutting      |      Deployment & Environments      |    🔴 To do    |
-| 14 |     Cross-cutting      |            Observability            |    🔴 To do    |
-| 15 |     Cross-cutting      |            Rate Limiting            |    🟢 Done     |
-| 16 |     Cross-cutting      |       Domain Validation Rules       |    🔴 To do    |
-| 17 |     Cross-cutting      | Integration Tests (Test Containers) |    🟢 Done     |
+The admin-facing operations that run the store.
 
-</div>
+| Module    | Feature                        | Status  |
+|:----------|:-------------------------------|:-------:|
+| Catalog   | Category Management            | 🟢 Done |
+| Catalog   | Product Management             | 🟢 Done |
+| Auth      | User Management                | 🟢 Done |
+| Auth      | Authentication & Authorization | 🟢 Done |
+| Admin Web | Blazor WASM SPA                | 🟢 Done |
+
+### 4.2 Storefront — 🔜 planned
+
+The customer-facing shop, built on top of the backoffice backbone.
+
+| Module        | Feature                   |  Status  |
+|:--------------|:--------------------------|:--------:|
+| Catalog       | Product browsing & search | 🔴 To do |
+| Orders        | Cart & checkout           | 🔴 To do |
+| Orders        | Order management          | 🔴 To do |
+| Payment       | Payment (microservice)    | 🔴 To do |
+| Shipping      | Shipping & fulfillment    | 🔴 To do |
+| Notifications | Customer notifications    | 🔴 To do |
+
+### 4.3 Cross-cutting
+
+Platform concerns not tied to a single module.
+
+| Feature                            |  Status  |
+|:-----------------------------------|:--------:|
+| Request Validation                 | 🟢 Done  |
+| Global Exception Handling          | 🟢 Done  |
+| API Documentation (Scalar)         | 🟢 Done  |
+| Rate Limiting                      | 🟢 Done  |
+| Integration Tests (Testcontainers) | 🟢 Done  |
+| CI/CD (GitHub Actions)             | 🟢 Done  |
+| Deployment & Environments (Azure)  | 🟢 Done  |
+| Logging                            | 🔴 To do |
+| Observability                      | 🔴 To do |
+| Infrastructure as Code (IaC)       | 🔴 To do |
 
 ## 5. Implementation details
 
-This section expands on the Functionalities table — pick a row above and find it here for the technologies, patterns and
-reasoning behind it.
+This section explains how the more interesting parts work — the technologies, patterns and reasoning behind the
+Functionalities above.
 
-### 5.0 Tech stack
+### 5.1 Tech stack
 
 * **.NET 10 / ASP.NET Core 10 / C#** — API runtime and framework.
-* **PostgreSQL 17** with **Entity Framework Core** — relational store, migrations and data access.
+* **SQL Server** with **Entity Framework Core** — relational store, migrations and data access.
 * **MediatR** — CQRS dispatch for commands and queries.
 * **FluentValidation** — declarative request validation.
-* **Scalar UI** (over OpenAPI) — interactive API documentation.
-* **xUnit**, **NSubstitute**, **Bogus**, **Shouldly**, **Testcontainers**, **Respawner** — testing toolchain.
+* **JWT bearer** + **BCrypt.Net** — token authentication and password hashing.
+* **Scalar** (over OpenAPI) — interactive API documentation.
+* **Unit testing** — xUnit, NSubstitute, Bogus, Shouldly.
+* **Integration testing** — Testcontainers (SQL Server + Azurite), Respawn, WebApplicationFactory.
 * **Docker** + **Docker Compose** — containerization.
-* **GitHub Actions** — CI (build, unit tests, integration tests, Docker image validation, commit message linting).
-* **Azure** — target cloud for deployment (App Service / Container Apps + Azure Database for PostgreSQL).
+* **GitHub Actions** — CI/CD.
+* **Azure** — Container Apps, Static Web Apps, Azure SQL, Blob Storage, Key Vault.
+* **Blazor WebAssembly** + **MudBlazor** — admin SPA.
 
-### 5.1 Modules
+### 5.2 Architecture
 
-`Ecommerce.AppHost` is the composition root. Each module ships an `Api` project that exposes two extension methods —
-`Add{Module}Module(IServiceCollection, IConfiguration)` and `Use{Module}Module(IApplicationBuilder)` — both invoked
-uniformly by `ModulesRegistry.AddModules` / `RegisterModules`.
+`Ecommerce.AppHost` is the composition root. Each bounded context is a **module** (Catalog, Auth) split into
+Domain / Application / Infrastructure / Api layers and registered uniformly through `Add{Module}Module` /
+`Use{Module}Module` via `ModulesRegistry`.
 
-Modules never reference each other directly: cross-module communication goes through `IModule` in
-`Ecommerce.Kernel.Application` and per-module contracts in
-`{Module}.Application` (e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`); the implementing module ships an
-internal mediator-backed adapter that extends `MediatorModuleBase` so consumers see a typed contract instead of
-`ISender`.
+Modules never reference each other directly: cross-module calls go through `IModule` (Kernel) and per-module contracts
+(e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`), implemented by an internal mediator-backed adapter
+(`MediatorModuleBase`) so consumers see a typed contract instead of `ISender`. Domain invariants are enforced with a
+small `BusinessRule` abstraction in the Kernel.
 
-### 5.2 API Validation
+### 5.3 Request pipeline
 
-```mermaid
-flowchart LR
-    Req[HTTP Request] --> Filter[RequestValidationFilter]
-    Filter -- valid --> Ctrl[Controller / Handler]
-    Filter -- invalid --> PDW[ProblemDetailsWriter<br/>400 ValidationProblemDetails]
-    Ctrl -- IExceptionContract thrown --> Handler[GlobalExceptionHandler]
-    Ctrl -- unhandled exception --> Handler
-    Handler -- has IExceptionContract --> PDW2[ProblemDetailsWriter<br/>StatusCode + Detail]
-    Handler -- no contract --> PDW3[ProblemDetailsWriter<br/>500 generic]
-    Ctrl -- success --> Res[HTTP Response]
-    PDW --> Res
-    PDW2 --> Res
-    PDW3 --> Res
-```
+Every request resolves to one consistent error contract — an [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)
+`ProblemDetails` written by a single `ProblemDetailsWriter`, so the response shape never drifts:
 
-Two complementary paths produce a [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) `ProblemDetails` response —
-one for invalid input, one for thrown exceptions. Both go through a single writer (`ProblemDetailsWriter`) so the
-response shape stays consistent.
+* **Validation** — `RequestValidationFilter` (registered globally) resolves the request's `IValidator<T>` and, on
+  failure, short-circuits with a `400 ValidationProblemDetails` before the controller action runs.
+* **Exceptions** — handlers throw exceptions implementing `IExceptionContract` (e.g. `ResourceNotFoundException` →
+  `404`, `BusinessRuleValidationException` → `409`); `GlobalExceptionHandler` maps them through the same writer.
+  Anything else falls back to a generic `500` with no internal leakage.
 
-1. **Request body validation.** `RequestValidationFilter` is registered globally in `ApiModule.AddApiModule`. For each
-   request DTO, it resolves the matching `IValidator<T>` from DI, calls `ValidateAsync`, and on failure short-circuits
-   the pipeline with a `400 ValidationProblemDetails` written by `ProblemDetailsWriter` — the controller action never
-   runs.
-2. **Controlled exceptions.** Handlers throw exceptions that implement `IExceptionContract` (e.g.
-   `ResourceNotFoundException` → `404`, `BusinessRuleValidationException` → `409`). `GlobalExceptionHandler` (
-   `IExceptionHandler`) picks up the contract, reads `StatusCode` and `Message`, and produces a `ProblemDetails` through
-   the same writer. Anything that does not implement the contract falls back to a generic `500` with no leakage of
-   internal details.
+### 5.4 Authentication, authorization & security
 
-### 5.4 Integration Tests
+Auth issues **JWT access tokens** (signed inside the Auth module) delivered as **httpOnly cookies**, with
+**refresh-token rotation** and logout revocation; passwords are hashed with **BCrypt**. Login is guarded by **account
+lockout** and **per-endpoint rate limiting**.
 
-Integration tests run against a real PostgreSQL 17 instance — Testcontainers spins up a container per fixture, EF
-migrations are applied through a `WebApplicationFactory` during host startup, and `Respawner` clears the schema between
-tests so each one starts from a known state. The stack composes a few small pieces, each with one responsibility:
+Authorization is **permission-based**: each module declares its own permissions and protects endpoints with
+`RequireClaim("permission", …)` (no role checks). The `RolePermissionMap` lives in the composition root, so the Auth
+module never learns other modules' permissions. The API also sets **security headers** and **HSTS**, a **CORS
+allowlist** for the SPA origin, and honors **forwarded headers** behind the Azure ingress.
 
-* **`DatabaseContainerFixture`** boots a `postgres:17` container via Testcontainers and exposes its connection string.
-* **`BaseIntegrationFixture<TFactory>`** (Kernel) owns the container, instantiates the per-module
-  `WebApplicationFactory`, calls `CreateClient` (which applies EF migrations during host startup), and then constructs a
-  `DatabaseResetter` over the schemas the module declares.
-* **`EcommerceWebApplicationFactory`** is an abstract base over `WebApplicationFactory<IApiMarker>`. Its
-  `ConfigureWebHost` injects the container connection string into in-memory configuration so the API points at the test
-  database. Each module supplies a concrete factory (e.g. `CatalogWebApplicationFactory`).
-* **`DatabaseResetter`** wraps `Respawner` with `DbAdapter.Postgres` and only the module-owned schemas, giving each test
-  a clean slate via `ResetAsync`.
-* **`CatalogTestCollection`** is an xUnit `[CollectionDefinition]` with `ICollectionFixture<CatalogIntegrationFixture>`
-  so the fixture (and its container) is shared across the whole test class set. `BaseCatalogIntegrationTest` hides the
-  wiring and exposes `Client`, `ResetDatabaseAsync()` and `SeedAsync<CatalogDbContext>()` to test classes.
+### 5.5 Product images: storage & delivery
 
-### 5.5 CI/CD (GitHub Actions)
+Product images live in **Blob Storage** — Azurite locally, a **private** Azure Storage container in production
+(`PublicAccessType.None`, no anonymous access). The catalog persists only the **blob key** (`ImageKey`), never a full
+URL, so the storage account or container can change without rewriting data.
 
-Three workflows live under `.github/workflows/`:
+Because the container is private, images are served **through the API**. The `GET {id}/image` endpoint **streams** the
+blob straight to the response (`DownloadStreamingAsync` → `File(...)`) instead of buffering it in memory, and flows the
+blob's **`ETag`** back as a response header. ASP.NET Core then resolves `If-None-Match` automatically, returning
+**`304 Not Modified`** when the client already has the current image — so browsers re-validate cheaply while the storage
+account stays locked down.
 
-* **`ci.yml`** runs on every push and on pull requests targeting `main`. It runs in two jobs: `build-and-unit-tests` (
-  restore, build in Release, run only tests whose fully-qualified name contains `UnitTests`) and `integration-tests` (
-  same, but filtering on `IntegrationTests` and depending on the first job). NuGet packages are cached by `*.csproj`
-  hash.
-* **`docker.yml`** builds the production image from `src/Ecommerce.AppHost/Dockerfile` on changes under `src/**`. It
-  does not push — it validates that the image still builds.
-* **`commitlint.yml`** lints PR commit messages against the Conventional Commits config at the repo root (
-  `commitlint.config.cjs`, `commitlinterrc.json`).
+### 5.6 Integration testing
 
-What is still open: deployment workflows (Azure) and a release pipeline.
+Integration tests run against a real **SQL Server** container (`Testcontainers.MsSql`); EF migrations are applied
+through a `WebApplicationFactory` on host startup, and **Respawn** resets the schema between tests so each one starts
+from a known state. Each module owns a thin fixture over a shared base (e.g. `CatalogIntegrationFixture`) that exposes
+`Client`, `ResetDatabaseAsync()` and `SeedAsync<TDbContext>()`, keeping the wiring out of the test classes. Unit tests
+use **xUnit + NSubstitute + Bogus + Shouldly**.
+
+### 5.7 CI/CD & deployment
+
+Six GitHub Actions workflows split shared gates from per-stack pipelines:
+
+* **`ci.yml`** — shared gates on every push/PR: Conventional Commits, `dotnet format`, config-file lint,
+  vulnerable-dependency check and secret scan (gitleaks).
+* **`backend-ci.yml`** (+ reusable **`backend-test.yml`**) — restore, build in Release, unit + integration tests
+  (Testcontainers) and a Docker image build validation.
+* **`frontend-ci.yml`** — builds the Blazor WebAssembly SPA.
+* **`backend-cd.yml`** — publishes the API image and deploys it to **Azure Container Apps** via OIDC, gated on tests and
+  a `/health` check.
+* **`frontend-cd.yml`** — deploys the SPA to **Azure Static Web Apps** via OIDC.
+
+Production secrets come from **Azure Key Vault** (system-assigned managed identity) and product images from **private
+Blob Storage** proxied through the API. Two environments only: local (Docker Compose) and Production.
 
 ## 6. Contributing
 
