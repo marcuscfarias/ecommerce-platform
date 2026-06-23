@@ -132,7 +132,7 @@ cd src
 dotnet test
 ```
 
-Integration tests require Docker to be running. See [5.7 Integration testing](#57-integration-testing) for the
+Integration tests require Docker to be running. See [5.6 Integration testing](#56-integration-testing) for the
 composition.
 
 ## 4. Functionalities
@@ -236,15 +236,19 @@ Authorization is **permission-based**: each module declares its own permissions 
 module never learns other modules' permissions. The API also sets **security headers** and **HSTS**, a **CORS
 allowlist** for the SPA origin, and honors **forwarded headers** behind the Azure ingress.
 
-### 5.5 Data, persistence & seeding
+### 5.5 Product images: storage & delivery
 
-_(Coming soon.)_
+Product images live in **Blob Storage** — Azurite locally, a **private** Azure Storage container in production
+(`PublicAccessType.None`, no anonymous access). The catalog persists only the **blob key** (`ImageKey`), never a full
+URL, so the storage account or container can change without rewriting data.
 
-### 5.6 Product images: storage & delivery
+Because the container is private, images are served **through the API**. The `GET {id}/image` endpoint **streams** the
+blob straight to the response (`DownloadStreamingAsync` → `File(...)`) instead of buffering it in memory, and flows the
+blob's **`ETag`** back as a response header. ASP.NET Core then resolves `If-None-Match` automatically, returning
+**`304 Not Modified`** when the client already has the current image — so browsers re-validate cheaply while the storage
+account stays locked down.
 
-_(Coming soon.)_
-
-### 5.7 Integration testing
+### 5.6 Integration testing
 
 Integration tests run against a real **SQL Server** container (`Testcontainers.MsSql`); EF migrations are applied
 through a `WebApplicationFactory` on host startup, and **Respawn** resets the schema between tests so each one starts
@@ -252,7 +256,7 @@ from a known state. Each module owns a thin fixture over a shared base (e.g. `Ca
 `Client`, `ResetDatabaseAsync()` and `SeedAsync<TDbContext>()`, keeping the wiring out of the test classes. Unit tests
 use **xUnit + NSubstitute + Bogus + Shouldly**.
 
-### 5.8 CI/CD & deployment
+### 5.7 CI/CD & deployment
 
 Six GitHub Actions workflows split shared gates from per-stack pipelines:
 
