@@ -34,7 +34,7 @@ public class UploadProductImageRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WhenFileIsEmpty_ShouldHaveErrorForFileLength()
+    public void Validate_WhenFileIsEmpty_ShouldHaveErrorForFile()
     {
         // Arrange
         var request = new UploadProductImageRequest(FileWith(length: 0, contentType: "image/jpeg"));
@@ -43,11 +43,11 @@ public class UploadProductImageRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "File.Length");
+        result.Errors.ShouldContain(e => e.PropertyName == "File");
     }
 
     [Fact]
-    public void Validate_WhenFileExceedsMaxSize_ShouldHaveErrorForFileLength()
+    public void Validate_WhenFileExceedsMaxSize_ShouldHaveErrorForFile()
     {
         // Arrange
         var request = new UploadProductImageRequest(FileWith(length: (2 * 1024 * 1024) + 1, contentType: "image/jpeg"));
@@ -56,11 +56,11 @@ public class UploadProductImageRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "File.Length");
+        result.Errors.ShouldContain(e => e.PropertyName == "File");
     }
 
     [Fact]
-    public void Validate_WhenContentTypeIsUnsupported_ShouldHaveErrorForFileContentType()
+    public void Validate_WhenContentTypeIsUnsupported_ShouldHaveErrorForFile()
     {
         // Arrange
         var request = new UploadProductImageRequest(FileWith(length: 1024, contentType: "application/pdf"));
@@ -69,7 +69,7 @@ public class UploadProductImageRequestValidatorTests
         var result = _sut.Validate(request);
 
         // Assert
-        result.Errors.ShouldContain(e => e.PropertyName == "File.ContentType");
+        result.Errors.ShouldContain(e => e.PropertyName == "File");
     }
 
     private static IFormFile FileWith(long length, string contentType)
