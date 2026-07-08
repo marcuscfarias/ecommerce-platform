@@ -1,12 +1,7 @@
 name: Backend CD
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - '.github/workflows/backend-cd.yml'
-  workflow_dispatch: # manual redeploy / rollback
+  workflow_dispatch: # manual-only: avoid waking the DB (cold start) on every push
 
 concurrency:
   group: backend-cd
