@@ -4,12 +4,14 @@ using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Domain.BusinessRules;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Auth.Application.Users.SetUserStatus;
 
-internal sealed class SetUserStatusHandler(
+internal sealed partial class SetUserStatusHandler(
     IAuthRepository repository,
-    TimeProvider timeProvider) : IRequestHandler<SetUserStatusCommand>
+    TimeProvider timeProvider,
+    ILogger<SetUserStatusHandler> logger) : IRequestHandler<SetUserStatusCommand>
 {
     public async Task Handle(SetUserStatusCommand command, CancellationToken cancellationToken)
     {
@@ -38,5 +40,13 @@ internal sealed class SetUserStatusHandler(
 
         repository.Update(user);
         await repository.SaveChangesAsync(cancellationToken);
+
+        LogStatusChanged(logger, user.Id, user.IsActive);
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Information,
+        Message = "User {UserId} activation set to {IsActive}")]
+    private static partial void LogStatusChanged(ILogger logger, int userId, bool isActive);
 }

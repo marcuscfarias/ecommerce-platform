@@ -4,16 +4,18 @@ using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Auth.Application.Auth.Login;
 
-internal sealed class LoginHandler(
+internal sealed partial class LoginHandler(
     IAuthRepository repository,
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator jwtTokenGenerator,
     IRefreshTokenFactory refreshTokenFactory,
     ILockoutPolicy lockoutPolicy,
-    TimeProvider timeProvider) : IRequestHandler<LoginCommand, LoginResult>
+    TimeProvider timeProvider,
+    ILogger<LoginHandler> logger) : IRequestHandler<LoginCommand, LoginResult>
 {
     public async Task<LoginResult> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
@@ -59,6 +61,8 @@ internal sealed class LoginHandler(
 
         await repository.SaveChangesAsync(cancellationToken);
 
+        LogUserAuthenticated(logger, user.Id);
+
         return new LoginResult(
             new AuthTokens(
                 accessToken.Token,
@@ -67,4 +71,10 @@ internal sealed class LoginHandler(
                 (int)lifetime.TotalSeconds),
             new UserSummary(user.Id, user.Email, user.Name));
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Information,
+        Message = "User {UserId} authenticated")]
+    private static partial void LogUserAuthenticated(ILogger logger, int userId);
 }

@@ -15,12 +15,21 @@ public sealed partial class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var (status, detail) = exception is IExceptionContract appException
-            ? (appException.StatusCode, exception.Message)
-            : (StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+        int status;
+        string detail;
 
-        if (exception is not IExceptionContract)
+        if (exception is IExceptionContract appException)
+        {
+            status = appException.StatusCode;
+            detail = exception.Message;
+            LogHandledDomainException(logger, status, exception.GetType().Name);
+        }
+        else
+        {
+            status = StatusCodes.Status500InternalServerError;
+            detail = "An unexpected error occurred.";
             LogUnhandledException(logger, exception);
+        }
 
         if (exception is IRetryAfter retryAfter)
             httpContext.Response.Headers.RetryAfter =
@@ -40,4 +49,13 @@ public sealed partial class GlobalExceptionHandler(
     private static partial void LogUnhandledException(
         ILogger logger,
         Exception exception);
+
+    [LoggerMessage(
+        EventId = 2,
+        Level = LogLevel.Warning,
+        Message = "Domain exception handled by GlobalExceptionHandler: {ExceptionType} ({StatusCode})")]
+    private static partial void LogHandledDomainException(
+        ILogger logger,
+        int statusCode,
+        string exceptionType);
 }

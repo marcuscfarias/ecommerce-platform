@@ -3,14 +3,16 @@ using Ecommerce.Auth.Application.Exceptions;
 using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Auth.Application.Auth.Refresh;
 
-internal sealed class RefreshHandler(
+internal sealed partial class RefreshHandler(
     IAuthRepository repository,
     IRefreshTokenFactory refreshTokenFactory,
     IJwtTokenGenerator jwtTokenGenerator,
-    TimeProvider timeProvider) : IRequestHandler<RefreshCommand, RefreshResult>
+    TimeProvider timeProvider,
+    ILogger<RefreshHandler> logger) : IRequestHandler<RefreshCommand, RefreshResult>
 {
     public async Task<RefreshResult> Handle(RefreshCommand command, CancellationToken cancellationToken)
     {
@@ -33,6 +35,14 @@ internal sealed class RefreshHandler(
         var roles = user.Roles.Select(r => Enum.Parse<RoleName>(r.Name));
         var accessToken = jwtTokenGenerator.Generate(user.Id, user.Email, roles);
 
+        LogTokenRefreshed(logger, user.Id);
+
         return new RefreshResult(accessToken.Token, accessToken.ExpiresInSeconds);
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Information,
+        Message = "Access token refreshed for user {UserId}")]
+    private static partial void LogTokenRefreshed(ILogger logger, int userId);
 }

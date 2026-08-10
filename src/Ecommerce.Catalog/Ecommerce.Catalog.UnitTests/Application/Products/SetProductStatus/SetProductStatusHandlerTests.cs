@@ -3,6 +3,7 @@ using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Domain.ValueObjects;
 using Ecommerce.Kernel.Application.Exceptions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Products.SetProductStatus;
 
@@ -10,11 +11,12 @@ public class SetProductStatusHandlerTests
 {
     private static readonly Faker Faker = new();
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
+    private readonly FakeLogger<SetProductStatusHandler> _logger = new();
     private readonly SetProductStatusHandler _handler;
 
     public SetProductStatusHandlerTests()
     {
-        _handler = new SetProductStatusHandler(_repository);
+        _handler = new SetProductStatusHandler(_repository, _logger);
     }
 
     [Fact]

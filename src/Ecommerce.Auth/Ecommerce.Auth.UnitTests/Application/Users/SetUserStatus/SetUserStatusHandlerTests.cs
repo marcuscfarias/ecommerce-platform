@@ -4,6 +4,7 @@ using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Domain.Exceptions;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Ecommerce.Auth.UnitTests.Application.Users.SetUserStatus;
@@ -12,12 +13,13 @@ public class SetUserStatusHandlerTests
 {
     private readonly IAuthRepository _repository = Substitute.For<IAuthRepository>();
     private readonly FakeTimeProvider _timeProvider = new();
+    private readonly FakeLogger<SetUserStatusHandler> _logger = new();
     private readonly Faker _faker = new();
     private readonly SetUserStatusHandler _handler;
 
     public SetUserStatusHandlerTests()
     {
-        _handler = new SetUserStatusHandler(_repository, _timeProvider);
+        _handler = new SetUserStatusHandler(_repository, _timeProvider, _logger);
     }
 
     [Fact]

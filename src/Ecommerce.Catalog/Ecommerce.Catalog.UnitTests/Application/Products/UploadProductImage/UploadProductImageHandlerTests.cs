@@ -4,6 +4,7 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Domain.Storage;
 using Ecommerce.Catalog.Domain.ValueObjects;
 using Ecommerce.Kernel.Application.Exceptions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Products.UploadProductImage;
 
@@ -12,11 +13,12 @@ public class UploadProductImageHandlerTests
     private static readonly Faker Faker = new();
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
     private readonly IProductImageStorage _imageStorage = Substitute.For<IProductImageStorage>();
+    private readonly FakeLogger<UploadProductImageHandler> _logger = new();
     private readonly UploadProductImageHandler _handler;
 
     public UploadProductImageHandlerTests()
     {
-        _handler = new UploadProductImageHandler(_repository, _imageStorage);
+        _handler = new UploadProductImageHandler(_repository, _imageStorage, _logger);
     }
 
     [Fact]

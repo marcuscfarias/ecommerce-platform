@@ -4,6 +4,7 @@ using Ecommerce.Auth.Application.Exceptions;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Ecommerce.Auth.UnitTests.Application.Auth.Login;
@@ -16,6 +17,7 @@ public class LoginHandlerTests
     private readonly IRefreshTokenFactory _refreshTokenFactory = Substitute.For<IRefreshTokenFactory>();
     private readonly ILockoutPolicy _lockoutPolicy = Substitute.For<ILockoutPolicy>();
     private readonly FakeTimeProvider _timeProvider = new();
+    private readonly FakeLogger<LoginHandler> _logger = new();
     private readonly Faker _faker = new();
     private readonly LoginHandler _handler;
     private const string DummyHash = "$2a$12$cFImGngfLrmQcxOsR1Np.Okd210KBzNKi/mxJU9NVmuaw8iKjf4Ve";
@@ -26,7 +28,7 @@ public class LoginHandlerTests
         _lockoutPolicy.LockoutDuration.Returns(TimeSpan.FromMinutes(15));
 
         _handler = new LoginHandler(
-            _repository, _passwordHasher, _jwtTokenGenerator, _refreshTokenFactory, _lockoutPolicy, _timeProvider);
+            _repository, _passwordHasher, _jwtTokenGenerator, _refreshTokenFactory, _lockoutPolicy, _timeProvider, _logger);
     }
 
     [Fact]

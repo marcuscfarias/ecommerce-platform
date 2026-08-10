@@ -64,9 +64,10 @@ public class GlobalExceptionHandlerTests
     }
 
     [Fact]
-    public async Task TryHandleAsync_AppException_ShouldNotLogError()
+    public async Task TryHandleAsync_AppException_ShouldLogWarning()
     {
         // Arrange
+        _logger.IsEnabled(Arg.Any<LogLevel>()).Returns(true);
         var context = new DefaultHttpContext();
         var exception = new FakeContractException(StatusCodes.Status409Conflict, "some rule violated");
 
@@ -74,7 +75,11 @@ public class GlobalExceptionHandlerTests
         await _sut.TryHandleAsync(context, exception, CancellationToken.None);
 
         // Assert
-        _logger.ReceivedCalls().ShouldBeEmpty();
+        var loggedLevels = _logger.ReceivedCalls()
+            .Select(call => call.GetArguments())
+            .Where(arguments => arguments.Length > 1)
+            .Select(arguments => (LogLevel)arguments[0]!);
+        loggedLevels.ShouldHaveSingleItem().ShouldBe(LogLevel.Warning);
     }
 
     [Fact]

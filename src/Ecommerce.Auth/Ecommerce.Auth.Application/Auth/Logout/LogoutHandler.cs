@@ -1,13 +1,15 @@
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Auth.Application.Auth.Logout;
 
-internal sealed class LogoutHandler(
+internal sealed partial class LogoutHandler(
     IAuthRepository repository,
     IRefreshTokenFactory refreshTokenFactory,
-    TimeProvider timeProvider) : IRequestHandler<LogoutCommand>
+    TimeProvider timeProvider,
+    ILogger<LogoutHandler> logger) : IRequestHandler<LogoutCommand>
 {
     public async Task Handle(LogoutCommand command, CancellationToken cancellationToken)
     {
@@ -22,5 +24,13 @@ internal sealed class LogoutHandler(
 
         token.Revoke(timeProvider.GetUtcNow());
         await repository.SaveChangesAsync(cancellationToken);
+
+        LogUserLoggedOut(logger, token.UserId);
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Information,
+        Message = "User {UserId} logged out")]
+    private static partial void LogUserLoggedOut(ILogger logger, int userId);
 }
