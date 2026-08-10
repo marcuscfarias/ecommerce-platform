@@ -30,6 +30,7 @@ internal static class Program
         }
 
         builder.Services.AddEcommerceLogging(builder.Environment);
+        builder.Services.AddEcommerceHttpLogging();
         builder.Services.AddKernelInfrastructure(builder.Configuration);
         builder.Services.AddApiModule(builder.Configuration);
         builder.Services.AddHostAuthorization();
@@ -47,6 +48,8 @@ internal static class Program
         var app = builder.Build();
 
         app.UseProxyForwardedHeaders();
+
+        app.UseHttpLogging();
 
         app.MapOpenApi();
         app.MapScalarApiReference(options =>
