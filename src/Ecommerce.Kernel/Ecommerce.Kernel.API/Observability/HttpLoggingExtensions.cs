@@ -18,6 +18,8 @@ public static class HttpLoggingExtensions
             options.CombineLogs = true;
         });
 
+        services.AddHttpLoggingInterceptor<HealthCheckHttpLoggingInterceptor>();
+
         return services;
     }
 }
