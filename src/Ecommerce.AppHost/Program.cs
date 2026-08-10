@@ -4,6 +4,7 @@ using Ecommerce.AppHost.Modules;
 using Ecommerce.AppHost.Scalar;
 using Ecommerce.AppHost.Security;
 using Ecommerce.Kernel.API;
+using Ecommerce.Kernel.API.Observability;
 using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
@@ -28,6 +29,7 @@ internal static class Program
             builder.Configuration.AddAzureKeyVault(new Uri(vaultUri), new DefaultAzureCredential());
         }
 
+        builder.Services.AddEcommerceLogging(builder.Environment);
         builder.Services.AddKernelInfrastructure(builder.Configuration);
         builder.Services.AddApiModule(builder.Configuration);
         builder.Services.AddHostAuthorization();
