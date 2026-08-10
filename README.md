@@ -179,7 +179,7 @@ Platform concerns not tied to a single module.
 | Integration Tests (Testcontainers) | 🟢 Done  |
 | CI/CD (GitHub Actions)             | 🟢 Done  |
 | Deployment & Environments (Azure)  | 🟢 Done  |
-| Logging                            | 🔴 To do |
+| Logging                            | 🟢 Done  |
 | Observability                      | 🔴 To do |
 | Infrastructure as Code (IaC)       | 🔴 To do |
 
@@ -196,6 +196,7 @@ Functionalities above.
 * **FluentValidation** — declarative request validation.
 * **JWT bearer** + **BCrypt.Net** — token authentication and password hashing.
 * **Scalar** (over OpenAPI) — interactive API documentation.
+* **Microsoft.Extensions.Logging** (`[LoggerMessage]` + HTTP logging) — structured logs to stdout (JSON in production) shipped to **Azure Log Analytics**.
 * **Unit testing** — xUnit, NSubstitute, Bogus, Shouldly.
 * **Integration testing** — Testcontainers (SQL Server + Azurite), Respawn, WebApplicationFactory.
 * **Docker** + **Docker Compose** — containerization.
@@ -271,6 +272,14 @@ Six GitHub Actions workflows split shared gates from per-stack pipelines:
 
 Production secrets come from **Azure Key Vault** (system-assigned managed identity) and product images from **private
 Blob Storage** proxied through the API. Two environments only: local (Docker Compose) and Production.
+
+### 5.8 Logging
+
+Structured logging on the **native `Microsoft.Extensions.Logging`** stack, written through the **`[LoggerMessage]`
+source generator**. Output goes to stdout (JSON in production) and is shipped by **Azure Container Apps** to **Log
+Analytics**. The **HTTP logging middleware** records one metadata-only entry per request, a per-request scope adds
+`RequestId`/`UserId` (and the W3C `TraceId` surfaces in the error response) for correlation, and handlers log key
+domain and auth events — always **ids only, never entities, credentials or tokens**.
 
 ## 6. Contributing
 
