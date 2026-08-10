@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Ecommerce.Kernel.API.Exceptions;
 using Ecommerce.Kernel.API.Filters;
@@ -26,7 +27,7 @@ public static class ApiModule
             options.CustomizeProblemDetails = context =>
             {
                 context.ProblemDetails.Instance = context.HttpContext.Request.Path;
-                context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+                context.ProblemDetails.Extensions["traceId"] = Activity.Current?.TraceId.ToString();
                 context.ProblemDetails.Extensions["timestamp"] = DateTimeOffset.UtcNow;
             };
         });
