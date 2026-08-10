@@ -75,6 +75,7 @@ internal static class Program
         app.UseCors(CorsConfiguration.PolicyName);
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRequestScope();
         app.UseApiModule();
         app.RegisterModules();
         app.MapControllers();
