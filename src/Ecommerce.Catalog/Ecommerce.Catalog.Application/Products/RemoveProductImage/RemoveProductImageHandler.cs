@@ -2,12 +2,14 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Domain.Storage;
 using Ecommerce.Kernel.Application.Exceptions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Catalog.Application.Products.RemoveProductImage;
 
-internal sealed class RemoveProductImageHandler(
+internal sealed partial class RemoveProductImageHandler(
     IProductRepository repository,
-    IProductImageStorage imageStorage) : IRequestHandler<RemoveProductImageCommand>
+    IProductImageStorage imageStorage,
+    ILogger<RemoveProductImageHandler> logger) : IRequestHandler<RemoveProductImageCommand>
 {
     public async Task Handle(RemoveProductImageCommand command, CancellationToken cancellationToken)
     {
@@ -22,5 +24,13 @@ internal sealed class RemoveProductImageHandler(
 
         repository.Update(product);
         await repository.SaveChangesAsync(cancellationToken);
+
+        LogImageRemoved(logger, product.Id);
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Information,
+        Message = "Product {ProductId} image removed")]
+    private static partial void LogImageRemoved(ILogger logger, int productId);
 }

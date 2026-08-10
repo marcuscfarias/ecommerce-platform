@@ -2,12 +2,14 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Domain.Storage;
 using Ecommerce.Kernel.Application.Exceptions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Catalog.Application.Products.UploadProductImage;
 
-internal sealed class UploadProductImageHandler(
+internal sealed partial class UploadProductImageHandler(
     IProductRepository repository,
-    IProductImageStorage imageStorage) : IRequestHandler<UploadProductImageCommand>
+    IProductImageStorage imageStorage,
+    ILogger<UploadProductImageHandler> logger) : IRequestHandler<UploadProductImageCommand>
 {
     public async Task Handle(UploadProductImageCommand command, CancellationToken cancellationToken)
     {
@@ -22,5 +24,13 @@ internal sealed class UploadProductImageHandler(
 
         repository.Update(product);
         await repository.SaveChangesAsync(cancellationToken);
+
+        LogImageUploaded(logger, product.Id);
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Information,
+        Message = "Product {ProductId} image uploaded")]
+    private static partial void LogImageUploaded(ILogger logger, int productId);
 }
