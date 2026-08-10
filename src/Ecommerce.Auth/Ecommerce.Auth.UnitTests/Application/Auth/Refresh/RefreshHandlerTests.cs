@@ -4,6 +4,7 @@ using Ecommerce.Auth.Application.Exceptions;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Ecommerce.Auth.UnitTests.Application.Auth.Refresh;
@@ -14,12 +15,13 @@ public class RefreshHandlerTests
     private readonly IRefreshTokenFactory _refreshTokenFactory = Substitute.For<IRefreshTokenFactory>();
     private readonly IJwtTokenGenerator _jwtTokenGenerator = Substitute.For<IJwtTokenGenerator>();
     private readonly FakeTimeProvider _timeProvider = new();
+    private readonly ILogger<RefreshHandler> _logger = Substitute.For<ILogger<RefreshHandler>>();
     private readonly Faker _faker = new();
     private readonly RefreshHandler _handler;
 
     public RefreshHandlerTests()
     {
-        _handler = new RefreshHandler(_repository, _refreshTokenFactory, _jwtTokenGenerator, _timeProvider);
+        _handler = new RefreshHandler(_repository, _refreshTokenFactory, _jwtTokenGenerator, _timeProvider, _logger);
     }
 
     [Fact]
