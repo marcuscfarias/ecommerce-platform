@@ -2,7 +2,7 @@ using Ecommerce.Auth.Application.Auth.Logout;
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Repositories;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Ecommerce.Auth.UnitTests.Application.Auth.Logout;
@@ -12,7 +12,7 @@ public class LogoutHandlerTests
     private readonly IAuthRepository _repository = Substitute.For<IAuthRepository>();
     private readonly IRefreshTokenFactory _refreshTokenFactory = Substitute.For<IRefreshTokenFactory>();
     private readonly FakeTimeProvider _timeProvider = new();
-    private readonly ILogger<LogoutHandler> _logger = Substitute.For<ILogger<LogoutHandler>>();
+    private readonly FakeLogger<LogoutHandler> _logger = new();
     private readonly Faker _faker = new();
     private readonly LogoutHandler _handler;
 

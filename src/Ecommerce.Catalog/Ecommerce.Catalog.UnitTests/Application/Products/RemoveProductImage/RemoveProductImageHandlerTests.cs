@@ -4,7 +4,7 @@ using Ecommerce.Catalog.Domain.Repositories;
 using Ecommerce.Catalog.Domain.Storage;
 using Ecommerce.Catalog.Domain.ValueObjects;
 using Ecommerce.Kernel.Application.Exceptions;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace Ecommerce.Catalog.UnitTests.Application.Products.RemoveProductImage;
 
@@ -13,7 +13,7 @@ public class RemoveProductImageHandlerTests
     private static readonly Faker Faker = new();
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
     private readonly IProductImageStorage _imageStorage = Substitute.For<IProductImageStorage>();
-    private readonly ILogger<RemoveProductImageHandler> _logger = Substitute.For<ILogger<RemoveProductImageHandler>>();
+    private readonly FakeLogger<RemoveProductImageHandler> _logger = new();
     private readonly RemoveProductImageHandler _handler;
 
     public RemoveProductImageHandlerTests()
