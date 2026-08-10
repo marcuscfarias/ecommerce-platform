@@ -4,6 +4,7 @@ using Ecommerce.Kernel.IntegrationTests.JwtToken;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Kernel.IntegrationTests;
 
@@ -13,6 +14,7 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.ConfigureLogging(logging => logging.ClearProviders());
         builder.ConfigureAppConfiguration(cfg =>
         {
             cfg.AddInMemoryCollection(databaseConfiguration.GetConfigurationEntries());
