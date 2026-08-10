@@ -11,8 +11,6 @@ public static class LoggingExtensions
     {
         services.AddLogging(builder =>
         {
-            // Drop the host's default console so re-adding one below doesn't emit every log
-            // twice. This removes providers only; the appsettings level filters stay in place.
             builder.ClearProviders();
 
             if (environment.IsDevelopment())
@@ -25,7 +23,6 @@ public static class LoggingExtensions
             }
             else
             {
-                // JSON so each field (RequestId, UserId, ...) stays queryable in Log Analytics.
                 builder.AddJsonConsole(options => options.IncludeScopes = true);
             }
         });
