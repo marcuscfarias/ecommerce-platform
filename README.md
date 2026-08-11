@@ -39,13 +39,12 @@ operational backbone the upcoming customer-facing storefront will build on.
 
 ## 2. Screenshots or Demo
 
-The project is live:
+> ⚠️⚠️⚠️ **Cold start.** To keep hosting costs near zero, the API scales to zero when idle. The first time you open the site
+> after an idle period, it takes around **1m30s** to spin everything back up — after that it responds normally. ⚠️⚠️⚠️
 
+The project is live:
 * **Admin SPA** — [admin-ecommerce.marcuscfarias.com](https://admin-ecommerce.marcuscfarias.com)
 * **API docs (Scalar)** — [api-ecommerce.marcuscfarias.com/scalar](https://api-ecommerce.marcuscfarias.com/scalar)
-
-> ⚠️ **Cold start.** To keep hosting costs near zero, the API scales to zero when idle. The first time you open the site
-> after an idle period, it takes around **1m30s** to spin everything back up — after that it responds normally.
 
 ### Demo logins
 
