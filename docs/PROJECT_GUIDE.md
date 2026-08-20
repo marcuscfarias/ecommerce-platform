@@ -4,12 +4,15 @@
 
 ## Architecture
 
-**Modular Monolith** — Independent modules inside a single deployable unit. Each module follows Clean Architecture layers (Domain, Application, Infrastructure, Api). Modules are decoupled and communicate through shared contracts. `Ecommerce.AppHost` is the composition root: it owns cross-cutting configuration (authentication, authorization map, CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
+**Modular Monolith** — Independent modules inside a single deployable unit. Each module follows Clean Architecture
+layers (Domain, Application, Infrastructure, Api). Modules are decoupled and communicate through shared contracts.
+`Ecommerce.AppHost` is the composition root: it owns cross-cutting configuration (authentication, authorization map,
+CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 
 ### Evolution Roadmap
 
 | Phase | Description |
-|---|---|
+| --- | --- |
 | **1. Modular Monolith** | Logical module boundaries, separate DbContexts/schemas, synchronous cross-module communication via shared contracts. *(current)* |
 | **2. DDD** | Tactical patterns within modules — aggregates, value objects, domain events, bounded contexts formalized. Well-defined boundaries set the stage for async communication. |
 | **3. Event-Driven** | Message broker (RabbitMQ + MassTransit) for async inter-module communication via integration events, replacing synchronous cross-module calls. Eventual consistency between modules. |
@@ -20,7 +23,7 @@
 ## Modules
 
 | Module | Description | Status |
-|---|---|---|
+| --- | --- | --- |
 | **Auth** | User management, login, sessions, roles and account lifecycle. | Implemented |
 | **Catalog** | Product and category management, product images, storefront listing. | Implemented |
 | **Orders** | Shopping cart, checkout, and order history. | Planned |
@@ -33,7 +36,7 @@
 ## Technologies
 
 | Technology | Purpose |
-|---|---|
+| --- | --- |
 | **.NET 10 / ASP.NET Core 10 / C#** | API development |
 | **SQL Server** (Azure SQL in production) | Relational database |
 | **Entity Framework Core** | ORM, migrations, and data access |
@@ -54,12 +57,12 @@
 ## Testing
 
 | Type | Scope |
-|---|---|
+| --- | --- |
 | **Unit** | Domain rules, handlers, validators, request mappers |
 | **Integration** | API endpoints, database queries, blob storage (WebApplicationFactory + Testcontainers) |
 
 | Tool | Purpose |
-|---|---|
+| --- | --- |
 | **xUnit** | Test framework |
 | **NSubstitute** | Mocking |
 | **Bogus** | Test data generation |
@@ -72,7 +75,7 @@
 ## Cross-Cutting Concepts
 
 | Concept | Description |
-|---|---|
+| --- | --- |
 | **Single Error Contract** | Every failure resolves to an RFC 7807 `ProblemDetails` written by one `ProblemDetailsWriter`, so the response shape never drifts. |
 | **Exception Contract** | Handlers throw exceptions implementing `IExceptionContract` (e.g. `ResourceNotFoundException` → `404`, `BusinessRuleValidationException` → `409`). `GlobalExceptionHandler` (`IExceptionHandler`) maps them generically — no type-specific branches — and falls back to a `500` with no internal leakage. |
 | **Validation via FluentValidation** | `RequestValidationFilter`, registered globally as an action filter, resolves the request's `IValidator<T>` and short-circuits with a `400 ValidationProblemDetails` before the action runs. |
@@ -89,13 +92,15 @@
 
 ## Cross-Module Communication
 
-Modules never reference each other directly. The Kernel defines `IModule` (`ExecuteCommandAsync` / `ExecuteQueryAsync`), and each module publishes a typed contract in its Application layer (`ICatalogModule`, `IAuthModule`). The owning module implements it with an internal MediatR-backed adapter, so consumers depend on the contract instead of `ISender`.
+Modules never reference each other directly. The Kernel defines `IModule` (`ExecuteCommandAsync` / `ExecuteQueryAsync`),
+and each module publishes a typed contract in its Application layer (`ICatalogModule`, `IAuthModule`). The owning module
+implements it with an internal MediatR-backed adapter, so consumers depend on the contract instead of `ISender`.
 
 ---
 
 ## Folder Structure
 
-```
+```text
 src/
 ├── Ecommerce.AppHost/                                # Host — composition root
 │   ├── Program.cs                                    # Pipeline, middleware, module registration
@@ -124,8 +129,9 @@ src/
 └── compose.yaml                                      # Docker Compose: SQL Server + API (+ Azurite via override)
 ```
 
-**Conventions**
+### Conventions
 
 - Layers are built in the order **Domain → Infrastructure → Application + Api**; ports are declared in the Domain.
-- Inside Application and Api, code is organized in **vertical-slice folders per endpoint** (`Products/CreateProduct/`), not by technical type.
+- Inside Application and Api, code is organized in **vertical-slice folders per endpoint**
+  (`Products/CreateProduct/`), not by technical type.
 - Request/response contracts belong to the Api layer; controllers dispatch through `ToCommand()` / `ToQuery()` mappers.
