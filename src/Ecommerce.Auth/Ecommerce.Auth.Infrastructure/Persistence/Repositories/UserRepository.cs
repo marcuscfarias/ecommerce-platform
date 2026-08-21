@@ -16,23 +16,23 @@ internal sealed class UserRepository(AuthDbContext context, IOptions<PaginationS
         return await Context.Users.AnyAsync(u => u.Email == normalizedEmail, ct);
     }
 
-    public Task<User?> GetByEmailAsync(string normalizedEmail, CancellationToken ct = default)
-        => Context.Users.SingleOrDefaultAsync(u => u.Email == normalizedEmail, ct);
+    public async Task<User?> GetByEmailAsync(string normalizedEmail, CancellationToken ct = default)
+        => await Context.Users.SingleOrDefaultAsync(u => u.Email == normalizedEmail, ct);
 
-    public Task<User?> GetByEmailWithRolesAsync(string normalizedEmail, CancellationToken ct = default)
-        => Context.Users.Include(u => u.Roles).SingleOrDefaultAsync(u => u.Email == normalizedEmail, ct);
+    public async Task<User?> GetByEmailWithRolesAsync(string normalizedEmail, CancellationToken ct = default)
+        => await Context.Users.Include(u => u.Roles).SingleOrDefaultAsync(u => u.Email == normalizedEmail, ct);
 
-    public Task<User?> GetByIdWithRolesAsync(int id, CancellationToken ct = default)
-        => Context.Users.Include(u => u.Roles).SingleOrDefaultAsync(u => u.Id == id, ct);
+    public async Task<User?> GetByIdWithRolesAsync(int id, CancellationToken ct = default)
+        => await Context.Users.Include(u => u.Roles).SingleOrDefaultAsync(u => u.Id == id, ct);
 
-    public Task<Role?> GetRoleByNameAsync(RoleName roleName, CancellationToken ct = default)
-        => Context.Set<Role>().SingleOrDefaultAsync(r => r.Name == roleName.ToString(), ct);
+    public async Task<Role?> GetRoleByNameAsync(RoleName roleName, CancellationToken ct = default)
+        => await Context.Set<Role>().SingleOrDefaultAsync(r => r.Name == roleName.ToString(), ct);
 
     public void AddRefreshToken(RefreshToken token)
         => Context.RefreshTokens.Add(token);
 
-    public Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default)
-        => Context.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+    public async Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default)
+        => await Context.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
 
     public async Task<IReadOnlyCollection<RefreshToken>> GetActiveRefreshTokensForUserAsync(int userId, DateTimeOffset now, CancellationToken ct = default)
         => await Context.RefreshTokens

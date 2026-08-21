@@ -11,12 +11,12 @@ namespace Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
 internal sealed class CategoryRepository(CatalogDbContext context, IOptions<PaginationSettings> paginationSettings)
     : Repository<Category, CatalogDbContext>(context, paginationSettings), ICatalogRepository
 {
-    public Task<PagedResult<Category>> GetAllAsync(int page, bool? isActive = true, CancellationToken ct = default)
+    public async Task<PagedResult<Category>> GetAllAsync(int page, bool? isActive = true, CancellationToken ct = default)
     {
         Expression<Func<Category, bool>>? filter = isActive.HasValue
             ? c => c.IsActive == isActive.Value
             : null;
 
-        return GetAllAsync(page, filter, orderBy: null, ct);
+        return await GetAllAsync(page, filter, orderBy: null, ct);
     }
 }

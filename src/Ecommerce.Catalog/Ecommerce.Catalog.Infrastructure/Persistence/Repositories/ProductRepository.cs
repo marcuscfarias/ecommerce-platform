@@ -12,25 +12,25 @@ namespace Ecommerce.Catalog.Infrastructure.Persistence.Repositories;
 internal sealed class ProductRepository(CatalogDbContext context, IOptions<PaginationSettings> paginationSettings)
     : Repository<Product, CatalogDbContext>(context, paginationSettings), IProductRepository
 {
-    public Task<PagedResult<Product>> GetAllAsync(int page, int? categoryId = null, bool? isActive = true, CancellationToken ct = default)
+    public async Task<PagedResult<Product>> GetAllAsync(int page, int? categoryId = null, bool? isActive = true, CancellationToken ct = default)
     {
         Expression<Func<Product, bool>>? filter = BuildFilter(categoryId, isActive);
 
-        return GetAllAsync(page, filter, orderBy: null, ct);
+        return await GetAllAsync(page, filter, orderBy: null, ct);
     }
 
-    public Task<bool> CheckSkuExistsAsync(string sku, int? excludeProductId = null, CancellationToken ct = default)
+    public async Task<bool> CheckSkuExistsAsync(string sku, int? excludeProductId = null, CancellationToken ct = default)
     {
         var query = Context.Set<Product>().Where(p => p.Sku == sku);
 
         if (excludeProductId.HasValue)
             query = query.Where(p => p.Id != excludeProductId.Value);
 
-        return query.AnyAsync(ct);
+        return await query.AnyAsync(ct);
     }
 
-    public Task<bool> CheckCategoryExistsAsync(int categoryId, CancellationToken ct = default) =>
-        Context.Set<Category>().AnyAsync(c => c.Id == categoryId, ct);
+    public async Task<bool> CheckCategoryExistsAsync(int categoryId, CancellationToken ct = default) =>
+        await Context.Set<Category>().AnyAsync(c => c.Id == categoryId, ct);
 
     private static Expression<Func<Product, bool>>? BuildFilter(int? categoryId, bool? isActive)
     {
