@@ -1,9 +1,11 @@
 using Ecommerce.Catalog.Api.Storefront.Products.GetStorefrontProductById;
+using Ecommerce.Catalog.Api.Storefront.Products.GetStorefrontProductImage;
 using Ecommerce.Catalog.Api.Storefront.Products.ListStorefrontProducts;
 using Ecommerce.Catalog.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace Ecommerce.Catalog.Api.Storefront.Products;
 
@@ -12,6 +14,8 @@ namespace Ecommerce.Catalog.Api.Storefront.Products;
 [AllowAnonymous]
 public sealed class StorefrontProductsController(ICatalogModule module) : ControllerBase
 {
+    private const string ImageCacheControl = "public, max-age=86400";
+
     [HttpGet]
     [EndpointDescription("Returns a paginated list of products on sale.")]
     [ProducesResponseType<ListStorefrontProductsResponse>(StatusCodes.Status200OK)]
@@ -41,8 +45,17 @@ public sealed class StorefrontProductsController(ICatalogModule module) : Contro
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public IActionResult GetImage(
+    public async Task<IActionResult> GetImage(
         [FromRoute] int id,
-        CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+        CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteQueryAsync(
+            GetStorefrontProductImageRequest.ToQuery(id), cancellationToken);
+
+        Response.Headers.CacheControl = ImageCacheControl;
+        var entityTag = new EntityTagHeaderValue($"\"{result.ETag.Trim('\"')}\"");
+
+        Response.ContentLength = result.ContentLength;
+        return File(result.Content, result.ContentType, lastModified: null, entityTag: entityTag);
+    }
 }
