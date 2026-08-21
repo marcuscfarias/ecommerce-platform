@@ -28,10 +28,13 @@ public sealed class StorefrontProductsController(ICatalogModule module) : Contro
     [EndpointDescription("Returns a product on sale by its ID.")]
     [ProducesResponseType<GetStorefrontProductByIdResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public IActionResult GetById(
+    public async Task<IActionResult> GetById(
         [FromRoute] int id,
-        CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+        CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteQueryAsync(GetStorefrontProductByIdRequest.ToQuery(id), cancellationToken);
+        return Ok(GetStorefrontProductByIdResponse.FromResult(result));
+    }
 
     [HttpGet("{id:int}/image")]
     [EndpointDescription("Returns the image of a product on sale.")]

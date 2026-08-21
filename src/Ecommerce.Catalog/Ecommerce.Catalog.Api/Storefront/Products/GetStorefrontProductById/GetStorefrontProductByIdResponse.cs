@@ -1,3 +1,5 @@
+using Ecommerce.Catalog.Application.Storefront.Products.GetStorefrontProductById;
+
 namespace Ecommerce.Catalog.Api.Storefront.Products.GetStorefrontProductById;
 
 public sealed record GetStorefrontProductByIdResponse(
@@ -7,4 +9,15 @@ public sealed record GetStorefrontProductByIdResponse(
     decimal Price,
     int CategoryId,
     bool InStock,
-    bool HasImage);
+    bool HasImage)
+{
+    internal static GetStorefrontProductByIdResponse FromResult(GetStorefrontProductByIdResult result) =>
+        new(
+            result.Id,
+            result.Name,
+            result.Description,
+            result.Price,
+            result.CategoryId,
+            result.InStock,
+            result.HasImage);
+}
