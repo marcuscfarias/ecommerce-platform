@@ -3,6 +3,7 @@ using Ecommerce.Catalog.Api.Products.ListProducts;
 using Ecommerce.Catalog.Domain.Entities;
 using Ecommerce.Catalog.Domain.ValueObjects;
 using Ecommerce.Catalog.IntegrationTests.Base;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Catalog.IntegrationTests.Products;
 
@@ -120,6 +121,23 @@ public sealed class ListProductsIntegrationTests : BaseCatalogIntegrationTest
         body.TotalCount.ShouldBe(1);
         body.Data.Count.ShouldBe(1);
         body.Data.ShouldAllBe(p => p.IsActive == false);
+    }
+
+    [Fact]
+    public async Task Get_WhenPageNumberIsLessThanOne_ShouldReturn400WithValidationProblemDetails()
+    {
+        await ResetDatabaseAsync();
+
+        // Act
+        var response = await _client.GetAsync($"{Endpoint}?pageNumber=0");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        body.ShouldNotBeNull();
+        body.Errors.ShouldContainKey("PageNumber");
     }
 
     [Fact]
