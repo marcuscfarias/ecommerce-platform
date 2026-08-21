@@ -16,7 +16,7 @@ internal sealed class ProductRepository(CatalogDbContext context, IOptions<Pagin
     {
         Expression<Func<Product, bool>>? filter = BuildFilter(categoryId, isActive);
 
-        return GetAllAsync(page, filter, ct);
+        return GetAllAsync(page, filter, orderBy: null, ct);
     }
 
     public Task<bool> CheckSkuExistsAsync(string sku, int? excludeProductId = null, CancellationToken ct = default)

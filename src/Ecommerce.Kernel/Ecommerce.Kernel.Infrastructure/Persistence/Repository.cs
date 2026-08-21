@@ -21,11 +21,14 @@ public abstract class Repository<T, TContext>(TContext context, IOptions<Paginat
 
     public virtual async Task<PagedResult<T>> GetAllAsync(int page, CancellationToken ct = default)
     {
-        return await GetAllAsync(page, filter: null, ct);
+        return await GetAllAsync(page, filter: null, orderBy: null, ct);
     }
 
     protected async Task<PagedResult<T>> GetAllAsync(
-        int page, Expression<Func<T, bool>>? filter, CancellationToken ct = default)
+        int page,
+        Expression<Func<T, bool>>? filter,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        CancellationToken ct = default)
     {
         var query = Context.Set<T>().AsNoTracking();
 
@@ -35,8 +38,9 @@ public abstract class Repository<T, TContext>(TContext context, IOptions<Paginat
         var totalCount = await query.CountAsync(ct);
         var totalPages = (int)Math.Ceiling((double)totalCount / _pageSize);
 
-        var items = await query
-            .OrderBy(x => x.Id)
+        var orderedQuery = orderBy is not null ? orderBy(query) : query.OrderBy(x => x.Id);
+
+        var items = await orderedQuery
             .Skip((page - 1) * _pageSize)
             .Take(_pageSize)
             .ToListAsync(ct);

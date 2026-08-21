@@ -17,6 +17,6 @@ internal sealed class CategoryRepository(CatalogDbContext context, IOptions<Pagi
             ? c => c.IsActive == isActive.Value
             : null;
 
-        return GetAllAsync(page, filter, ct);
+        return GetAllAsync(page, filter, orderBy: null, ct);
     }
 }
