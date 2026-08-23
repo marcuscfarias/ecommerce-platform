@@ -227,12 +227,12 @@ img {
     min-height: clamp(280px, 42vh, 440px);
     padding: clamp(2rem, 6vw, 4rem) var(--shell-pad);
     color: #FFFFFF;
-    /* Image over the dark chrome color: a failed load degrades to #131A22
-       with the headline and the CTA still legible. */
+    /* No asset ships with this slice: the banner is the chrome color plus a scrim that
+       darkens the text side. The scrim is written as background-image so an artwork
+       layer can be appended after it without touching anything else. */
     background-color: var(--squid-ink);
     background-image:
-        linear-gradient(90deg, rgba(19, 26, 34, .92) 0%, rgba(19, 26, 34, .62) 55%, rgba(19, 26, 34, .35) 100%),
-        url("../img/hero.webp");
+        linear-gradient(105deg, rgba(19, 26, 34, .96) 0%, rgba(19, 26, 34, .70) 46%, rgba(35, 47, 62, .58) 100%);
     background-size: cover;
     background-position: center;
 }

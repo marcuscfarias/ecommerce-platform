@@ -1,0 +1,24 @@
+@* The entry block of the store. It carries no artwork, so the hierarchy is
+   the hairline, the headline and the gold call to action. *@
+
+<section class="hero" aria-labelledby="hero-headline">
+    <div class="hero__inner">
+        <span class="hero__rule" aria-hidden="true"></span>
+
+        <h1 id="hero-headline" class="hero__headline">Every shelf, one page.</h1>
+
+        <p class="hero__sub">
+            The whole catalog sits right below: search it, narrow it by category, sort it the way
+            you shop. No account needed to look around.
+        </p>
+
+        <button type="button" class="cta" @onclick="() => OnBrowse.InvokeAsync()">
+            Start browsing
+        </button>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public EventCallback OnBrowse { get; set; }
+}
