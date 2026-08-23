@@ -1,0 +1,20 @@
+@inherits LayoutComponentBase
+@layout MainLayout
+
+<div class="store-shell">
+    <StoreHeader />
+
+    <main class="store-body">
+        @Body
+    </main>
+
+    <footer class="store-footer">
+        <div class="store-footer__inner">
+            <span class="wordmark">
+                ecommerce
+                <span class="wordmark__tag">store</span>
+            </span>
+            <span class="store-footer__copy">&copy; @DateTime.UtcNow.Year Ecommerce. A portfolio project.</span>
+        </div>
+    </footer>
+</div>

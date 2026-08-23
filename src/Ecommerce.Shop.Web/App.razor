@@ -1,5 +1,10 @@
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" />
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(StoreShell)" />
     </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(StoreShell)">
+            <NotFoundPage />
+        </LayoutView>
+    </NotFound>
 </Router>
