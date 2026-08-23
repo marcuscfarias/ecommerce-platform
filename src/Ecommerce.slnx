@@ -40,4 +40,5 @@
   </Folder>
   <Project Path="Ecommerce.AppHost/Ecommerce.AppHost.csproj" />
   <Project Path="Ecommerce.Admin.Web/Ecommerce.Admin.Web.csproj" />
+  <Project Path="Ecommerce.Shop.Web/Ecommerce.Shop.Web.csproj" />
 </Solution>

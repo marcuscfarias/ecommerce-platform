@@ -1,0 +1,27 @@
+<div class="sort" role="group" aria-label="Sort products">
+    @foreach (var option in Options)
+    {
+        var value = option.Key;
+        <button type="button"
+                class="sort__btn @(string.Equals(Sort, value, StringComparison.Ordinal) ? "is-active" : null)"
+                @onclick="() => OnSelect.InvokeAsync(value)">
+            @option.Value
+        </button>
+    }
+</div>
+
+@code {
+    private static readonly IReadOnlyList<KeyValuePair<string, string>> Options =
+    [
+        new(StorefrontQuery.SortByName, "Name"),
+        new(StorefrontQuery.SortByPriceAscending, "Price ↑"),
+        new(StorefrontQuery.SortByPriceDescending, "Price ↓"),
+        new(StorefrontQuery.SortByNewest, "Newest"),
+    ];
+
+    [Parameter, EditorRequired]
+    public string Sort { get; set; } = StorefrontQuery.SortByName;
+
+    [Parameter, EditorRequired]
+    public EventCallback<string> OnSelect { get; set; }
+}

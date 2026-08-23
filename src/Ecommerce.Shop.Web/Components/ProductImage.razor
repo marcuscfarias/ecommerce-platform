@@ -1,0 +1,47 @@
+@inject StorefrontApiClient Api
+
+@if (_source is not null)
+{
+    <img class="entry__img"
+         src="@_source"
+         alt="@Name"
+         loading="lazy"
+         decoding="async"
+         @onerror="OnLoadFailed" />
+}
+else
+{
+    <span class="entry__ph" aria-hidden="true">@Initial</span>
+}
+
+@code {
+    private string? _source;
+    private int _renderedProductId;
+
+    [Parameter, EditorRequired]
+    public int ProductId { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool HasImage { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    private string Initial => string.IsNullOrWhiteSpace(Name) ? "?" : Name.Trim()[..1].ToUpperInvariant();
+
+    protected override void OnParametersSet()
+    {
+        // A card recycled for another product must try its image again.
+        if (_renderedProductId == ProductId && _source is null && HasImage)
+        {
+            return;
+        }
+
+        _renderedProductId = ProductId;
+        // The listing tells us there is no image, so the request is never made.
+        _source = HasImage ? Api.ResolveImageUrl(ProductId)?.ToString() : null;
+    }
+
+    // A stored image that 404s or fails to decode falls back to the same placeholder.
+    private void OnLoadFailed() => _source = null;
+}
