@@ -7,4 +7,6 @@ namespace Ecommerce.Catalog.Domain.Repositories;
 public interface ICatalogRepository : IRepository<Category>
 {
     Task<PagedResult<Category>> GetAllAsync(int page, bool? isActive = true, CancellationToken ct = default);
+
+    Task<IReadOnlyList<Category>> GetActiveAsync(CancellationToken ct = default);
 }

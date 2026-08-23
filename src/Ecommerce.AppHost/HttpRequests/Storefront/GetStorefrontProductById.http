@@ -1,0 +1,25 @@
+@host = https://localhost:8081
+
+# Public endpoint: send no cookie and no Authorization header.
+
+### Active product
+# Expect 200 with exactly id, name, description, price, categoryId, inStock, hasImage
+# Id 17 "Letter" is the only seeded product with stock, so inStock is true here
+GET {{host}}/api/v1/storefront/products/17
+Accept: application/json
+
+### Active product without stock
+# Expect 200 with "inStock": false — an out-of-stock product still has a page
+GET {{host}}/api/v1/storefront/products/1
+Accept: application/json
+
+### Inactive product
+# Id 2 "4K Action Camera" exists but is inactive
+# Expect 404 with a ProblemDetails body, indistinguishable from a product that never existed
+GET {{host}}/api/v1/storefront/products/2
+Accept: application/json
+
+### Product that does not exist
+# Expect the same 404 and the same body shape as the inactive case
+GET {{host}}/api/v1/storefront/products/999
+Accept: application/json

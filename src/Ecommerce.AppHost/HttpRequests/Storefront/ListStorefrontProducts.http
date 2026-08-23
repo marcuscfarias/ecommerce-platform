@@ -1,0 +1,115 @@
+@host = https://localhost:8081
+
+# Public endpoint: send no cookie and no Authorization header.
+#
+# Baseline from the migration seed (page size is fixed at 10 by Pagination:PageSize):
+#   9 active products  -> totalCount 9, totalPages 1
+#   8 inactive products, never listed: ids 2, 4, 6, 8, 10, 12, 14, 16
+#   only id 17 "Letter" has stock, so it is the only one with "inStock": true
+#   no seeded product has an image, so every "hasImage" is false
+
+### Default listing: active products only, ordered by name ascending
+# Expect 200, 9 items, first "Building Blocks Set", and no sku/stockQuantity/isActive anywhere
+GET {{host}}/api/v1/storefront/products
+Accept: application/json
+
+### Page beyond the last one
+# Expect 200 with "data": [] — an empty page, not a 404
+GET {{host}}/api/v1/storefront/products?pageNumber=2
+Accept: application/json
+
+### Filter by category
+# Category 5 (Books) seeds ids 9, 10, 17; id 10 is inactive
+# Expect 200 with exactly 2 items: "Clean Architecture" and "Letter"
+GET {{host}}/api/v1/storefront/products?categoryId=5
+Accept: application/json
+
+### Filter by a category that matches nothing
+# Expect 200 with "data": [] and "totalCount": 0 — a filter miss is not an error
+GET {{host}}/api/v1/storefront/products?categoryId=999
+Accept: application/json
+
+### Search matching a product name
+# Expect 200 with 1 item: "Gourmet Coffee Beans"
+GET {{host}}/api/v1/storefront/products?search=coffee
+Accept: application/json
+
+### Search matching a description, not a name
+# "guide" only appears in the description of "Clean Architecture"
+# Expect 200 with 1 item — this is what proves the filter reads Description too
+GET {{host}}/api/v1/storefront/products?search=guide
+Accept: application/json
+
+### Search matching only an inactive product
+# "Organic Green Tea" is the sole match and it is inactive
+# Expect 200 with "data": [] — the active filter wins over the search
+GET {{host}}/api/v1/storefront/products?search=tea
+Accept: application/json
+
+### Search that is whitespace only
+# Expect the same 9 items as the default listing — a blank search box filters nothing
+GET {{host}}/api/v1/storefront/products?search=%20%20
+Accept: application/json
+
+### Search for a SQL LIKE wildcard
+# Expect 200 with "data": [] — the term is a value, not a pattern, so % matches nothing
+GET {{host}}/api/v1/storefront/products?search=%25
+Accept: application/json
+
+### Category and search combined
+# Expect 200 with 1 item: "Letter" (category 5, name matches)
+GET {{host}}/api/v1/storefront/products?categoryId=5&search=letter
+Accept: application/json
+
+### Sort by price ascending
+# Expect "Letter" (5.00) first and "Stainless Steel Cookware Set" (189.99) last
+GET {{host}}/api/v1/storefront/products?sort=price_asc
+Accept: application/json
+
+### Sort by price descending
+# Expect "Stainless Steel Cookware Set" (189.99) first
+GET {{host}}/api/v1/storefront/products?sort=price_desc
+Accept: application/json
+
+### Sort by newest
+# Newest maps to Id descending, so expect "Letter" (id 17) first
+GET {{host}}/api/v1/storefront/products?sort=newest
+Accept: application/json
+
+### Sort by name ascending, stated explicitly
+# Expect the same order as the default listing
+GET {{host}}/api/v1/storefront/products?sort=name_asc
+Accept: application/json
+
+### Invalid pageNumber
+# Expect 400 with a ValidationProblemDetails body naming pageNumber
+GET {{host}}/api/v1/storefront/products?pageNumber=0
+Accept: application/json
+
+### Unknown sort value
+# Expect 400 with a ValidationProblemDetails body naming sort
+GET {{host}}/api/v1/storefront/products?sort=cheapest
+Accept: application/json
+
+### Empty sort value
+# Present but empty counts as unknown, so expect 400
+GET {{host}}/api/v1/storefront/products?sort=
+Accept: application/json
+
+### Search at exactly the 200-character limit
+# The value below is 200 characters, the longest the validator accepts
+# Expect 200 with "data": [] — a valid search that simply matches nothing
+GET {{host}}/api/v1/storefront/products?search=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Accept: application/json
+
+### Search one character past the limit
+# The value below is 201 characters
+# Expect 400 with a ValidationProblemDetails body naming search
+GET {{host}}/api/v1/storefront/products?search=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Accept: application/json
+
+### Non-integer categoryId
+# Model binding rejects it before the validator
+# Expect 400 with a ValidationProblemDetails body
+GET {{host}}/api/v1/storefront/products?categoryId=abc
+Accept: application/json

@@ -15,7 +15,9 @@ public class RequestValidationFilter(IServiceProvider serviceProvider) : IAsyncA
         var validatableParameter = context.ActionDescriptor.Parameters
             .FirstOrDefault(p => p.ParameterType.IsClass
                 && p.BindingInfo?.BindingSource is { } source // not null + capture
-                && (source == BindingSource.Body || source == BindingSource.Form));
+                && (source == BindingSource.Body
+                    || source == BindingSource.Form
+                    || source == BindingSource.Query));
 
         if (validatableParameter is not null)
         {

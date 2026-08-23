@@ -1,0 +1,33 @@
+@host = https://localhost:8081
+
+# Public endpoint: send no cookie and no Authorization header.
+#
+# No seeded product has an image, so every request below returns 404 on a fresh database.
+# To see a 200 you first have to upload one through the backoffice, which needs a
+# Manager or Owner session:
+#   1. POST /api/v1/auth/login  with a demo login from the README
+#   2. POST /api/v1/products/17/image  as multipart/form-data
+# Then come back here.
+
+### Image of an active product
+# Expect 200 with the stored bytes, the stored Content-Type,
+# Cache-Control: public, max-age=86400, and an ETag
+GET {{host}}/api/v1/storefront/products/17/image
+
+### Revalidate with the ETag returned above
+# Replace the value with the ETag from the previous response, quotes included
+# Expect 304 with no body
+GET {{host}}/api/v1/storefront/products/17/image
+If-None-Match: "REPLACE-WITH-THE-ETAG"
+
+### Active product that has no image
+# Expect 404 with a ProblemDetails body
+GET {{host}}/api/v1/storefront/products/1/image
+
+### Inactive product
+# Expect 404 — the image route must not leak what the detail route hides
+GET {{host}}/api/v1/storefront/products/2/image
+
+### Product that does not exist
+# Expect 404
+GET {{host}}/api/v1/storefront/products/999/image

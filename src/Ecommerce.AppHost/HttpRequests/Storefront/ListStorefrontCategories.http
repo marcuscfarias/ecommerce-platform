@@ -1,0 +1,12 @@
+@host = https://localhost:8081
+
+# Public endpoint: send no cookie and no Authorization header.
+
+### List the categories that feed the storefront filter
+# Expect 200 with a flat array — no data/page/totalCount envelope
+# All 8 seeded categories are active, ordered by name:
+#   Books, Clothing, Electronics, Food & Beverages, Health & Beauty,
+#   Home & Garden, Sports & Outdoors, Toys & Games
+# Each item carries exactly id and name; isActive must be absent
+GET {{host}}/api/v1/storefront/categories
+Accept: application/json
