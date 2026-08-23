@@ -8,6 +8,15 @@
 
 <HeroBanner OnBrowse="ScrollToBrowseAsync" />
 
+<BrowseBar Query="@_query"
+           Categories="@_categories"
+           CategoriesFailed="@_categoriesFailed"
+           TotalCount="@_result?.TotalCount"
+           OnSearch="SearchFor"
+           OnCategory="SelectCategory"
+           OnSort="SortBy"
+           OnRetryCategories="LoadCategoriesAsync" />
+
 <section class="catalog">
     @if (_loading)
     {
@@ -62,9 +71,15 @@
 
     private StorefrontQuery _query = StorefrontQuery.Default;
     private StorefrontProductListResult? _result;
+    private IReadOnlyList<StorefrontCategory>? _categories;
     private CancellationTokenSource? _requests;
     private bool _loading = true;
     private bool _failed;
+    private bool _categoriesFailed;
+
+    private string? SelectedCategoryName => _query.CategoryId is null
+        ? null
+        : _categories?.FirstOrDefault(category => category.Id == _query.CategoryId)?.Name;
 
     // The API answers a page past the end with an empty page, not an error, so the grid
     // says so instead of claiming the filters matched nothing.
@@ -84,7 +99,7 @@
     {
         get
         {
-            var category = _query.CategoryId is null ? null : "the selected category";
+            var category = SelectedCategoryName is null ? null : $"the category “{SelectedCategoryName}”";
             var search = _query.Search is null ? null : $"the search “{_query.Search}”";
 
             return (category, search) switch
@@ -101,7 +116,17 @@
     {
         Navigation.LocationChanged += OnLocationChanged;
         _query = StorefrontQuery.FromUri(Navigation.Uri);
+        await LoadCategoriesAsync();
         await LoadAsync(scrollToBrowse: false);
+    }
+
+    // Categories change far less often than the grid, so one successful load serves the
+    // whole visit. The client caches only success, which is what makes the retry a retry.
+    private async Task LoadCategoriesAsync()
+    {
+        _categoriesFailed = false;
+        _categories = await Api.ListCategoriesAsync();
+        _categoriesFailed = _categories is null;
     }
 
     public void Dispose()
@@ -179,6 +204,13 @@
     private Task RetryAsync() => LoadAsync(scrollToBrowse: false);
 
     private void GoToPage(int page) => Navigate(_query.WithPage(page));
+
+    private void SearchFor(string? search) => Navigate(_query.WithSearch(search));
+
+    // The tabs report which one was picked; picking the active one again clears the filter.
+    private void SelectCategory(int categoryId) => Navigate(_query.ToggleCategory(categoryId));
+
+    private void SortBy(string sort) => Navigate(_query.WithSort(sort));
 
     private void OpenProduct(int productId) => Navigate(_query.WithProduct(productId));
 
