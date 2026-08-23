@@ -66,6 +66,11 @@
     }
 </section>
 
+@if (_query.ProductId is int openProductId)
+{
+    <ProductDialog ProductId="@openProductId" OnClose="CloseProduct" />
+}
+
 @code {
     private const int SkeletonCount = 8;
 
@@ -213,6 +218,8 @@
     private void SortBy(string sort) => Navigate(_query.WithSort(sort));
 
     private void OpenProduct(int productId) => Navigate(_query.WithProduct(productId));
+
+    private void CloseProduct() => Navigate(_query.WithProduct(null));
 
     private void ClearFilters() => Navigate(_query.WithoutFilters());
 
