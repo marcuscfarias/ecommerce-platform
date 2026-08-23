@@ -5,7 +5,7 @@ namespace Ecommerce.Shop.Web.Services;
 
 // The grid's only state. Parsed from the URL and written back to it, so a reload,
 // a shared link and the back button all reproduce the same screen.
-public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, string Sort)
+public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, string Sort, int? ProductId)
 {
     public const string SortByName = "name_asc";
     public const string SortByPriceAscending = "price_asc";
@@ -22,7 +22,7 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
         SortByNewest,
     ];
 
-    public static StorefrontQuery Default { get; } = new(1, null, null, SortByName);
+    public static StorefrontQuery Default { get; } = new(1, null, null, SortByName, null);
 
     public bool HasFilters => CategoryId is not null || Search is not null;
 
@@ -45,6 +45,7 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
         string? categoryId = null;
         string? search = null;
         string? sort = null;
+        string? product = null;
 
         foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
@@ -70,6 +71,9 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
                 case "sort":
                     sort = value;
                     break;
+                case "product":
+                    product = value;
+                    break;
                 default:
                     break;
             }
@@ -77,9 +81,10 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
 
         return new StorefrontQuery(
             ParsePage(page),
-            ParseCategoryId(categoryId),
+            ParsePositiveId(categoryId),
             NormalizeSearch(search),
-            NormalizeSort(sort));
+            NormalizeSort(sort),
+            ParsePositiveId(product));
     }
 
     public StorefrontQuery WithPage(int page) => this with { Page = page < 1 ? 1 : page };
@@ -95,6 +100,10 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
     public StorefrontQuery WithSort(string? sort) => this with { Sort = NormalizeSort(sort), Page = 1 };
 
     public StorefrontQuery WithoutFilters() => this with { CategoryId = null, Search = null, Page = 1 };
+
+    // The only mutator that leaves Page and the filters alone: the dialog is a state of the
+    // grid, not a new grid, so opening or closing it must not move the visitor's listing.
+    public StorefrontQuery WithProduct(int? productId) => this with { ProductId = productId };
 
     // Only non-default values travel in the URL, so the default grid keeps a clean address.
     public string ToQueryString()
@@ -121,6 +130,11 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
             Append(builder, "sort", Sort);
         }
 
+        if (ProductId is not null)
+        {
+            Append(builder, "product", ProductId.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
         return builder.ToString();
     }
 
@@ -137,8 +151,8 @@ public sealed record StorefrontQuery(int Page, int? CategoryId, string? Search, 
             ? parsed
             : 1;
 
-    private static int? ParseCategoryId(string? categoryId) =>
-        int.TryParse(categoryId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0
+    private static int? ParsePositiveId(string? id) =>
+        int.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0
             ? parsed
             : null;
 
