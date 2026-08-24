@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'src/Ecommerce.Admin.Web/**'
+      - 'src/Ecommerce.Shop.Web/**'
       - '.github/workflows/frontend-cd.yml'
   workflow_dispatch: # manual redeploy / rollback
 
@@ -14,12 +15,28 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to Static Web Apps
+    name: Deploy ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       id-token: write # mint the short-lived OIDC token for azure/login
       contents: read
+
+    # One entry per SPA, each with its own Static Web App. The path filter above is
+    # workflow-level, so a commit touching one SPA republishes both — idempotent upload,
+    # and it keeps the two SPAs on the same commit.
+    strategy:
+      # Never let one SPA's failure cancel the other's deploy.
+      fail-fast: false
+      matrix:
+        include:
+          - name: backoffice
+            app_location: src/Ecommerce.Admin.Web
+            swa_name: ${{ vars.AZURE_SWA_ADMIN }}
+          - name: store
+            app_location: src/Ecommerce.Shop.Web
+            swa_name: ${{ vars.AZURE_SWA_SHOP }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -37,7 +54,7 @@ jobs:
         id: swa
         run: |
           token=$(az staticwebapp secrets list \
-            --name "${{ vars.AZURE_SWA_ADMIN }}" \
+            --name "${{ matrix.swa_name }}" \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --query "properties.apiKey" -o tsv)
           echo "::add-mask::$token"
@@ -48,5 +65,5 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
           action: upload
-          app_location: src/Ecommerce.Admin.Web
+          app_location: ${{ matrix.app_location }}
           output_location: wwwroot

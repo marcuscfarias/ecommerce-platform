@@ -267,7 +267,7 @@ Six GitHub Actions workflows split shared gates from per-stack pipelines:
 * **`frontend-ci.yml`** — builds the Blazor WebAssembly SPA.
 * **`backend-cd.yml`** — publishes the API image and deploys it to **Azure Container Apps** via OIDC, gated on tests and
   a `/health` check.
-* **`frontend-cd.yml`** — deploys the SPA to **Azure Static Web Apps** via OIDC.
+* **`frontend-cd.yml`** — deploys the backoffice and the store SPA, each to its own **Azure Static Web App**, via OIDC.
 
 Production secrets come from **Azure Key Vault** (system-assigned managed identity) and product images from **private
 Blob Storage** proxied through the API. Two environments only: local (Docker Compose) and Production.
