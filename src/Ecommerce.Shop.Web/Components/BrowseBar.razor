@@ -1,0 +1,57 @@
+@* The controls that shape the grid, grouped in the block that pins under the header and
+   is also the scroll target. It composes and forwards: no state, no API call of its own. *@
+
+<div class="browse" id="browse">
+    <div class="browse__inner">
+        <div class="browse__row">
+            <SearchBox Value="@Query.Search" OnSubmit="OnSearch" />
+        </div>
+
+        <div class="browse__row">
+            <CategoryTabs Categories="@Categories"
+                          SelectedId="@Query.CategoryId"
+                          Failed="@CategoriesFailed"
+                          OnSelect="OnCategory"
+                          OnRetry="OnRetryCategories" />
+        </div>
+
+        <div class="browse__row">
+            <span class="browse__count">@CountLabel</span>
+            <SortSelector Sort="@Query.Sort" OnSelect="OnSort" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public StorefrontQuery Query { get; set; } = StorefrontQuery.Default;
+
+    [Parameter]
+    public IReadOnlyList<StorefrontCategory>? Categories { get; set; }
+
+    [Parameter]
+    public bool CategoriesFailed { get; set; }
+
+    [Parameter]
+    public int? TotalCount { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<string?> OnSearch { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnCategory { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<string> OnSort { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnRetryCategories { get; set; }
+
+    private string CountLabel => TotalCount switch
+    {
+        null => string.Empty,
+        0 => "No products",
+        1 => "1 product",
+        int count => $"{count.ToString(CultureInfo.InvariantCulture)} products",
+    };
+}

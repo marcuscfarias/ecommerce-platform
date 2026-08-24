@@ -1,0 +1,229 @@
+@page "/"
+@implements IDisposable
+@inject StorefrontApiClient Api
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+
+<PageTitle>Ecommerce Store</PageTitle>
+
+<HeroBanner OnBrowse="ScrollToBrowseAsync" />
+
+<BrowseBar Query="@_query"
+           Categories="@_categories"
+           CategoriesFailed="@_categoriesFailed"
+           TotalCount="@_result?.TotalCount"
+           OnSearch="SearchFor"
+           OnCategory="SelectCategory"
+           OnSort="SortBy"
+           OnRetryCategories="LoadCategoriesAsync" />
+
+<section class="catalog">
+    @if (_loading)
+    {
+        <div class="grid" aria-hidden="true">
+            @for (var i = 0; i < SkeletonCount; i++)
+            {
+                <div class="skeleton">
+                    <div class="skeleton__media"></div>
+                    <div class="skeleton__line"></div>
+                    <div class="skeleton__line skeleton__line--short"></div>
+                </div>
+            }
+        </div>
+    }
+    else if (_failed)
+    {
+        <div class="state--error">
+            <StateBlock Title="We couldn't load the products"
+                        Hint="The store is having trouble reaching its catalog.">
+                <button type="button" class="cta" @onclick="RetryAsync">Try again</button>
+            </StateBlock>
+        </div>
+    }
+    else if (_result is null || _result.Data.Count == 0)
+    {
+        <StateBlock Title="@EmptyTitle" Hint="@EmptyHint">
+            @if (IsPastLastPage)
+            {
+                <button type="button" class="ghost" @onclick="() => GoToPage(1)">Back to the first page</button>
+            }
+            else if (_query.HasFilters)
+            {
+                <button type="button" class="ghost" @onclick="ClearFilters">Clear filters</button>
+            }
+        </StateBlock>
+    }
+    else
+    {
+        <div class="grid">
+            @foreach (var product in _result.Data)
+            {
+                <ProductCard @key="product.Id" Product="@product" OnOpen="OpenProduct" />
+            }
+        </div>
+
+        <GridPager Page="@_result.Page" TotalPages="@_result.TotalPages" OnSelect="GoToPage" />
+    }
+</section>
+
+@if (_query.ProductId is int openProductId)
+{
+    <ProductDialog ProductId="@openProductId" OnClose="CloseProduct" />
+}
+
+@code {
+    private const int SkeletonCount = 8;
+
+    private StorefrontQuery _query = StorefrontQuery.Default;
+    private StorefrontProductListResult? _result;
+    private IReadOnlyList<StorefrontCategory>? _categories;
+    private CancellationTokenSource? _requests;
+    private bool _loading = true;
+    private bool _failed;
+    private bool _categoriesFailed;
+
+    private string? SelectedCategoryName => _query.CategoryId is null
+        ? null
+        : _categories?.FirstOrDefault(category => category.Id == _query.CategoryId)?.Name;
+
+    // The API answers a page past the end with an empty page, not an error, so the grid
+    // says so instead of claiming the filters matched nothing.
+    private bool IsPastLastPage => _result is { TotalCount: > 0 } result && result.Page > result.TotalPages;
+
+    private string EmptyTitle => IsPastLastPage ? "That page is past the end" : "Nothing to show here";
+
+    private string EmptyHint => IsPastLastPage
+        ? "The catalog doesn't have that many pages."
+        : _query.HasFilters
+            ? $"No product matches {ActiveFilterLabel}."
+            : "The catalog has no products on sale yet.";
+
+    // Both filters can be active at once, and the empty state has to name both or the
+    // visitor cannot tell which one emptied the grid.
+    private string ActiveFilterLabel
+    {
+        get
+        {
+            var category = SelectedCategoryName is null ? null : $"the category “{SelectedCategoryName}”";
+            var search = _query.Search is null ? null : $"the search “{_query.Search}”";
+
+            return (category, search) switch
+            {
+                (not null, not null) => $"{search} in {category}",
+                (not null, null) => category,
+                (null, not null) => search,
+                _ => "these filters",
+            };
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        _query = StorefrontQuery.FromUri(Navigation.Uri);
+        await LoadCategoriesAsync();
+        await LoadAsync(scrollToBrowse: false);
+    }
+
+    // Categories change far less often than the grid, so one successful load serves the
+    // whole visit. The client caches only success, which is what makes the retry a retry.
+    private async Task LoadCategoriesAsync()
+    {
+        _categoriesFailed = false;
+        _categories = await Api.ListCategoriesAsync();
+        _categoriesFailed = _categories is null;
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        _requests?.Cancel();
+        _requests?.Dispose();
+    }
+
+    private async Task LoadAsync(bool scrollToBrowse)
+    {
+        // A new request always supersedes the one in flight, so a slow answer for an older
+        // query can never overwrite a newer grid.
+        _requests?.Cancel();
+        _requests?.Dispose();
+        _requests = new CancellationTokenSource();
+        var token = _requests.Token;
+
+        _loading = true;
+        _failed = false;
+        StateHasChanged();
+
+        StorefrontProductListResult? result;
+        try
+        {
+            result = await Api.ListProductsAsync(_query, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _result = result ?? _result;
+        _failed = result is null;
+        _loading = false;
+        StateHasChanged();
+
+        if (scrollToBrowse && !_failed)
+        {
+            await ScrollToBrowseAsync();
+        }
+    }
+
+    // Which parameter moved decides everything: the dialog is a state of this page, so
+    // opening or closing it must not refetch the listing, reset the page or move the scroll.
+    // Record equality answers that with `with` isolating one dimension at a time, which keeps
+    // working when the query grows a sixth parameter.
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        var next = StorefrontQuery.FromUri(args.Location);
+        if (next == _query)
+        {
+            return;
+        }
+
+        var productOnly = (next with { ProductId = _query.ProductId }) == _query;
+        var pageOnly = (next with { Page = _query.Page }) == _query;
+
+        _query = next;
+
+        if (productOnly)
+        {
+            _ = InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        _ = InvokeAsync(() => LoadAsync(scrollToBrowse: pageOnly));
+    }
+
+    private Task RetryAsync() => LoadAsync(scrollToBrowse: false);
+
+    private void GoToPage(int page) => Navigate(_query.WithPage(page));
+
+    private void SearchFor(string? search) => Navigate(_query.WithSearch(search));
+
+    // The tabs report which one was picked; picking the active one again clears the filter.
+    private void SelectCategory(int categoryId) => Navigate(_query.ToggleCategory(categoryId));
+
+    private void SortBy(string sort) => Navigate(_query.WithSort(sort));
+
+    private void OpenProduct(int productId) => Navigate(_query.WithProduct(productId));
+
+    private void CloseProduct() => Navigate(_query.WithProduct(null));
+
+    private void ClearFilters() => Navigate(_query.WithoutFilters());
+
+    private void Navigate(StorefrontQuery query) => Navigation.NavigateTo("/" + query.ToQueryString());
+
+    private Task ScrollToBrowseAsync() => Js.InvokeVoidAsync("storefront.scrollToBrowse").AsTask();
+}

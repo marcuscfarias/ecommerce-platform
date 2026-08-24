@@ -1,11 +1,12 @@
 name: Frontend CI
 
-# Validates the SPA compiles before Frontend CD publishes it. Path-filtered to the SPA.
+# Validates the SPAs compile before Frontend CD publishes them. Path-filtered to the SPAs.
 on:
   pull_request:
     branches: [main]
     paths:
       - 'src/Ecommerce.Admin.Web/**'
+      - 'src/Ecommerce.Shop.Web/**'
       - '.github/workflows/frontend-ci.yml'
       - '.github/actions/setup-dotnet/action.yml'
 
@@ -13,6 +14,7 @@ on:
     branches-ignore: [main]
     paths:
       - 'src/Ecommerce.Admin.Web/**'
+      - 'src/Ecommerce.Shop.Web/**'
       - '.github/workflows/frontend-ci.yml'
       - '.github/actions/setup-dotnet/action.yml'
 
@@ -36,6 +38,10 @@ jobs:
       - name: Setup .NET
         uses: ./.github/actions/setup-dotnet
 
-      - name: Publish
+      - name: Publish backoffice
         working-directory: src
         run: dotnet publish Ecommerce.Admin.Web/Ecommerce.Admin.Web.csproj -c Release --no-restore
+
+      - name: Publish store
+        working-directory: src
+        run: dotnet publish Ecommerce.Shop.Web/Ecommerce.Shop.Web.csproj -c Release --no-restore

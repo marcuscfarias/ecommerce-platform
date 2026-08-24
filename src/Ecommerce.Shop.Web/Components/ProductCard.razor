@@ -1,0 +1,24 @@
+@* One shelf cell. There is no product route to link to: the dialog is a state of the
+   home page, so the card is a button and the page turns the event into a query string. *@
+
+<button type="button" class="card" @onclick="() => OnOpen.InvokeAsync(Product.Id)">
+    <span class="card__media">
+        <ProductImage ProductId="@Product.Id" HasImage="@Product.HasImage" Name="@Product.Name" />
+    </span>
+
+    <span class="card__name">@Product.Name</span>
+    <span class="card__price">@Money.Format(Product.Price)</span>
+
+    @if (!Product.InStock)
+    {
+        <span class="badge badge--out">Out of stock</span>
+    }
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public StorefrontProductListItem Product { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnOpen { get; set; }
+}

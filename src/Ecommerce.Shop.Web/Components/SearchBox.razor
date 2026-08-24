@@ -1,0 +1,57 @@
+@* The term is held locally and leaves only on submit: Enter or the button. Nothing is
+   emitted while the visitor types, so there is no debounce, no timer and no echo guard. *@
+
+<div class="search" role="search">
+    <input class="search__input"
+           type="text"
+           enterkeyhint="search"
+           maxlength="@StorefrontQuery.SearchMaxLength"
+           placeholder="Search the store"
+           aria-label="Search products"
+           value="@_value"
+           @oninput="OnInput"
+           @onkeydown="OnKeyDownAsync" />
+
+    @if (!string.IsNullOrEmpty(_value))
+    {
+        <button type="button" class="search__clear" aria-label="Clear the search box" @onclick="Clear">✕</button>
+    }
+
+    <button type="button" class="search__submit" @onclick="SubmitAsync">Search</button>
+</div>
+
+@code {
+    private string? _value;
+    private string? _applied;
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<string?> OnSubmit { get; set; }
+
+    // Adopt the incoming term only when it actually changed, which is what the back button
+    // and clearing the filters do. Comparing against the local field instead would wipe what
+    // the visitor is typing on any unrelated re-render of the page.
+    protected override void OnParametersSet()
+    {
+        if (string.Equals(Value, _applied, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _applied = Value;
+        _value = Value;
+    }
+
+    private void OnInput(ChangeEventArgs args) => _value = args.Value?.ToString();
+
+    private void Clear() => _value = null;
+
+    private Task OnKeyDownAsync(KeyboardEventArgs args) =>
+        string.Equals(args.Key, "Enter", StringComparison.Ordinal) ? SubmitAsync() : Task.CompletedTask;
+
+    // A term of blanks is no term at all, and the page's own normalisation agrees, so the
+    // grid never receives a filter the URL would drop anyway.
+    private Task SubmitAsync() => OnSubmit.InvokeAsync(StorefrontQuery.NormalizeSearch(_value));
+}

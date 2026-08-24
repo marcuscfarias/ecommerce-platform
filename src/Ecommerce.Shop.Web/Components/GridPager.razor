@@ -1,0 +1,73 @@
+@if (TotalPages > 1)
+{
+    <nav class="pager" aria-label="Pagination">
+        <button type="button" class="pager__btn" disabled="@(Page <= 1)"
+                @onclick="() => SelectAsync(Page - 1)">
+            Previous
+        </button>
+
+        @foreach (var page in PageNumbers())
+        {
+            if (page is null)
+            {
+                <span class="pager__gap">…</span>
+            }
+            else
+            {
+                var number = page.Value;
+                <button type="button"
+                        class="pager__btn @(number == Page ? "is-current" : null)"
+                        aria-current="@(number == Page ? "page" : null)"
+                        @onclick="() => SelectAsync(number)">
+                    @number
+                </button>
+            }
+        }
+
+        <button type="button" class="pager__btn" disabled="@(Page >= TotalPages)"
+                @onclick="() => SelectAsync(Page + 1)">
+            Next
+        </button>
+    </nav>
+}
+
+@code {
+    private const int Window = 2;
+
+    [Parameter, EditorRequired]
+    public int Page { get; set; }
+
+    [Parameter, EditorRequired]
+    public int TotalPages { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnSelect { get; set; }
+
+    private Task SelectAsync(int page) =>
+        page < 1 || page > TotalPages || page == Page ? Task.CompletedTask : OnSelect.InvokeAsync(page);
+
+    // First and last page always visible, a window around the current one, ellipsis for the rest.
+    private IEnumerable<int?> PageNumbers()
+    {
+        var previous = 0;
+
+        for (var page = 1; page <= TotalPages; page++)
+        {
+            var isEdge = page == 1 || page == TotalPages;
+            var isNearCurrent = Math.Abs(page - Page) <= Window;
+
+            if (!isEdge && !isNearCurrent)
+            {
+                continue;
+            }
+
+            if (previous > 0 && page - previous > 1)
+            {
+                yield return null;
+            }
+
+            yield return page;
+            previous = page;
+        }
+    }
+}

@@ -1,0 +1,43 @@
+@* A flat strip of categories. Picking the selected one again emits the same id: the page
+   owns the toggle rule, because it is the page that writes the query string. *@
+
+<div class="tabs" role="group" aria-label="Filter by category">
+    @if (Failed)
+    {
+        <button type="button" class="tabs__btn" @onclick="() => OnRetry.InvokeAsync()">
+            Reload categories
+        </button>
+    }
+    else if (Categories is not null)
+    {
+        @foreach (var category in Categories)
+        {
+            var id = category.Id;
+            var isSelected = SelectedId == id;
+
+            <button type="button"
+                    class="tabs__btn @(isSelected ? "is-active" : null)"
+                    aria-pressed="@(isSelected ? "true" : "false")"
+                    @onclick="() => OnSelect.InvokeAsync(id)">
+                @category.Name
+            </button>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<StorefrontCategory>? Categories { get; set; }
+
+    [Parameter]
+    public int? SelectedId { get; set; }
+
+    [Parameter]
+    public bool Failed { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnSelect { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnRetry { get; set; }
+}

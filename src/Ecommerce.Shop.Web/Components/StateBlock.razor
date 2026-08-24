@@ -1,0 +1,21 @@
+@* The shared shape of every non-result screen: loading, empty, error, not found. *@
+
+<div class="state">
+    <p class="state__title">@Title</p>
+    @if (!string.IsNullOrWhiteSpace(Hint))
+    {
+        <p class="state__hint">@Hint</p>
+    }
+    @ChildContent
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Hint { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

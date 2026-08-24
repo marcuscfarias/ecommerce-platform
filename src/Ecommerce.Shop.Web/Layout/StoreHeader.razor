@@ -1,0 +1,23 @@
+@* Account and cart ship in their final shape but inert. Sign-in lands in the accounts
+   slice and the live counter in the cart slice; both replace this markup, not the CSS. *@
+
+<header class="store-header">
+    <div class="store-header__inner">
+        <a class="wordmark" href="/">
+            ecommerce
+            <span class="wordmark__tag">store</span>
+        </a>
+
+        <div class="store-header__actions">
+            <div class="store-action" aria-disabled="true" title="Accounts arrive in a later release">
+                <span class="store-action__hint">Hello, sign in</span>
+                <span class="store-action__label">Account &amp; Lists</span>
+            </div>
+
+            <div class="store-action store-action--cart" aria-disabled="true" title="The cart arrives in a later release">
+                <span class="cart-badge">0</span>
+                <span class="store-action__label">Cart</span>
+            </div>
+        </div>
+    </div>
+</header>

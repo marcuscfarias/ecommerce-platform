@@ -1,0 +1,141 @@
+@* The detail lives on top of the catalog, so it loads itself and owns its own loading,
+   not-found and error states. The page behind it keeps its grid, its page and its scroll. *@
+
+@inject StorefrontApiClient Api
+
+<div class="dialog" role="presentation">
+    <button type="button"
+            class="dialog__scrim"
+            aria-label="Close the product"
+            @onclick="CloseAsync"></button>
+
+    <div class="dialog__panel" role="dialog" aria-modal="true" aria-label="@(_product?.Name ?? "Product")">
+        <button type="button" class="dialog__close" aria-label="Close the product" @onclick="CloseAsync">✕</button>
+
+        @if (_loading)
+        {
+            <div class="dialog__media" aria-hidden="true"></div>
+            <div class="dialog__body" aria-hidden="true">
+                <div class="skeleton__line"></div>
+                <div class="skeleton__line skeleton__line--short"></div>
+            </div>
+        }
+        else if (_status == StorefrontProductStatus.NotFound)
+        {
+            <div class="dialog__state">
+                <StateBlock Title="This product isn't available"
+                            Hint="It may have been taken off sale.">
+                    <button type="button" class="ghost" @onclick="CloseAsync">Close</button>
+                </StateBlock>
+            </div>
+        }
+        else if (_product is null)
+        {
+            <div class="dialog__state state--error">
+                <StateBlock Title="We couldn't load this product"
+                            Hint="The store is having trouble reaching its catalog.">
+                    <button type="button" class="cta" @onclick="LoadAsync">Try again</button>
+                </StateBlock>
+            </div>
+        }
+        else
+        {
+            <div class="dialog__media">
+                <ProductImage ProductId="@_product.Id" HasImage="@_product.HasImage" Name="@_product.Name" />
+            </div>
+
+            <div class="dialog__body">
+                @if (_categoryName is not null)
+                {
+                    <span class="dialog__meta">@_categoryName</span>
+                }
+
+                <h2 class="dialog__title">@_product.Name</h2>
+                <p class="dialog__price">@Money.Format(_product.Price)</p>
+
+                @if (!_product.InStock)
+                {
+                    <span class="badge badge--out">Out of stock</span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_product.Description))
+                {
+                    <p class="dialog__desc">@_product.Description</p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private StorefrontProductDetail? _product;
+    private StorefrontProductStatus _status = StorefrontProductStatus.Found;
+    private string? _categoryName;
+    private int _loadedId;
+    private bool _loading = true;
+
+    [Parameter, EditorRequired]
+    public int ProductId { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnClose { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedId == ProductId)
+        {
+            return;
+        }
+
+        _loadedId = ProductId;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var requestedId = ProductId;
+
+        _loading = true;
+        _product = null;
+        _categoryName = null;
+        StateHasChanged();
+
+        var result = await Api.GetProductAsync(requestedId);
+
+        // The visitor may already have opened another product. Every value below is derived
+        // from this response, so a superseded one has to stop here.
+        if (requestedId != ProductId)
+        {
+            return;
+        }
+
+        _status = result.Status;
+        _product = result.Product;
+        _loading = false;
+        StateHasChanged();
+
+        if (result.Product is not null)
+        {
+            await ResolveCategoryNameAsync(requestedId, result.Product.CategoryId);
+        }
+    }
+
+    // The detail response carries only the id; the name comes from the same list that feeds
+    // the browse bar. An id with no match simply renders no label.
+    private async Task ResolveCategoryNameAsync(int requestedId, int categoryId)
+    {
+        var categories = await Api.ListCategoriesAsync();
+
+        // The second await needs the same guard as the first: without it a late category
+        // name lands on the product now on screen.
+        if (requestedId != ProductId)
+        {
+            return;
+        }
+
+        _categoryName = categories?.FirstOrDefault(category => category.Id == categoryId)?.Name;
+        StateHasChanged();
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+}
