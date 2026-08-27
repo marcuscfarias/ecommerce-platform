@@ -18,7 +18,7 @@ services:
     env_file:
       - .env
     ports:
-      - "1433:1433"
+      - "5432:5432"
 
   azurite:
     container_name: ecommerce-azurite

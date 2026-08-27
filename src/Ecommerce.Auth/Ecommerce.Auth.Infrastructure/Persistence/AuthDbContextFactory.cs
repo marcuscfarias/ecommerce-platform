@@ -20,7 +20,7 @@ internal sealed class AuthDbContextFactory : IDesignTimeDbContextFactory<AuthDbC
             ?? throw new InvalidOperationException("Connection string 'EcommerceDb' is not configured.");
 
         var options = new DbContextOptionsBuilder<AuthDbContext>()
-            .UseSqlServer(connectionString)
+            .UseNpgsql(connectionString)
             .Options;
 
         return new AuthDbContext(options);

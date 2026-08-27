@@ -1,11 +1,11 @@
-using Testcontainers.MsSql;
+using Testcontainers.PostgreSql;
 
 namespace Ecommerce.Kernel.IntegrationTests.Database;
 
 public class DatabaseContainerFixture : IAsyncLifetime
 {
-    private readonly MsSqlContainer _container =
-        new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+    private readonly PostgreSqlContainer _container =
+        new PostgreSqlBuilder("postgres:18-alpine").Build();
 
     public string ConnectionString { get; private set; } = null!;
 

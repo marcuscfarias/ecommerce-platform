@@ -95,7 +95,7 @@ cp .env.example .env
 
 Edit `.env`:
 
-* `MSSQL_SA_PASSWORD` — a strong SA password, mirrored inside `ConnectionStrings__EcommerceDb`.
+* `POSTGRES_PASSWORD` — a strong database password, mirrored inside `ConnectionStrings__EcommerceDb`.
 * `ASPNETCORE_Kestrel__Certificates__Default__Password` — the `<cert-password>` you chose in step 2.
 
 ### 4. Run the backend
@@ -106,7 +106,7 @@ docker compose up --build
 
 This boots three containers:
 
-* `ecommerce-db` — SQL Server 2022 with a persistent volume.
+* `ecommerce-db` — PostgreSQL 18 with a persistent volume.
 * `ecommerce-azurite` — local Azure Blob Storage emulator for product images.
 * `ecommerce-api` — the API (`Ecommerce.AppHost`) on [`https://localhost:8081`](https://localhost:8081).
 
@@ -190,14 +190,14 @@ Functionalities above.
 ### 5.1 Tech stack
 
 * **.NET 10 / ASP.NET Core 10 / C#** — API runtime and framework.
-* **SQL Server** with **Entity Framework Core** — relational store, migrations and data access.
+* **PostgreSQL** with **Entity Framework Core** (Npgsql) — relational store, migrations and data access.
 * **MediatR** — CQRS dispatch for commands and queries.
 * **FluentValidation** — declarative request validation.
 * **JWT bearer** + **BCrypt.Net** — token authentication and password hashing.
 * **Scalar** (over OpenAPI) — interactive API documentation.
 * **Microsoft.Extensions.Logging** (`[LoggerMessage]` + HTTP logging) — structured logs to stdout (JSON in production) shipped to **Azure Log Analytics**.
 * **Unit testing** — xUnit, NSubstitute, Bogus, Shouldly.
-* **Integration testing** — Testcontainers (SQL Server + Azurite), Respawn, WebApplicationFactory.
+* **Integration testing** — Testcontainers (PostgreSQL + Azurite), Respawn, WebApplicationFactory.
 * **Docker** + **Docker Compose** — containerization.
 * **GitHub Actions** — CI/CD.
 * **Azure** — Container Apps, Static Web Apps, Azure SQL, Blob Storage, Key Vault.
@@ -250,7 +250,7 @@ account stays locked down.
 
 ### 5.6 Integration testing
 
-Integration tests run against a real **SQL Server** container (`Testcontainers.MsSql`); EF migrations are applied
+Integration tests run against a real **PostgreSQL** container (`Testcontainers.PostgreSql`); EF migrations are applied
 through a `WebApplicationFactory` on host startup, and **Respawn** resets the schema between tests so each one starts
 from a known state. Each module owns a thin fixture over a shared base (e.g. `CatalogIntegrationFixture`) that exposes
 `Client`, `ResetDatabaseAsync()` and `SeedAsync<TDbContext>()`, keeping the wiring out of the test classes. Unit tests
