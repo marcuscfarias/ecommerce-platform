@@ -38,7 +38,7 @@ CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 | Technology | Purpose |
 | --- | --- |
 | **.NET 10 / ASP.NET Core 10 / C#** | API development |
-| **SQL Server** (Azure SQL in production) | Relational database |
+| **PostgreSQL 18** | Relational database |
 | **Entity Framework Core** | ORM, migrations, and data access |
 | **Controllers + vertical-slice folders** | HTTP endpoint style |
 | **JWT Bearer + BCrypt.Net** | Authentication and password hashing (no ASP.NET Identity) |
@@ -67,7 +67,7 @@ CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 | **NSubstitute** | Mocking |
 | **Bogus** | Test data generation |
 | **Shouldly** | Assertions |
-| **Testcontainers** | SQL Server + Azurite containers for integration tests |
+| **Testcontainers** | PostgreSQL + Azurite containers for integration tests |
 | **Respawn** | Database reset between integration tests |
 
 ---
@@ -84,7 +84,7 @@ CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 | **Permission-Based Authorization** | Each module declares its own permissions; endpoints use `RequireClaim("permission", …)` — never role checks. `RolePermissionMap` lives in the AppHost, so Auth never learns other modules' permissions. |
 | **Security Baseline** | HSTS, security headers, CORS allowlist for the SPA origin, global and per-endpoint rate limiting, forwarded headers behind the Azure ingress. |
 | **Structured Logging** | `[LoggerMessage]` source-generated logs, one metadata-only HTTP log entry per request, and a per-request scope carrying `RequestId`/`UserId`. Ids only — never entities, credentials or tokens. |
-| **DbContext per Module** | Each module has its own DbContext with a dedicated SQL Server schema (`catalog`, `auth`). No cross-module table access. |
+| **DbContext per Module** | Each module has its own DbContext with a dedicated PostgreSQL schema (`catalog`, `auth`). No cross-module table access. |
 | **Module DI Registration** | Each module's Api project exposes `Add{ModuleName}Module(IServiceCollection, IConfiguration)` and `Use{ModuleName}Module(WebApplication, bool applyMigrations)`. `ModulesRegistry` in the AppHost is the only place that calls them. |
 | **Secrets** | Production configuration comes from Azure Key Vault through a system-assigned managed identity. Two environments only: local (Docker Compose) and Production. |
 
@@ -126,7 +126,7 @@ src/
 ├── Ecommerce.Admin.Web/                              # Blazor WebAssembly admin SPA (MudBlazor)
 │
 ├── Ecommerce.slnx                                    # Solution file
-└── compose.yaml                                      # Docker Compose: SQL Server + API (+ Azurite via override)
+└── compose.yaml                                      # Docker Compose: PostgreSQL + API (+ Azurite via override)
 ```
 
 ### Conventions

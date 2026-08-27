@@ -20,7 +20,7 @@ internal sealed class CatalogDbContextFactory : IDesignTimeDbContextFactory<Cata
             ?? throw new InvalidOperationException("Connection string 'EcommerceDb' is not configured.");
 
         var options = new DbContextOptionsBuilder<CatalogDbContext>()
-            .UseSqlServer(connectionString)
+            .UseNpgsql(connectionString)
             .Options;
 
         return new CatalogDbContext(options);
