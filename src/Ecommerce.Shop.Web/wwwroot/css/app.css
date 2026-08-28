@@ -876,6 +876,77 @@ img {
     }
 }
 
+/* ======================== Cold start notice ========================== */
+/* Above everything, the fixed header and the product dialog included: whatever is on
+   screen when the API stalls, the visitor still needs the explanation and the button. */
+.cold-start {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 1500;
+    width: min(24rem, calc(100vw - 2.5rem));
+    padding: 1.25rem 1.4rem;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border-gray);
+    border-top: 4px solid var(--orange);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(15, 17, 17, .22);
+    transform: translate(-50%, -50%);
+    animation: cold-start-in .32s var(--ease-out) both;
+}
+
+.cold-start__title {
+    margin: 0 0 .35rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.cold-start__text {
+    margin: 0 0 .85rem;
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--slate-60);
+}
+
+.cold-start__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .5rem 1.1rem;
+    font: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--gold-cta-start), var(--gold-cta-end));
+}
+
+.cold-start__action:hover {
+    background: linear-gradient(180deg, var(--gold-cta-hover), var(--gold-cta-end));
+}
+
+.cold-start__action:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+}
+
+/* Both steps carry the centring translate, or the animation would drop it mid-flight. */
+@keyframes cold-start-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -46%) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
 /* ===================== Blazor framework error UI ===================== */
 #blazor-error-ui {
     display: none;

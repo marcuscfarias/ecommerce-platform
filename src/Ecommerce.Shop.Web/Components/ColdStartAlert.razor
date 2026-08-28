@@ -1,0 +1,26 @@
+@* Explains the first slow load instead of letting it read as a broken store. *@
+@implements IDisposable
+@inject ColdStartNotice Notice
+@inject NavigationManager Navigation
+
+@if (Notice.IsVisible)
+{
+    <aside class="cold-start" role="status" aria-live="polite">
+        <p class="cold-start__title">Waking the server up</p>
+        <p class="cold-start__text">
+            Hosting scales to zero while idle to keep this portfolio's running costs near zero, so the
+            first request after a quiet period takes about a minute. Give it a moment, then reload.
+        </p>
+        <button type="button" class="cold-start__action" @onclick="Reload">Reload</button>
+    </aside>
+}
+
+@code {
+    protected override void OnInitialized() => Notice.Changed += OnNoticeChanged;
+
+    public void Dispose() => Notice.Changed -= OnNoticeChanged;
+
+    private void OnNoticeChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void Reload() => Navigation.Refresh(forceReload: true);
+}

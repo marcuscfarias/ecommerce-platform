@@ -16,17 +16,27 @@ var apiBaseAddress = new Uri(apiBaseUrl);
 
 builder.Services.AddTransient<CookieAuthenticationHandler>();
 
+// Singleton rather than scoped: the handler chain runs in a scope of its own, and in
+// WebAssembly the two lifetimes coincide anyway.
+builder.Services.AddSingleton<ColdStartNotice>();
+builder.Services.AddTransient<ColdStartHandler>();
+
 // API clients: cookies attached on every request + transparent refresh on 401.
+// The cold start handler is registered first so its timer spans the refresh and the retry.
 builder.Services.AddHttpClient<AuthApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<ColdStartHandler>()
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
 builder.Services.AddHttpClient<CatalogApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<ColdStartHandler>()
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
 builder.Services.AddHttpClient<ProductsApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<ColdStartHandler>()
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
 builder.Services.AddHttpClient<UsersApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<ColdStartHandler>()
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
 // Bare client used only by the handler's refresh call (no handler -> no recursion).

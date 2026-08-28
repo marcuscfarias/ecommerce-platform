@@ -15,3 +15,7 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@* Outside the router: the sign-in screen sits in AuthorizeRouteView's Authorizing state until
+   /auth/me answers, so a notice inside the layout would never render during a cold start. *@
+<ColdStartAlert />
