@@ -7,6 +7,12 @@ namespace Ecommerce.Admin.Web.Authentication;
 
 internal sealed class CookieAuthenticationStateProvider(AuthApiClient authApi) : AuthenticationStateProvider
 {
+    // The API scales to zero, so the /auth/me that boots the app can hang for about a minute
+    // while the container wakes. The router blocks on this state, and blocking it leaves the
+    // user on a blank page, so a long wait answers Anonymous and lets the sign-in screen
+    // render; the real answer promotes the session if the cookie turns out to be valid.
+    private static readonly TimeSpan BootTimeout = TimeSpan.FromSeconds(2);
+
     private static readonly AuthenticationState Anonymous =
         new(new ClaimsPrincipal(new ClaimsIdentity()));
 
@@ -16,7 +22,38 @@ internal sealed class CookieAuthenticationStateProvider(AuthApiClient authApi) :
     private Task<AuthenticationState>? _state;
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync() =>
-        _state ??= LoadStateAsync();
+        _state ??= ResolveStateAsync();
+
+    public void NotifyStateChanged()
+    {
+        _state = null;
+        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    private async Task<AuthenticationState> ResolveStateAsync()
+    {
+        var load = LoadStateAsync();
+        if (await Task.WhenAny(load, Task.Delay(BootTimeout)) == load)
+        {
+            return await load;
+        }
+
+        _ = PromoteWhenLoadedAsync(load);
+        return Anonymous;
+    }
+
+    // GetMeAsync turns every transport failure into null, so this task cannot fault.
+    private async Task PromoteWhenLoadedAsync(Task<AuthenticationState> load)
+    {
+        var state = await load;
+        if (state.User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        _state = load;
+        NotifyAuthenticationStateChanged(load);
+    }
 
     private async Task<AuthenticationState> LoadStateAsync()
     {
@@ -36,11 +73,5 @@ internal sealed class CookieAuthenticationStateProvider(AuthApiClient authApi) :
 
         var identity = new ClaimsIdentity(claims, authenticationType: "cookie", nameType: ClaimTypes.Name, roleType: "role");
         return new AuthenticationState(new ClaimsPrincipal(identity));
-    }
-
-    public void NotifyStateChanged()
-    {
-        _state = null;
-        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 }

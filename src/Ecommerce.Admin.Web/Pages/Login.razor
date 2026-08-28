@@ -1,6 +1,7 @@
 @page "/"
 @page "/login"
 @layout MainLayout
+@implements IDisposable
 @using System.ComponentModel.DataAnnotations
 @inject AuthApiClient AuthApi
 @inject AuthenticationStateProvider AuthState
@@ -96,6 +97,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        AuthState.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
         var state = await AuthState.GetAuthenticationStateAsync();
         _authenticated = state.User.Identity?.IsAuthenticated == true;
         if (_authenticated)
@@ -110,6 +113,24 @@
         {
             await JS.InvokeVoidAsync("focusById", "email");
         }
+    }
+
+    public void Dispose() => AuthState.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+
+    // A cold start answers the boot /auth/me as anonymous so this screen can render. When the
+    // API wakes and the cookie turns out to be valid, the screen steps aside on its own.
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> state) =>
+        _ = RedirectIfAuthenticatedAsync(state);
+
+    private async Task RedirectIfAuthenticatedAsync(Task<AuthenticationState> state)
+    {
+        if ((await state).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        _authenticated = true;
+        await InvokeAsync(() => Navigation.NavigateTo(SafeReturnUrl(), replace: true));
     }
 
     private void ToggleReveal() => _revealPassword = !_revealPassword;
