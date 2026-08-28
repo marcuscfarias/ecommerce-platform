@@ -27,22 +27,25 @@
 
 Ecommerce is a personal portfolio project I use to practice modern full-stack development on .NET (focused on backend).
 It's built as a
-**modular monolith** in ASP.NET Core 10, with a **Blazor WebAssembly** admin SPA on top, and it runs **live on Azure**
-(Container Apps, Static Web Apps, Azure SQL, Blob Storage and Key Vault).
+**modular monolith** in ASP.NET Core 10, with two **Blazor WebAssembly** SPAs on top — a storefront and a backoffice —
+and it runs **live on Azure** (Container Apps, Static Web Apps, Blob Storage and Key Vault) over **Postgres on Neon**.
 
 The project is **evolutionary by design**: instead of a one-shot build, it grows feature by feature — each as a vertical
 slice with its own tests — so the architectural decisions stay visible in the commit history.
 
 The first milestone, the **backoffice**, is complete: catalog management (categories and products, including image
-upload and delivery) and user management (authentication, authorization, roles and account lifecycle). This is the
-operational backbone the upcoming customer-facing storefront will build on.
+upload and delivery) and user management (authentication, authorization, roles and account lifecycle). The
+customer-facing **storefront** is now building on that backbone: anonymous browsing, search and product pages are live,
+with the cart and checkout next.
 
 ## 2. Screenshots or Demo
 
 > ⚠️⚠️⚠️ **Cold start.** To keep hosting costs near zero, the API scales to zero when idle. The first time you open the site
-> after an idle period, it takes around **1m30s** to spin everything back up — after that it responds normally. ⚠️⚠️⚠️
+> after an idle period, it takes around **1m30s** to spin everything back up — after that it responds normally. Both SPAs
+> watch for a request hanging past three seconds and explain the wait on screen, so it doesn't read as a broken site. ⚠️⚠️⚠️
 
 The project is live:
+* **Storefront** — [ecommerce.marcuscfarias.com](https://ecommerce.marcuscfarias.com)
 * **Admin SPA** — [admin-ecommerce.marcuscfarias.com](https://admin-ecommerce.marcuscfarias.com)
 * **API docs (Scalar)** — [api-ecommerce.marcuscfarias.com/scalar](https://api-ecommerce.marcuscfarias.com/scalar)
 
@@ -115,14 +118,16 @@ on startup, so the API is ready as soon as it answers.
 
 Open the **Scalar UI** at [`https://localhost:8081/scalar`](https://localhost:8081/scalar) to explore the endpoints.
 
-### 5. Run the Admin SPA
+### 5. Run the SPAs
 
 ```bash
 dotnet run --project Ecommerce.Admin.Web
+dotnet run --project Ecommerce.Shop.Web
 ```
 
-The Blazor WebAssembly admin opens at [`https://localhost:7777`](https://localhost:7777) and talks to the API on port
-`8081`. Sign in with any of the [Demo logins](#demo-logins).
+Both Blazor WebAssembly apps talk to the API on port `8081`. The backoffice opens at
+[`https://localhost:7777`](https://localhost:7777) — sign in with any of the [Demo logins](#demo-logins) — and the
+storefront at [`https://localhost:7778`](https://localhost:7778), which needs no sign-in.
 
 ### Run tests
 
@@ -136,8 +141,8 @@ composition.
 
 ## 4. Functionalities
 
-Features are grouped by delivery phase. The **backoffice** (admin-facing) milestone is shipped; the **storefront**
-(customer-facing) phase is next. **Cross-cutting** concerns span both. Each feature is expanded in
+Features are grouped by delivery phase. The **backoffice** (admin-facing) milestone is shipped and the **storefront**
+(customer-facing) phase is under way. **Cross-cutting** concerns span both. Each feature is expanded in
 [5. Implementation details](#5-implementation-details).
 
 ### 4.1 Backoffice — ✅ shipped
@@ -152,13 +157,14 @@ The admin-facing operations that run the store.
 | Auth      | Authentication & Authorization | 🟢 Done |
 | Admin Web | Blazor WASM SPA                | 🟢 Done |
 
-### 4.2 Storefront — 🔜 planned
+### 4.2 Storefront — 🚧 in progress
 
 The customer-facing shop, built on top of the backoffice backbone.
 
 | Module        | Feature                   |  Status  |
 |:--------------|:--------------------------|:--------:|
-| Catalog       | Product browsing & search | 🔴 To do |
+| Catalog       | Product browsing & search | 🟢 Done  |
+| Shop Web      | Blazor WASM SPA           | 🟢 Done  |
 | Orders        | Cart & checkout           | 🔴 To do |
 | Orders        | Order management          | 🔴 To do |
 | Payment       | Payment (microservice)    | 🔴 To do |
@@ -200,8 +206,9 @@ Functionalities above.
 * **Integration testing** — Testcontainers (PostgreSQL + Azurite), Respawn, WebApplicationFactory.
 * **Docker** + **Docker Compose** — containerization.
 * **GitHub Actions** — CI/CD.
-* **Azure** — Container Apps, Static Web Apps, Azure SQL, Blob Storage, Key Vault.
-* **Blazor WebAssembly** + **MudBlazor** — admin SPA.
+* **Azure** — Container Apps, Static Web Apps, Blob Storage, Key Vault.
+* **Neon** — serverless Postgres hosting in production.
+* **Blazor WebAssembly** + **MudBlazor** — storefront and backoffice SPAs.
 
 ### 5.2 Architecture
 
@@ -264,13 +271,17 @@ Six GitHub Actions workflows split shared gates from per-stack pipelines:
   vulnerable-dependency check and secret scan (gitleaks).
 * **`backend-ci.yml`** (+ reusable **`backend-test.yml`**) — restore, build in Release, unit + integration tests
   (Testcontainers) and a Docker image build validation.
-* **`frontend-ci.yml`** — builds the Blazor WebAssembly SPA.
+* **`frontend-ci.yml`** — builds both Blazor WebAssembly SPAs.
 * **`backend-cd.yml`** — publishes the API image and deploys it to **Azure Container Apps** via OIDC, gated on tests and
   a `/health` check.
 * **`frontend-cd.yml`** — deploys the backoffice and the store SPA, each to its own **Azure Static Web App**, via OIDC.
 
 Production secrets come from **Azure Key Vault** (system-assigned managed identity) and product images from **private
 Blob Storage** proxied through the API. Two environments only: local (Docker Compose) and Production.
+
+The API scales to zero between visits, so each SPA wraps its `HttpClient` in a `DelegatingHandler` that flags any
+request still pending after three seconds. The notice it raises stays up until the visitor reloads — the wait it
+describes ends with a reload, and a request that dies of timeout would otherwise fall back to a generic error.
 
 ### 5.8 Logging
 
