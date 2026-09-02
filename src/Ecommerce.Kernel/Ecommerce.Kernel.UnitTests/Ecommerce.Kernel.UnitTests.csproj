@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ecommerce.Kernel.Domain\Ecommerce.Kernel.Domain.csproj" />
     <ProjectReference Include="..\Ecommerce.Kernel.Application\Ecommerce.Kernel.Application.csproj" />
+    <ProjectReference Include="..\Ecommerce.Kernel.Infrastructure\Ecommerce.Kernel.Infrastructure.csproj" />
     <ProjectReference Include="..\Ecommerce.Kernel.API\Ecommerce.Kernel.API.csproj" />
   </ItemGroup>
 
