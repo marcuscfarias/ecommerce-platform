@@ -6,6 +6,7 @@ using Ecommerce.AppHost.Security;
 using Ecommerce.Kernel.API;
 using Ecommerce.Kernel.API.Observability;
 using Ecommerce.Kernel.API.Security;
+using Ecommerce.Kernel.Infrastructure.Notifications;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Scalar.AspNetCore;
@@ -32,6 +33,7 @@ internal static class Program
         builder.Services.AddEcommerceLogging(builder.Environment);
         builder.Services.AddEcommerceHttpLogging();
         builder.Services.AddKernelInfrastructure(builder.Configuration);
+        builder.Services.AddEmailSender(builder.Configuration);
         builder.Services.AddApiModule(builder.Configuration);
         builder.Services.AddHostAuthorization();
         builder.Services.AddGlobalRateLimiting(builder.Configuration);

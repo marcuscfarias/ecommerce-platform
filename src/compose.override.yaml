@@ -7,6 +7,9 @@ services:
       - ASPNETCORE_HTTPS_PORTS=8081
       - Cors__AllowedOrigins__0=https://localhost:7777
       - Cors__AllowedOrigins__1=https://localhost:7778
+      - Email__Provider=Console
+      - Email__FromAddress=noreply@localhost
+      - "Email__FromName=Ecommerce (dev)"
       - "ProductImageStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
     depends_on:
       azurite:
