@@ -31,6 +31,12 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
                 ["Auth:AdminSeed:Password"] = "TestAdminP@ss1",
                 ["Auth:AdminSeed:Name"] = "Test Admin",
 
+                // The composed host validates Email on startup and the committed appsettings.json
+                // selects Resend with an empty key, so the test host has to pick the console
+                // adapter explicitly or every suite dies before the first request.
+                ["Email:Provider"] = "Console",
+                ["Email:FromAddress"] = "noreply@test.local",
+
                 // The composed host now wires the global rate limiter (default on). Disable it
                 // for every functional suite so legitimate test traffic is never throttled.
                 ["RateLimiting:Enabled"] = "false",
