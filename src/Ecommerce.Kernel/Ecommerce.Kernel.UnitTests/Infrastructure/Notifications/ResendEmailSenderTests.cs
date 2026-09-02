@@ -36,6 +36,7 @@ public class ResendEmailSenderTests
         await sender.SendAsync(message);
 
         // Assert
+        handler.RequestCount.ShouldBe(1);
         handler.Request!.Method.ShouldBe(HttpMethod.Post);
         handler.Request.RequestUri!.AbsolutePath.ShouldBe("/emails");
 
@@ -63,6 +64,20 @@ public class ResendEmailSenderTests
         payload.TryGetProperty("text", out _).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task SendAsync_WhenResendAccepts_ShouldWriteNoLogEntry()
+    {
+        // Arrange
+        var message = FakeMessage(_faker.Lorem.Sentence());
+        var sender = CreateSender(new FakeHttpMessageHandler(Accepted()));
+
+        // Act
+        await sender.SendAsync(message);
+
+        // Assert
+        _logger.Collector.GetSnapshot().ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.BadRequest)] // malformed payload or unverified sending domain
     [InlineData(HttpStatusCode.TooManyRequests)] // free plan quota exhausted
@@ -81,9 +96,7 @@ public class ResendEmailSenderTests
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Warning);
         record.Message.ShouldContain(((int)status).ToString(CultureInfo.InvariantCulture));
-        record.Message.ShouldNotContain(message.To);
-        record.Message.ShouldNotContain(message.HtmlBody);
-        record.Message.ShouldNotContain(message.TextBody!);
+        ShouldNotLeak(record, message);
     }
 
     [Fact]
@@ -102,6 +115,7 @@ public class ResendEmailSenderTests
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Warning);
         record.Exception.ShouldBe(transportFailure);
+        ShouldNotLeak(record, message);
     }
 
     [Fact]
@@ -120,6 +134,7 @@ public class ResendEmailSenderTests
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Warning);
         record.Exception.ShouldBe(timeout);
+        ShouldNotLeak(record, message);
     }
 
     [Fact]
@@ -134,7 +149,7 @@ public class ResendEmailSenderTests
         await sender.SendAsync(message);
 
         // Assert
-        handler.Request.ShouldBeNull();
+        handler.RequestCount.ShouldBe(0);
         _logger.Collector.GetSnapshot().ShouldHaveSingleItem().Level.ShouldBe(LogLevel.Warning);
     }
 
@@ -164,4 +179,11 @@ public class ResendEmailSenderTests
         new(_faker.Internet.Email(), _faker.Lorem.Sentence(), $"<p>{_faker.Lorem.Sentence()}</p>", textBody);
 
     private static HttpResponseMessage Accepted() => new(HttpStatusCode.OK);
+
+    private static void ShouldNotLeak(FakeLogRecord record, EmailMessage message)
+    {
+        record.Message.ShouldNotContain(message.To);
+        record.Message.ShouldNotContain(message.HtmlBody);
+        record.Message.ShouldNotContain(message.TextBody!);
+    }
 }

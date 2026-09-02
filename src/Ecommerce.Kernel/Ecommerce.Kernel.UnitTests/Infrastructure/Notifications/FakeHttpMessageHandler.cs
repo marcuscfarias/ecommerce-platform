@@ -13,11 +13,14 @@ internal sealed class FakeHttpMessageHandler : HttpMessageHandler
 
     public string? RequestBody { get; private set; }
 
+    public int RequestCount { get; private set; }
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         Request = request;
+        RequestCount++;
 
         if (request.Content is not null)
         {

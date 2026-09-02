@@ -46,6 +46,29 @@ public class EmailModuleTests
     }
 
     [Fact]
+    public void AddEmailSender_WhenProviderIsResend_ShouldConfigureTheTypedClient()
+    {
+        // Arrange
+        var apiKey = _faker.Random.AlphaNumeric(32);
+        var provider = BuildProvider(new()
+        {
+            ["Email:Provider"] = "Resend",
+            ["Email:FromAddress"] = _faker.Internet.Email(),
+            ["Email:Resend:ApiKey"] = apiKey,
+        });
+
+        // Act
+        var client = provider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(nameof(ResendEmailSender));
+
+        // Assert
+        client.BaseAddress.ShouldBe(new Uri("https://api.resend.com"));
+        client.Timeout.ShouldBe(TimeSpan.FromSeconds(10));
+        client.DefaultRequestHeaders.Authorization!.Scheme.ShouldBe("Bearer");
+        client.DefaultRequestHeaders.Authorization.Parameter.ShouldBe(apiKey);
+    }
+
+    [Fact]
     public void AddEmailSender_WhenProviderIsAbsent_ShouldFailStartupNamingTheProvider()
     {
         // Arrange
