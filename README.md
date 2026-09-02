@@ -101,6 +101,9 @@ Edit `.env`:
 * `POSTGRES_PASSWORD` — a strong database password, mirrored inside `ConnectionStrings__EcommerceDb`.
 * `ASPNETCORE_Kestrel__Certificates__Default__Password` — the `<cert-password>` you chose in step 2.
 
+Email needs no setup: `compose.override.yaml` sets `Email__Provider=Console`, so transactional emails are written to
+the API log instead of being sent. No provider account and no API key are required to run the project locally.
+
 ### 4. Run the backend
 
 ```bash
@@ -185,6 +188,7 @@ Platform concerns not tied to a single module.
 | CI/CD (GitHub Actions)             | 🟢 Done  |
 | Deployment & Environments (Azure)  | 🟢 Done  |
 | Logging                            | 🟢 Done  |
+| Transactional Email                | 🟢 Done  |
 | Observability                      | 🔴 To do |
 | Infrastructure as Code (IaC)       | 🔴 To do |
 
@@ -208,6 +212,7 @@ Functionalities above.
 * **GitHub Actions** — CI/CD.
 * **Azure** — Container Apps, Static Web Apps, Blob Storage, Key Vault.
 * **Neon** — serverless Postgres hosting in production.
+* **Resend** — transactional email delivery in production.
 * **Blazor WebAssembly** + **MudBlazor** — storefront and backoffice SPAs.
 
 ### 5.2 Architecture
@@ -290,6 +295,23 @@ source generator**. Output goes to stdout (JSON in production) and is shipped by
 Analytics**. The **HTTP logging middleware** records one metadata-only entry per request, a per-request scope adds
 `RequestId`/`UserId` (and the W3C `TraceId` surfaces in the error response) for correlation, and handlers log key
 domain and auth events — always **ids only, never entities, credentials or tokens**.
+
+### 5.9 Transactional email
+
+Modules send mail through a single port, **`IEmailSender`**, declared in `Ecommerce.Kernel.Application`. No handler
+names a provider, so replacing the provider never reaches the callers. Two adapters implement it in
+`Ecommerce.Kernel.Infrastructure`: **`ConsoleEmailSender`** writes the whole message to the log, and
+**`ResendEmailSender`** posts it to **Resend** through a typed `HttpClient` with a 10-second timeout.
+
+The active adapter comes from an explicit **`Email:Provider`** setting (`Console` or `Resend`), validated with
+`ValidateOnStart` — an absent or misspelled value fails the boot rather than defaulting. Selecting by environment was
+rejected on purpose: a wrong mode either sends real mail from a developer machine or silently sends nothing, and both
+are invisible until a customer complains. In production the API key is resolved from **Key Vault** at boot; locally
+nothing is configured because `Console` needs no account.
+
+`SendAsync` **never throws**. Every failure — non-2xx, transport error, timeout, even a cancelled token — degrades to
+a single `Warning` and returns normally, so a provider outage cannot break the flow that triggered the email. The
+recipient address and the message body stay out of every log entry the Resend adapter writes.
 
 ## 6. Contributing
 
