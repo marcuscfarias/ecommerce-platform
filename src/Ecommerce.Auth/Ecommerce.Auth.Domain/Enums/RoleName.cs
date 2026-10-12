@@ -5,4 +5,5 @@ public enum RoleName
     Admin = 1,
     Owner = 2,
     Manager = 3,
+    Customer = 4,
 }

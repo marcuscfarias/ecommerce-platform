@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Kernel.Domain.Entities;
 
 namespace Ecommerce.Auth.Domain.Entities;
@@ -68,6 +69,8 @@ public sealed class User(
 
         _roles.Add(role);
     }
+
+    public bool IsCustomer() => _roles.Any(r => r.Name == nameof(RoleName.Customer));
 
     public void SetRoles(IEnumerable<Role> roles)
     {
