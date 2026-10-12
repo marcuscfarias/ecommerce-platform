@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using Ecommerce.Auth.Infrastructure.Persistence;
 using Ecommerce.Kernel.IntegrationTests;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Ecommerce.Auth.IntegrationTests.Base;
@@ -26,4 +27,8 @@ public abstract class BaseAuthIntegrationTest
         _fixture.CreateAuthenticatedClient(permissions);
 
     internal Task SeedAsync(Func<AuthDbContext, Task> seed) => _fixture.SeedAsync(seed);
+
+    protected Task StartHostedServiceAsync<THostedService>()
+        where THostedService : IHostedService
+        => _fixture.StartHostedServiceAsync<THostedService>();
 }

@@ -181,8 +181,46 @@ public class LoginHandlerTests
         user.LockoutEnd.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task Handle_WhenEmailIsNotConfirmed_ShouldThrowEmailNotConfirmed()
+    {
+        // Arrange
+        var command = FakeCommand();
+        var user = FakeUser(isActive: true, emailConfirmed: false);
+
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
+        _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(true);
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<EmailNotConfirmedException>();
+        exception.StatusCode.ShouldBe(403);
+        exception.Message.ShouldBe("Email not confirmed");
+    }
+
+    [Fact]
+    public async Task Handle_WhenEmailIsNotConfirmedAndPasswordIsWrong_ShouldThrowInvalidCredentialsAndRegisterFailedAccess()
+    {
+        // Arrange
+        var command = FakeCommand();
+        var user = FakeUser(isActive: true, emailConfirmed: false);
+
+        _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
+        _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(false);
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidCredentialsException>();
+        user.AccessFailedCount.ShouldBe(1);
+        await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
     private LoginCommand FakeCommand() => new(_faker.Internet.Email(), _faker.Internet.Password());
 
-    private User FakeUser(bool isActive) =>
-        new(_faker.Internet.Email(), _faker.Internet.Password(), _faker.Person.FullName, isActive);
+    private User FakeUser(bool isActive, bool emailConfirmed = true) =>
+        new(_faker.Internet.Email(), _faker.Internet.Password(), _faker.Person.FullName, isActive, emailConfirmed);
 }

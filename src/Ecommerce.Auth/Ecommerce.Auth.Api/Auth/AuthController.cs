@@ -22,6 +22,7 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request,
         CancellationToken cancellationToken)
