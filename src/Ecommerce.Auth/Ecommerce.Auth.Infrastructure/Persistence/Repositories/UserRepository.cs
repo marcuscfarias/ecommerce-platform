@@ -38,4 +38,15 @@ internal sealed class UserRepository(AuthDbContext context, IOptions<PaginationS
         => await Context.RefreshTokens
             .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > now)
             .ToListAsync(ct);
+
+    public void AddUserToken(UserToken token)
+        => Context.UserTokens.Add(token);
+
+    public async Task<UserToken?> GetUserTokenByHashAsync(string tokenHash, UserTokenPurpose purpose, CancellationToken ct = default)
+        => await Context.UserTokens.SingleOrDefaultAsync(t => t.TokenHash == tokenHash && t.Purpose == purpose, ct);
+
+    public async Task<IReadOnlyCollection<UserToken>> GetActiveUserTokensAsync(int userId, UserTokenPurpose purpose, DateTimeOffset now, CancellationToken ct = default)
+        => await Context.UserTokens
+            .Where(t => t.UserId == userId && t.Purpose == purpose && t.RevokedAt == null && t.ExpiresAt > now)
+            .ToListAsync(ct);
 }

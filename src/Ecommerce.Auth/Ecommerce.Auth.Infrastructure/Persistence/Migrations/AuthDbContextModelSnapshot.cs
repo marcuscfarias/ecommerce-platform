@@ -98,6 +98,11 @@ namespace Ecommerce.Auth.Infrastructure.Persistence.Migrations
                         {
                             Id = 3,
                             Name = "Manager"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Customer"
                         });
                 });
 
@@ -149,6 +154,46 @@ namespace Ecommerce.Auth.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", "auth");
                 });
 
+            modelBuilder.Entity("Ecommerce.Auth.Domain.Entities.UserToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Purpose");
+
+                    b.ToTable("UserTokens", "auth");
+                });
+
             modelBuilder.Entity("UserRoles", b =>
                 {
                     b.Property<int>("UserId")
@@ -165,6 +210,15 @@ namespace Ecommerce.Auth.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Ecommerce.Auth.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Ecommerce.Auth.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ecommerce.Auth.Domain.Entities.UserToken", b =>
                 {
                     b.HasOne("Ecommerce.Auth.Domain.Entities.User", null)
                         .WithMany()

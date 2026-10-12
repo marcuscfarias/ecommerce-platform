@@ -23,6 +23,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.HasData(
             new { Id = (int)RoleName.Admin, Name = nameof(RoleName.Admin) },
             new { Id = (int)RoleName.Owner, Name = nameof(RoleName.Owner) },
-            new { Id = (int)RoleName.Manager, Name = nameof(RoleName.Manager) });
+            new { Id = (int)RoleName.Manager, Name = nameof(RoleName.Manager) },
+            new { Id = (int)RoleName.Customer, Name = nameof(RoleName.Customer) });
     }
 }

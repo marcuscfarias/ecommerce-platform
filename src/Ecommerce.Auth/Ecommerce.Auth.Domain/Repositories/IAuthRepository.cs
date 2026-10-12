@@ -14,4 +14,7 @@ public interface IAuthRepository : IRepository<User>
     void AddRefreshToken(RefreshToken token);
     Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken ct = default);
     Task<IReadOnlyCollection<RefreshToken>> GetActiveRefreshTokensForUserAsync(int userId, DateTimeOffset now, CancellationToken ct = default);
+    void AddUserToken(UserToken token);
+    Task<UserToken?> GetUserTokenByHashAsync(string tokenHash, UserTokenPurpose purpose, CancellationToken ct = default);
+    Task<IReadOnlyCollection<UserToken>> GetActiveUserTokensAsync(int userId, UserTokenPurpose purpose, DateTimeOffset now, CancellationToken ct = default);
 }
