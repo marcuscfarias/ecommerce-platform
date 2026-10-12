@@ -54,7 +54,7 @@ internal sealed partial class UserSeedService(
             throw new InvalidOperationException($"Seed role '{seed.Role}' was not found.");
 
         var passwordHash = passwordHasher.Hash(seed.Password);
-        var user = new User(normalizedEmail, passwordHash, seed.Name);
+        var user = new User(normalizedEmail, passwordHash, seed.Name, emailConfirmed: true);
         user.AssignRole(role);
 
         context.Users.Add(user);

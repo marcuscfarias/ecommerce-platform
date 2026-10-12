@@ -58,6 +58,22 @@ public class CreateUserHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenUserCreated_ShouldCreateUserWithEmailConfirmed()
+    {
+        // Arrange
+        var command = new CreateUserCommand(_faker.Internet.Email(), _faker.Internet.Password(), _faker.Name.FullName());
+        _repository.CheckEmailExistsAsync(command.Email, Arg.Any<CancellationToken>())
+            .Returns(false);
+        _passwordHasher.Hash(command.Password).Returns(_faker.Random.AlphaNumeric(60));
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        _repository.Received(1).Add(Arg.Is<User>(u => u.EmailConfirmed));
+    }
+
+    [Fact]
     public async Task Handle_WhenEmailAlreadyExists_ShouldThrowBusinessRuleValidationException()
     {
         // Arrange

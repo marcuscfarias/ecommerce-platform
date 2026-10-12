@@ -30,6 +30,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsActive)
             .IsRequired();
 
+        builder.Property(u => u.EmailConfirmed)
+            .IsRequired();
+
         builder.Property(u => u.SecurityStamp)
             .IsRequired()
             .HasMaxLength(UserConsts.SecurityStampMaxLength);
