@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Application.Auth.EmailConfirmation;
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +24,22 @@ public class EmailConfirmationModuleTests
 
         // Assert
         factory.Lifetime.ShouldBe(TimeSpan.FromHours(6));
+    }
+
+    [Fact]
+    public void AddEmailConfirmation_WhenSettingsAreValid_ShouldResolveLinksFromConfiguredShopBaseUrl()
+    {
+        // Arrange
+        var settings = ValidSettings();
+        var shopHost = _faker.Internet.DomainName();
+        settings["Auth:EmailConfirmation:ShopBaseUrl"] = $"https://{shopHost}";
+        var provider = BuildProvider(settings);
+
+        // Act
+        var links = provider.GetRequiredService<IEmailConfirmationLinks>();
+
+        // Assert
+        links.ShopHome.AbsoluteUri.ShouldBe($"https://{shopHost}/");
     }
 
     [Theory]

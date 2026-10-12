@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Application.Auth.EmailConfirmation;
 using Ecommerce.Auth.Application.Auth.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ internal static class EmailConfirmationModule
             .ValidateOnStart();
 
         services.AddSingleton<IEmailConfirmationTokenFactory, EmailConfirmationTokenFactory>();
+        services.AddSingleton<IEmailConfirmationLinks, EmailConfirmationLinks>();
 
         return services;
     }
