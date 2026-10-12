@@ -27,6 +27,7 @@ public static class InfrastructureModule
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IRefreshTokenFactory, RefreshTokenFactory>();
+        services.AddEmailConfirmation(configuration);
 
         services
             .AddOptions<LockoutSettings>()

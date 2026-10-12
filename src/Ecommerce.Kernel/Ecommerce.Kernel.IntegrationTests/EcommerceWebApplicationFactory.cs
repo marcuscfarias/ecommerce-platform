@@ -30,6 +30,8 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
                 ["Auth:AdminSeed:Email"] = "admin@test.local",
                 ["Auth:AdminSeed:Password"] = "TestAdminP@ss1",
                 ["Auth:AdminSeed:Name"] = "Test Admin",
+                ["Auth:EmailConfirmation:ApiBaseUrl"] = "https://api.test.local",
+                ["Auth:EmailConfirmation:ShopBaseUrl"] = "https://shop.test.local",
 
                 // The composed host validates Email on startup and the committed appsettings.json
                 // selects Resend with an empty key, so the test host has to pick the console

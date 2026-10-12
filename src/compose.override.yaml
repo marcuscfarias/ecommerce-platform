@@ -10,6 +10,8 @@ services:
       - Email__Provider=Console
       - Email__FromAddress=noreply@localhost
       - "Email__FromName=Ecommerce (dev)"
+      - Auth__EmailConfirmation__ApiBaseUrl=https://localhost:8081
+      - Auth__EmailConfirmation__ShopBaseUrl=https://localhost:7778
       - "ProductImageStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
     depends_on:
       azurite:
