@@ -39,7 +39,7 @@ public class EmailConfirmationModuleTests
         var links = provider.GetRequiredService<IEmailConfirmationLinks>();
 
         // Assert
-        links.ShopHome.AbsoluteUri.ShouldBe($"https://{shopHost}/");
+        links.AfterConfirmation(succeeded: true).AbsoluteUri.ShouldBe($"https://{shopHost}/?emailConfirmation=success");
     }
 
     [Theory]

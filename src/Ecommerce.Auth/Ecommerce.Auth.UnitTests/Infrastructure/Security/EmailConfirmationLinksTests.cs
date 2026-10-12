@@ -95,17 +95,17 @@ public class EmailConfirmationLinksTests
     }
 
     [Fact]
-    public void ShopHome_WhenShopBaseUrlHasTrailingSlash_ShouldEndWithSingleSlash()
+    public void AfterConfirmation_WhenShopBaseUrlHasTrailingSlash_ShouldNotDoubleTheSlash()
     {
         // Arrange
         var host = _faker.Internet.DomainName();
         var sut = CreateSut(shopBaseUrl: $"https://{host}/");
 
         // Act
-        var home = sut.ShopHome;
+        var target = sut.AfterConfirmation(succeeded: true);
 
         // Assert
-        home.AbsoluteUri.ShouldBe($"https://{host}/");
+        target.AbsoluteUri.ShouldBe($"https://{host}/?emailConfirmation=success");
     }
 
     private EmailConfirmationLinks CreateSut(string? apiBaseUrl = null, string? shopBaseUrl = null) =>

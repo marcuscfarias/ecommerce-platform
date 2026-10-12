@@ -8,8 +8,6 @@ internal sealed class EmailConfirmationLinks(IOptions<EmailConfirmationSettings>
     private readonly string _apiBaseUrl = settings.Value.ApiBaseUrl.TrimEnd('/');
     private readonly string _shopBaseUrl = settings.Value.ShopBaseUrl.TrimEnd('/');
 
-    public Uri ShopHome => new($"{_shopBaseUrl}/");
-
     public Uri ConfirmationLink(string token) =>
         new($"{_apiBaseUrl}/api/v1/auth/confirm-email?token={Uri.EscapeDataString(token)}");
 
