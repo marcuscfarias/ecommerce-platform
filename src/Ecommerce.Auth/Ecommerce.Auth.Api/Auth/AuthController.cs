@@ -2,6 +2,7 @@ using Ecommerce.Auth.Api.Auth.GetMe;
 using Ecommerce.Auth.Api.Auth.Login;
 using Ecommerce.Auth.Api.Auth.Logout;
 using Ecommerce.Auth.Api.Auth.Refresh;
+using Ecommerce.Auth.Api.Auth.Register;
 using Ecommerce.Auth.Application;
 using Ecommerce.Kernel.API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,19 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
         Response.SetAuthCookies(result.Tokens);
 
         return Ok(LoginResponse.FromResult(result));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("register")]
+    [EndpointDescription("Registers a customer account and emails a confirmation link. Responds 202 whether or not the email is already registered.")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterCustomerRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+        return Accepted();
     }
 
     [Authorize]
