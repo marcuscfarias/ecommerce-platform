@@ -60,7 +60,7 @@ jobs:
           fetch-depth: 0
 
       - name: Super-Linter
-        uses: super-linter/super-linter/slim@v8
+        uses: super-linter/super-linter/slim@v9
         env:
           DEFAULT_BRANCH: main
           VALIDATE_ALL_CODEBASE: false # only changed files, so pre-existing issues don't block PRs
