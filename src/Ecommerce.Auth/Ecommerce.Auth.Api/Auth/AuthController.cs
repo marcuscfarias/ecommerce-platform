@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Api.Auth.ConfirmEmail;
 using Ecommerce.Auth.Api.Auth.GetMe;
 using Ecommerce.Auth.Api.Auth.Login;
 using Ecommerce.Auth.Api.Auth.Logout;
@@ -46,6 +47,18 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     {
         await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
         return Accepted();
+    }
+
+    [AllowAnonymous]
+    [HttpGet("confirm-email")]
+    [EndpointDescription("Confirms the email from the emailed link and redirects to the shop with the outcome (success or invalid).")]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    public async Task<IActionResult> ConfirmEmail(
+        [FromQuery] string? token,
+        CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteCommandAsync(ConfirmEmailRequest.ToCommand(token), cancellationToken);
+        return Redirect(result.RedirectTo.AbsoluteUri);
     }
 
     [Authorize]
