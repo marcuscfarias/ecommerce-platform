@@ -45,6 +45,26 @@ public sealed class ResendConfirmationIntegrationTests(AuthIntegrationFixture fi
         newToken.RevokedAt.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task Resend_WhenEmailDiffersOnlyByCaseAndSpaces_ShouldSendToThePendingAccount()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await SeedAsync(db =>
+        {
+            db.Users.Add(new User(Email, "hash", "Jane Doe"));
+            return Task.CompletedTask;
+        });
+
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, new { email = "  Shopper@Example.COM " });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        SentEmails.ShouldHaveSingleItem().To.ShouldBe(Email);
+    }
+
     [Theory]
     [InlineData(false)] // no user owns the email
     [InlineData(true)]  // the email belongs to a confirmed user
