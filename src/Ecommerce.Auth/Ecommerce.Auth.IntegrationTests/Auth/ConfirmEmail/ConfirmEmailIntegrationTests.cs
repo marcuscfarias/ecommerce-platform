@@ -93,14 +93,15 @@ public sealed class ConfirmEmailIntegrationTests(AuthIntegrationFixture fixture)
         await ResetDatabaseAsync();
 
         // Arrange — a confirmed user whose token was revoked by the first confirmation.
+        var revokedAt = DateTimeOffset.UtcNow.AddMinutes(-5);
         await SeedAsync(async db =>
         {
             var user = new User(Email, PasswordHash, "Jane Doe", emailConfirmed: true);
             db.Users.Add(user);
             await db.SaveChangesAsync();
             var token = new UserToken(user.Id, UserTokenPurpose.EmailConfirmation,
-                ConfirmationEmails.HashOf(PlainToken), DateTimeOffset.UtcNow.AddHours(1), DateTimeOffset.UtcNow);
-            token.Revoke(DateTimeOffset.UtcNow);
+                ConfirmationEmails.HashOf(PlainToken), DateTimeOffset.UtcNow.AddHours(1), DateTimeOffset.UtcNow.AddMinutes(-10));
+            token.Revoke(revokedAt);
             db.UserTokens.Add(token);
         });
         using var client = CreateNonRedirectingClient();
@@ -111,6 +112,45 @@ public sealed class ConfirmEmailIntegrationTests(AuthIntegrationFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Found);
         response.Headers.Location.ShouldBe(new Uri(SuccessLocation));
+
+        User? stored = null;
+        UserToken? storedToken = null;
+        await SeedAsync(async db =>
+        {
+            stored = await db.Users.SingleAsync();
+            storedToken = await db.UserTokens.SingleAsync();
+        });
+        stored!.EmailConfirmed.ShouldBeTrue();
+        storedToken!.RevokedAt.ShouldNotBeNull().ShouldBe(revokedAt, TimeSpan.FromMilliseconds(1));
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_WhenUserIsInactiveAndTokenIsActive_ShouldRedirectToSuccessAndConfirmUser()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var user = new User(Email, PasswordHash, "Jane Doe", isActive: false);
+        await SeedAsync(async db =>
+        {
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+            db.UserTokens.Add(new UserToken(user.Id, UserTokenPurpose.EmailConfirmation,
+                ConfirmationEmails.HashOf(PlainToken), DateTimeOffset.UtcNow.AddHours(1), DateTimeOffset.UtcNow));
+        });
+        using var client = CreateNonRedirectingClient();
+
+        // Act
+        var response = await client.GetAsync($"{Endpoint}?token={PlainToken}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Found);
+        response.Headers.Location.ShouldBe(new Uri(SuccessLocation));
+
+        User? stored = null;
+        await SeedAsync(async db => stored = await db.Users.SingleAsync(u => u.Id == user.Id));
+        stored!.EmailConfirmed.ShouldBeTrue();
+        stored.IsActive.ShouldBeFalse();
     }
 
     [Fact]

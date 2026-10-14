@@ -93,6 +93,7 @@ public class ConfirmEmailHandlerTests
         // Arrange
         var user = FakeUser(emailConfirmed: true);
         var token = FakeInactiveToken(user, revoked);
+        var originalRevokedAt = token.RevokedAt;
         ArrangeLookup(user, token);
 
         // Act
@@ -100,6 +101,23 @@ public class ConfirmEmailHandlerTests
 
         // Assert
         result.RedirectTo.ShouldBe(_successUri);
+        token.RevokedAt.ShouldBe(originalRevokedAt);
+        user.EmailConfirmed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserIsInactiveAndTokenIsActive_ShouldConfirmUserAndRedirectToSuccess()
+    {
+        // Arrange
+        var user = FakeUser(emailConfirmed: false, isActive: false);
+        ArrangeLookup(user, FakeToken(user, expiresAt: _timeProvider.GetUtcNow().AddHours(1)));
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.RedirectTo.ShouldBe(_successUri);
+        user.EmailConfirmed.ShouldBeTrue();
     }
 
     [Theory]
@@ -139,21 +157,41 @@ public class ConfirmEmailHandlerTests
         record.Message.ShouldNotContain(user.Email);
     }
 
-    [Fact]
-    public async Task Handle_WhenTokenIsRejected_ShouldLogOneEntryWithoutUserIdOrToken()
+    [Theory]
+    [InlineData("empty-token")]          // token query value is empty
+    [InlineData("unknown-hash")]         // hash matches no stored token
+    [InlineData("missing-user")]         // token points at a user that no longer exists
+    [InlineData("inactive-for-pending")] // expired token of a user still pending
+    public async Task Handle_WhenTokenIsRejected_ShouldLogOneEntryWithoutUserIdOrToken(string rejection)
     {
         // Arrange
-        _repository.GetUserTokenByHashAsync(_hash, UserTokenPurpose.EmailConfirmation, Arg.Any<CancellationToken>())
-            .Returns((UserToken?)null);
+        var command = rejection == "empty-token" ? new ConfirmEmailCommand("") : _command;
+        var user = FakeUser(emailConfirmed: false);
+        switch (rejection)
+        {
+            case "unknown-hash":
+                _repository.GetUserTokenByHashAsync(_hash, UserTokenPurpose.EmailConfirmation, Arg.Any<CancellationToken>())
+                    .Returns((UserToken?)null);
+                break;
+            case "missing-user":
+                _repository.GetUserTokenByHashAsync(_hash, UserTokenPurpose.EmailConfirmation, Arg.Any<CancellationToken>())
+                    .Returns(FakeToken(user, expiresAt: _timeProvider.GetUtcNow().AddHours(1)));
+                _repository.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns((User?)null);
+                break;
+            case "inactive-for-pending":
+                ArrangeLookup(user, FakeInactiveToken(user, revoked: false));
+                break;
+        }
 
         // Act
-        await _handler.Handle(_command, CancellationToken.None);
+        await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Information);
         record.StructuredState.ShouldNotBeNull().ShouldNotContain(e => e.Key == "UserId");
         record.Message.ShouldNotContain(_command.Token);
+        record.Message.ShouldNotContain(user.Email);
     }
 
     private void ArrangeLookup(User user, UserToken token)
@@ -163,8 +201,8 @@ public class ConfirmEmailHandlerTests
         _repository.GetByIdAsync(token.UserId, Arg.Any<CancellationToken>()).Returns(user);
     }
 
-    private User FakeUser(bool emailConfirmed) =>
-        new(_faker.Internet.Email(), _faker.Random.Hash(), _faker.Person.FullName, emailConfirmed: emailConfirmed);
+    private User FakeUser(bool emailConfirmed, bool isActive = true) =>
+        new(_faker.Internet.Email(), _faker.Random.Hash(), _faker.Person.FullName, isActive, emailConfirmed);
 
     private UserToken FakeToken(User user, DateTimeOffset expiresAt) =>
         new(user.Id, UserTokenPurpose.EmailConfirmation, _hash, expiresAt, _timeProvider.GetUtcNow().AddHours(-1));
