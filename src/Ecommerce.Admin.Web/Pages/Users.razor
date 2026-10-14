@@ -166,7 +166,7 @@
     private async Task ToggleStatusAsync(UserDetail detail)
     {
         var deactivating = detail.IsActive;
-        var confirmed = await DialogService.ShowMessageBox(
+        var confirmed = await DialogService.ShowMessageBoxAsync(
             deactivating ? "Deactivate user" : "Activate user",
             deactivating
                 ? $"Deactivate \"{detail.Name}\"? They will be signed out and unable to sign in."

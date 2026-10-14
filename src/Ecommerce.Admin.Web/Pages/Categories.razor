@@ -159,7 +159,7 @@
 
     private async Task DeactivateAsync(CategoryDetail detail)
     {
-        var confirmed = await DialogService.ShowMessageBox(
+        var confirmed = await DialogService.ShowMessageBoxAsync(
             "Deactivate category",
             $"Deactivate \"{detail.Name}\"? It will no longer be active in the catalog.",
             yesText: "Deactivate",

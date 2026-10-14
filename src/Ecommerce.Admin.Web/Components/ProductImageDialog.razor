@@ -28,12 +28,14 @@
 
         <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelectedAsync"
                        Accept="image/png, image/jpeg" MaximumFileCount="1" Class="mt-4">
-            <ActivatorContent>
+            <CustomContent Context="fileUpload">
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           OnClick="@(() => fileUpload.OpenFilePickerAsync())">
                     Choose image
                 </MudButton>
-            </ActivatorContent>
+            </CustomContent>
+            <SelectedTemplate></SelectedTemplate>
         </MudFileUpload>
 
         @if (_selectedFileName is not null)

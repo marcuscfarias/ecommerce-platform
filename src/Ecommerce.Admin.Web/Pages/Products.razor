@@ -172,7 +172,7 @@
     private async Task ToggleStatusAsync(ProductDetail detail)
     {
         var deactivating = detail.IsActive;
-        var confirmed = await DialogService.ShowMessageBox(
+        var confirmed = await DialogService.ShowMessageBoxAsync(
             deactivating ? "Deactivate product" : "Activate product",
             deactivating
                 ? $"Deactivate \"{detail.Name}\"? It will no longer be available in the catalog."
