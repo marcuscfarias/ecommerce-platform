@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Ecommerce.Auth.Infrastructure.Persistence;
+using Ecommerce.Kernel.Application.Notifications;
 using Ecommerce.Kernel.IntegrationTests;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -21,10 +22,18 @@ public abstract class BaseAuthIntegrationTest
         Client = fixture.Client;
     }
 
-    protected Task ResetDatabaseAsync() => _fixture.ResetDatabaseAsync();
+    protected IReadOnlyList<EmailMessage> SentEmails => _fixture.EmailSender.Messages;
+
+    protected Task ResetDatabaseAsync()
+    {
+        _fixture.EmailSender.Clear();
+        return _fixture.ResetDatabaseAsync();
+    }
 
     protected HttpClient CreateAuthenticatedClient(params string[] permissions) =>
         _fixture.CreateAuthenticatedClient(permissions);
+
+    protected HttpClient CreateNonRedirectingClient() => _fixture.CreateNonRedirectingClient();
 
     internal Task SeedAsync(Func<AuthDbContext, Task> seed) => _fixture.SeedAsync(seed);
 

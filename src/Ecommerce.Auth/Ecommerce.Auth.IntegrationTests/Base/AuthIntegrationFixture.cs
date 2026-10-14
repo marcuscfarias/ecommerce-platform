@@ -12,6 +12,8 @@ public sealed class AuthIntegrationFixture : BaseIntegrationFixture<AuthWebAppli
     protected override AuthWebApplicationFactory CreateFactory(DatabaseContainerFixture container)
         => new(container);
 
+    public CapturingEmailSender EmailSender => Factory.EmailSender;
+
     public Task StartHostedServiceAsync<THostedService>()
         where THostedService : IHostedService
         => Factory.Services.GetServices<IHostedService>().OfType<THostedService>().Single()
