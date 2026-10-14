@@ -8,7 +8,7 @@ internal sealed class ListUsersHandler(IAuthRepository repository)
 {
     public async Task<ListUsersResult> Handle(ListUsersQuery query, CancellationToken cancellationToken)
     {
-        var result = await repository.GetAllAsync(query.PageNumber, cancellationToken);
+        var result = await repository.GetOperatorsAsync(query.PageNumber, cancellationToken);
 
         var items = result.Data
             .Select(u => new ListUsersItemResult(u.Id, u.Name, u.IsActive))

@@ -1,6 +1,7 @@
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.Domain.Repositories;
+using Ecommerce.Kernel.Domain.Models;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using Ecommerce.Kernel.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,9 @@ internal sealed class UserRepository(AuthDbContext context, IOptions<PaginationS
 
     public async Task<User?> GetByIdWithRolesAsync(int id, CancellationToken ct = default)
         => await Context.Users.Include(u => u.Roles).SingleOrDefaultAsync(u => u.Id == id, ct);
+
+    public async Task<PagedResult<User>> GetOperatorsAsync(int page, CancellationToken ct = default)
+        => await GetAllAsync(page, u => !u.Roles.Any(r => r.Name == nameof(RoleName.Customer)), ct: ct);
 
     public async Task<Role?> GetRoleByNameAsync(RoleName roleName, CancellationToken ct = default)
         => await Context.Set<Role>().SingleOrDefaultAsync(r => r.Name == roleName.ToString(), ct);
