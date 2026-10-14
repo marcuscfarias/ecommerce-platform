@@ -5,6 +5,7 @@ internal sealed class RateLimitingSettings
     public bool Enabled { get; init; } = true;
     public FixedWindowRateLimitSettings Global { get; init; } = new() { PermitLimit = 120, WindowSeconds = 60 };
     public FixedWindowRateLimitSettings Login { get; init; } = new() { PermitLimit = 10, WindowSeconds = 60 };
+    public FixedWindowRateLimitSettings EmailDispatch { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 }
 
 internal sealed class FixedWindowRateLimitSettings

@@ -38,6 +38,7 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.EmailDispatch)]
     [HttpPost("register")]
     [EndpointDescription("Registers a customer account and emails a confirmation link. Responds 202 whether or not the email is already registered.")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
@@ -63,6 +64,7 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.EmailDispatch)]
     [HttpPost("resend-confirmation")]
     [EndpointDescription("Emails a new confirmation link to a pending account. Responds 202 whether or not the email is registered or confirmed.")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]

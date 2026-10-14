@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -36,24 +37,8 @@ public static class RateLimitingExtensions
                 return ValueTask.CompletedTask;
             };
 
-            // Stricter, login-only policy. Registered even when disabled so endpoints
-            // referencing it never fault with "policy not found"; the partition is then a
-            // pass-through NoLimiter.
-            options.AddPolicy(RateLimitingPolicies.Login, context =>
-            {
-                if (!settings.Enabled)
-                    return RateLimitPartition.GetNoLimiter("disabled");
-
-                var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ =>
-                    new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = settings.Login.PermitLimit,
-                        Window = TimeSpan.FromSeconds(settings.Login.WindowSeconds),
-                        QueueLimit = settings.Login.QueueLimit,
-                    });
-            });
+            AddFixedWindowPerIpPolicy(options, RateLimitingPolicies.Login, settings.Login, settings.Enabled);
+            AddFixedWindowPerIpPolicy(options, RateLimitingPolicies.EmailDispatch, settings.EmailDispatch, settings.Enabled);
 
             // Disabled hosts (Development, tests) register the services but install no
             // global limiter, so UseRateLimiter() stays a safe pass-through.
@@ -80,4 +65,25 @@ public static class RateLimitingExtensions
 
         return services;
     }
+
+    // Stricter, endpoint-scoped policy. Registered even when disabled so endpoints
+    // referencing it never fault with "policy not found"; the partition is then a
+    // pass-through NoLimiter.
+    private static void AddFixedWindowPerIpPolicy(
+        RateLimiterOptions options, string policyName, FixedWindowRateLimitSettings policySettings, bool enabled) =>
+        options.AddPolicy(policyName, context =>
+        {
+            if (!enabled)
+                return RateLimitPartition.GetNoLimiter("disabled");
+
+            var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ =>
+                new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = policySettings.PermitLimit,
+                    Window = TimeSpan.FromSeconds(policySettings.WindowSeconds),
+                    QueueLimit = policySettings.QueueLimit,
+                });
+        });
 }

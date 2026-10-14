@@ -7,12 +7,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace Ecommerce.Auth.IntegrationTests.Base.RateLimited;
 
-// Boots a host with rate limiting enabled and a tiny login window so the throttling
+// Boots a host with rate limiting enabled and tiny login and email-dispatch windows so the throttling
 // behaviour can be asserted; the shared functional host keeps the limiter disabled.
 public sealed class RateLimitedAuthWebApplicationFactory(DatabaseContainerFixture containerFixture)
     : EcommerceWebApplicationFactory(new AuthDatabaseConfiguration(containerFixture.ConnectionString))
 {
     public const int LoginPermitLimit = 2;
+    public const int EmailDispatchPermitLimit = 2;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,6 +26,8 @@ public sealed class RateLimitedAuthWebApplicationFactory(DatabaseContainerFixtur
                 ["RateLimiting:Enabled"] = "true",
                 ["RateLimiting:Login:PermitLimit"] = LoginPermitLimit.ToString(CultureInfo.InvariantCulture),
                 ["RateLimiting:Login:WindowSeconds"] = "60",
+                ["RateLimiting:EmailDispatch:PermitLimit"] = EmailDispatchPermitLimit.ToString(CultureInfo.InvariantCulture),
+                ["RateLimiting:EmailDispatch:WindowSeconds"] = "60",
             });
         });
     }
