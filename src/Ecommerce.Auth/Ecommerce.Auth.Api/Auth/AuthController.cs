@@ -4,6 +4,7 @@ using Ecommerce.Auth.Api.Auth.Login;
 using Ecommerce.Auth.Api.Auth.Logout;
 using Ecommerce.Auth.Api.Auth.Refresh;
 using Ecommerce.Auth.Api.Auth.Register;
+using Ecommerce.Auth.Api.Auth.ResendConfirmation;
 using Ecommerce.Auth.Application;
 using Ecommerce.Kernel.API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -59,6 +60,19 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     {
         var result = await module.ExecuteCommandAsync(ConfirmEmailRequest.ToCommand(token), cancellationToken);
         return Redirect(result.RedirectTo.AbsoluteUri);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("resend-confirmation")]
+    [EndpointDescription("Emails a new confirmation link to a pending account. Responds 202 whether or not the email is registered or confirmed.")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResendConfirmation(
+        [FromBody] ResendEmailConfirmationRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+        return Accepted();
     }
 
     [Authorize]
