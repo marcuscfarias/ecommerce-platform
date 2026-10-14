@@ -71,6 +71,40 @@ public sealed class SetUserRolesIntegrationTests : BaseAuthIntegrationTest
     }
 
     [Fact]
+    public async Task SetRoles_WhenRolesContainCustomer_ShouldReturn400AndKeepRoles()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var user = new User("jane@example.com", "hash", "Jane Doe");
+        await SeedAsync(async db =>
+        {
+            var manager = new Role("Manager");
+            db.Roles.AddRange(manager, new Role("Customer"));
+            await db.SaveChangesAsync();
+            user.AssignRole(manager);
+            db.Users.Add(user);
+        });
+
+        // Act
+        string[] roles = ["Manager", "Customer"];
+        var response = await _client.PutAsJsonAsync($"{Endpoint}/{user.Id}/roles", new { Roles = roles });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        body.ShouldNotBeNull();
+        body.Errors.Values.SelectMany(v => v).ShouldContain("'Roles' cannot contain the Customer role.");
+
+        List<string> storedRoles = [];
+        await SeedAsync(async db => storedRoles = (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == user.Id))
+            .Roles.Select(r => r.Name).ToList());
+        storedRoles.ShouldBe(["Manager"]);
+    }
+
+    [Fact]
     public async Task SetRoles_WhenUserDoesNotExist_ShouldReturn404WithProblemDetails()
     {
         await ResetDatabaseAsync();

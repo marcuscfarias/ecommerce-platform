@@ -18,6 +18,7 @@ internal sealed class RolePermissionMap : IRolePermissionMap
             [AuthPermissions.ViewUsers, CatalogPermissions.Manage, CatalogPermissions.View],
         [RoleName.Manager] =
             [CatalogPermissions.Manage, CatalogPermissions.View],
+        [RoleName.Customer] = [],
     };
 
     public IReadOnlyCollection<string> ResolvePermissions(IEnumerable<RoleName> roles) =>

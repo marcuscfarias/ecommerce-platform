@@ -1,3 +1,4 @@
+using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Kernel.Domain.Entities;
 
 namespace Ecommerce.Auth.Domain.Entities;
@@ -6,7 +7,8 @@ public sealed class User(
     string email,
     string passwordHash,
     string name,
-    bool isActive = true) : Entity
+    bool isActive = true,
+    bool emailConfirmed = false) : Entity
 {
     private readonly List<Role> _roles = [];
 
@@ -14,6 +16,7 @@ public sealed class User(
     public string PasswordHash { get; private set; } = passwordHash;
     public string Name { get; private set; } = name;
     public bool IsActive { get; private set; } = isActive;
+    public bool EmailConfirmed { get; private set; } = emailConfirmed;
     public string SecurityStamp { get; private set; } = Guid.NewGuid().ToString("N");
     public int AccessFailedCount { get; private set; }
     public DateTimeOffset? LockoutEnd { get; private set; }
@@ -29,6 +32,8 @@ public sealed class User(
     }
 
     public void Reactivate() => IsActive = true;
+
+    public void ConfirmEmail() => EmailConfirmed = true;
 
     public void ResetPassword(string passwordHash)
     {
@@ -64,6 +69,8 @@ public sealed class User(
 
         _roles.Add(role);
     }
+
+    public bool IsCustomer() => _roles.Any(r => r.Name == nameof(RoleName.Customer));
 
     public void SetRoles(IEnumerable<Role> roles)
     {

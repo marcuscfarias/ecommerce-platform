@@ -44,4 +44,30 @@ public class SetUserRolesRequestValidatorTests
         // Assert
         result.Errors.ShouldContain(e => e.PropertyName.StartsWith("Roles"));
     }
+
+    [Fact]
+    public void Validate_WhenRolesContainOnlyCustomer_ShouldHaveCustomerRoleError()
+    {
+        // Arrange
+        var request = new SetUserRolesRequest(["Customer"]);
+
+        // Act
+        var result = _sut.Validate(request);
+
+        // Assert
+        result.Errors.ShouldContain(e => e.ErrorMessage == "'Roles' cannot contain the Customer role.");
+    }
+
+    [Fact]
+    public void Validate_WhenRolesMixOperatorRoleAndCustomer_ShouldHaveCustomerRoleError()
+    {
+        // Arrange
+        var request = new SetUserRolesRequest(["Manager", "Customer"]);
+
+        // Act
+        var result = _sut.Validate(request);
+
+        // Assert
+        result.Errors.ShouldContain(e => e.ErrorMessage == "'Roles' cannot contain the Customer role.");
+    }
 }

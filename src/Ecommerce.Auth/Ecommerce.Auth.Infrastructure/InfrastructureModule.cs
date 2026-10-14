@@ -1,4 +1,5 @@
 using Ecommerce.Auth.Application;
+using Ecommerce.Auth.Application.Auth.EmailConfirmation;
 using Ecommerce.Auth.Application.Auth.Security;
 using Ecommerce.Auth.Domain.Repositories;
 using Ecommerce.Auth.Infrastructure.Mediation;
@@ -27,6 +28,8 @@ public static class InfrastructureModule
         services.Configure<AuthPasswordSettings>(configuration.GetSection("Auth:Password"));
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IRefreshTokenFactory, RefreshTokenFactory>();
+        services.AddEmailConfirmation(configuration);
+        services.AddScoped<EmailConfirmationDispatcher>();
 
         services
             .AddOptions<LockoutSettings>()

@@ -29,7 +29,7 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         // Arrange
         await SeedAsync(db =>
         {
-            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: true));
+            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: true, emailConfirmed: true));
             return Task.CompletedTask;
         });
         var request = new { email = ValidEmail, password = ValidPassword };
@@ -124,6 +124,54 @@ public sealed class LoginIntegrationTests(AuthIntegrationFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        body.ShouldNotBeNull();
+        body.Detail.ShouldBe("Invalid credentials");
+    }
+
+    [Fact]
+    public async Task Login_WhenEmailIsNotConfirmed_ShouldReturnForbiddenWithoutCookies()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await SeedAsync(db =>
+        {
+            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: true, emailConfirmed: false));
+            return Task.CompletedTask;
+        });
+        var request = new { email = ValidEmail, password = ValidPassword };
+
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        response.Headers.Contains("Set-Cookie").ShouldBeFalse();
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        body.ShouldNotBeNull();
+        body.Detail.ShouldBe("Email not confirmed");
+    }
+
+    [Fact]
+    public async Task Login_WhenEmailIsNotConfirmedAndPasswordIsWrong_ShouldReturnUnauthorized()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await SeedAsync(db =>
+        {
+            db.Users.Add(new User(ValidEmail, ValidPasswordHash, "Jane Doe", isActive: true, emailConfirmed: false));
+            return Task.CompletedTask;
+        });
+        var request = new { email = ValidEmail, password = "WrongPassword1!" };
+
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         body.ShouldNotBeNull();
         body.Detail.ShouldBe("Invalid credentials");

@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Ecommerce.Kernel.IntegrationTests.Database;
 using Ecommerce.Kernel.IntegrationTests.JwtToken;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -41,6 +42,9 @@ public abstract class BaseIntegrationFixture<TFactory> : IAsyncLifetime
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
     }
+
+    public HttpClient CreateNonRedirectingClient() =>
+        Factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     public async Task SeedAsync<TDbContext>(Func<TDbContext, Task> seed)
         where TDbContext : DbContext

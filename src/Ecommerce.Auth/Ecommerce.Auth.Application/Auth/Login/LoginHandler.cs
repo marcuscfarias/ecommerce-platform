@@ -48,6 +48,11 @@ internal sealed partial class LoginHandler(
             throw new InvalidCredentialsException();
         }
 
+        if (!user.EmailConfirmed)
+        {
+            throw new EmailNotConfirmedException();
+        }
+
         user.ResetAccessFailedCount();
 
         var roles = user.Roles.Select(r => Enum.Parse<RoleName>(r.Name));

@@ -6,6 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Ecommerce.Auth.Infrastructure" />
     <InternalsVisibleTo Include="Ecommerce.Auth.UnitTests" />
   </ItemGroup>
 

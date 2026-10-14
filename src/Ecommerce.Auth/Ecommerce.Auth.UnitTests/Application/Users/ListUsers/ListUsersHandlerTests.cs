@@ -27,7 +27,7 @@ public class ListUsersHandlerTests
         };
         var pagedResult = new PagedResult<User>(users, Page: 1, TotalCount: 2, TotalPages: 1);
         var query = new ListUsersQuery(1);
-        _repository.GetAllAsync(query.PageNumber, Arg.Any<CancellationToken>()).Returns(pagedResult);
+        _repository.GetOperatorsAsync(query.PageNumber, Arg.Any<CancellationToken>()).Returns(pagedResult);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -51,7 +51,7 @@ public class ListUsersHandlerTests
         // Arrange
         var pagedResult = new PagedResult<User>([], Page: 1, TotalCount: 0, TotalPages: 0);
         var query = new ListUsersQuery(1);
-        _repository.GetAllAsync(query.PageNumber, Arg.Any<CancellationToken>()).Returns(pagedResult);
+        _repository.GetOperatorsAsync(query.PageNumber, Arg.Any<CancellationToken>()).Returns(pagedResult);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);

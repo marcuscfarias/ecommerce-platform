@@ -33,7 +33,7 @@ internal sealed partial class AdminSeedService(
         var adminRole = await context.Roles.SingleAsync(r => r.Name == nameof(RoleName.Admin), cancellationToken);
 
         var passwordHash = passwordHasher.Hash(settings.Password);
-        var user = new User(normalizedEmail, passwordHash, settings.Name);
+        var user = new User(normalizedEmail, passwordHash, settings.Name, emailConfirmed: true);
         user.AssignRole(adminRole);
 
         context.Users.Add(user);

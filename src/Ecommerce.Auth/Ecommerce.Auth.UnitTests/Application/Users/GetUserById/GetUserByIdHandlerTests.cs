@@ -9,6 +9,7 @@ namespace Ecommerce.Auth.UnitTests.Application.Users.GetUserById;
 public class GetUserByIdHandlerTests
 {
     private readonly IAuthRepository _repository = Substitute.For<IAuthRepository>();
+    private readonly Faker _faker = new();
     private readonly GetUserByIdHandler _handler;
 
     public GetUserByIdHandlerTests()
@@ -22,6 +23,22 @@ public class GetUserByIdHandlerTests
         // Arrange
         User? user = null;
         var query = new GetUserByIdQuery(1);
+        _repository.GetByIdWithRolesAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        // Act
+        var act = () => _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<ResourceNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserIsCustomer_ShouldThrowResourceNotFoundException()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.Hash(), _faker.Name.FullName());
+        user.AssignRole(new Role(nameof(RoleName.Customer)));
+        var query = new GetUserByIdQuery(_faker.Random.Int(1));
         _repository.GetByIdWithRolesAsync(query.Id, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act

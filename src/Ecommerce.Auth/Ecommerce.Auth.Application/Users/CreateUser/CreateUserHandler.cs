@@ -22,7 +22,8 @@ internal sealed class CreateUserHandler(
         var user = new User(
             command.Email,
             passwordHash,
-            command.Name);
+            command.Name,
+            emailConfirmed: true);
 
         var managerRole = await repository.GetRoleByNameAsync(RoleName.Manager, cancellationToken);
         user.AssignRole(managerRole!);

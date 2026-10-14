@@ -12,6 +12,9 @@ internal sealed class GetUserByIdHandler(IAuthRepository repository)
         var user = await repository.GetByIdWithRolesAsync(query.Id, cancellationToken) ??
                    throw new ResourceNotFoundException("User", query.Id);
 
+        if (user.IsCustomer())
+            throw new ResourceNotFoundException("User", query.Id);
+
         return new GetUserByIdResult(
             user.Id,
             user.Email,

@@ -1,7 +1,10 @@
+using Ecommerce.Auth.Api.Auth.ConfirmEmail;
 using Ecommerce.Auth.Api.Auth.GetMe;
 using Ecommerce.Auth.Api.Auth.Login;
 using Ecommerce.Auth.Api.Auth.Logout;
 using Ecommerce.Auth.Api.Auth.Refresh;
+using Ecommerce.Auth.Api.Auth.Register;
+using Ecommerce.Auth.Api.Auth.ResendConfirmation;
 using Ecommerce.Auth.Application;
 using Ecommerce.Kernel.API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -22,6 +25,7 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request,
         CancellationToken cancellationToken)
@@ -31,6 +35,46 @@ public sealed class AuthController(IAuthModule module) : ControllerBase
         Response.SetAuthCookies(result.Tokens);
 
         return Ok(LoginResponse.FromResult(result));
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.EmailDispatch)]
+    [HttpPost("register")]
+    [EndpointDescription("Registers a customer account and emails a confirmation link. Responds 202 whether or not the email is already registered.")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterCustomerRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+        return Accepted();
+    }
+
+    [AllowAnonymous]
+    [HttpGet("confirm-email")]
+    [EndpointDescription("Confirms the email from the emailed link and redirects to the shop with the outcome (success or invalid).")]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    public async Task<IActionResult> ConfirmEmail(
+        [FromQuery] string? token,
+        CancellationToken cancellationToken)
+    {
+        var result = await module.ExecuteCommandAsync(ConfirmEmailRequest.ToCommand(token), cancellationToken);
+        return Redirect(result.RedirectTo.AbsoluteUri);
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.EmailDispatch)]
+    [HttpPost("resend-confirmation")]
+    [EndpointDescription("Emails a new confirmation link to a pending account. Responds 202 whether or not the email is registered or confirmed.")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResendConfirmation(
+        [FromBody] ResendEmailConfirmationRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+        return Accepted();
     }
 
     [Authorize]

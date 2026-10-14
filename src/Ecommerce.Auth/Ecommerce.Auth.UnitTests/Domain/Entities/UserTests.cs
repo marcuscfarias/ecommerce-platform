@@ -1,4 +1,5 @@
 using Ecommerce.Auth.Domain.Entities;
+using Ecommerce.Auth.Domain.Enums;
 
 namespace Ecommerce.Auth.UnitTests.Domain.Entities;
 
@@ -304,5 +305,92 @@ public class UserTests
 
         // Assert
         user.Roles.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Constructor_WithoutEmailConfirmed_ShouldDefaultToFalse()
+    {
+        // Arrange & Act
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+
+        // Assert
+        user.EmailConfirmed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Constructor_WithEmailConfirmedTrue_ShouldSetEmailConfirmedTrue()
+    {
+        // Arrange & Act
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName(), emailConfirmed: true);
+
+        // Assert
+        user.EmailConfirmed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ConfirmEmail_WhenNotConfirmed_ShouldSetEmailConfirmedTrue()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+
+        // Act
+        user.ConfirmEmail();
+
+        // Assert
+        user.EmailConfirmed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ConfirmEmail_WhenAlreadyConfirmed_ShouldKeepEmailConfirmedTrue()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName(), emailConfirmed: true);
+
+        // Act
+        user.ConfirmEmail();
+
+        // Assert
+        user.EmailConfirmed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsCustomer_WhenUserHasCustomerRole_ShouldReturnTrue()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        user.AssignRole(new Role(nameof(RoleName.Customer)));
+
+        // Act
+        var result = user.IsCustomer();
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsCustomer_WhenUserHasOnlyOperatorRoles_ShouldReturnFalse()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+        user.SetRoles([new Role(nameof(RoleName.Owner)), new Role(nameof(RoleName.Manager))]);
+
+        // Act
+        var result = user.IsCustomer();
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsCustomer_WhenUserHasNoRoles_ShouldReturnFalse()
+    {
+        // Arrange
+        var user = new User(_faker.Internet.Email(), _faker.Random.AlphaNumeric(60), _faker.Name.FullName());
+
+        // Act
+        var result = user.IsCustomer();
+
+        // Assert
+        result.ShouldBeFalse();
     }
 }
