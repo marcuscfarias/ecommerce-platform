@@ -61,4 +61,31 @@ public sealed class GetUserByIdIntegrationTests : BaseAuthIntegrationTest
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         body.ShouldNotBeNull();
     }
+
+    [Fact]
+    public async Task Get_WhenUserIsCustomer_ShouldReturn404WithProblemDetails()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var seeded = new User("john@example.com", "hash", "John Doe");
+        await SeedAsync(async db =>
+        {
+            var customer = new Role(nameof(RoleName.Customer));
+            db.Roles.Add(customer);
+            await db.SaveChangesAsync();
+            seeded.AssignRole(customer);
+            db.Users.Add(seeded);
+        });
+
+        // Act
+        var response = await _client.GetAsync($"{Endpoint}/{seeded.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        body.ShouldNotBeNull();
+    }
 }
