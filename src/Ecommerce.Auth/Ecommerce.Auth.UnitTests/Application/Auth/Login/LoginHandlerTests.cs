@@ -52,7 +52,7 @@ public class LoginHandlerTests
     {
         // Arrange
         var command = FakeCommand();
-        var user = FakeUser(false);
+        var user = FakeUser(false, emailConfirmed: false);
 
         _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
         _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(true);
