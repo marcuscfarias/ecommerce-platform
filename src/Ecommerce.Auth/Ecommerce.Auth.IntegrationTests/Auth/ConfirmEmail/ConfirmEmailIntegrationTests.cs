@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Ecommerce.Auth.Domain.Entities;
 using Ecommerce.Auth.Domain.Enums;
 using Ecommerce.Auth.IntegrationTests.Base;
+using Ecommerce.Customers.Api.Authorization;
 using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.Application.Security;
 using Microsoft.EntityFrameworkCore;
@@ -177,7 +178,7 @@ public sealed class ConfirmEmailIntegrationTests(AuthIntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task ConfirmEmail_WhenConfirmedCustomerLogsIn_ShouldReturn200WithCustomerRoleAndNoPermissions()
+    public async Task ConfirmEmail_WhenConfirmedCustomerLogsIn_ShouldReturn200WithCustomerRoleAndProfilePermission()
     {
         await ResetDatabaseAsync();
 
@@ -196,7 +197,8 @@ public sealed class ConfirmEmailIntegrationTests(AuthIntegrationFixture fixture)
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(GetCookieValue(response, AuthCookieNames.AccessToken));
         jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
             .ShouldHaveSingleItem().ShouldBe(nameof(RoleName.Customer));
-        jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).ShouldBeEmpty();
+        jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value)
+            .ShouldHaveSingleItem().ShouldBe(CustomersPermissions.ManageProfile);
     }
 
     private Task SeedCustomerRoleAsync() => SeedAsync(db =>
