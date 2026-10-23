@@ -46,6 +46,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStat
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 
+builder.Services.AddScoped<ProfileState>();
+
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();
