@@ -16,8 +16,6 @@ internal sealed class CookieAuthenticationStateProvider : AuthenticationStatePro
     private static readonly AuthenticationState Anonymous =
         new(new ClaimsPrincipal(new ClaimsIdentity()));
 
-    // Both SPAs share one cookie pair on the API host, so the latest sign-in in either one
-    // replaces the session here; an identity outside the backoffice audience is no session.
     private static readonly string[] AudienceRoles = ["Admin", "Owner", "Manager"];
 
     private readonly AuthApiClient _authApi;
@@ -44,6 +42,21 @@ internal sealed class CookieAuthenticationStateProvider : AuthenticationStatePro
     {
         _state = null;
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    public async Task<SignInCheck> CompleteSignInAsync()
+    {
+        var me = await _authApi.GetMeAsync();
+        var state = ToState(me);
+        _state = Task.FromResult(state);
+        NotifyAuthenticationStateChanged(_state);
+
+        if (me is null)
+        {
+            return SignInCheck.Unavailable;
+        }
+
+        return state.User.Identity?.IsAuthenticated == true ? SignInCheck.Accepted : SignInCheck.ForeignAudience;
     }
 
     public void Dispose() => _accessDenied.Raised -= OnAccessDenied;
@@ -83,9 +96,6 @@ internal sealed class CookieAuthenticationStateProvider : AuthenticationStatePro
         _revalidation = RevalidateAsync();
     }
 
-    // A new state makes AuthorizeRouteView re-create the page, so a page whose load answers
-    // 403 again would loop. Only a session that is gone or foreign replaces the cached state;
-    // a legitimate permission 403 stays the page's own error.
     private async Task RevalidateAsync()
     {
         var cached = _state;
@@ -104,9 +114,10 @@ internal sealed class CookieAuthenticationStateProvider : AuthenticationStatePro
         NotifyAuthenticationStateChanged(_state);
     }
 
-    private async Task<AuthenticationState> LoadStateAsync()
+    private async Task<AuthenticationState> LoadStateAsync() => ToState(await _authApi.GetMeAsync());
+
+    private static AuthenticationState ToState(MeResponse? me)
     {
-        var me = await _authApi.GetMeAsync();
         if (me is null || !me.Roles.Any(AudienceRoles.Contains))
         {
             return Anonymous;
