@@ -149,8 +149,21 @@
             return;
         }
 
-        ((CookieAuthenticationStateProvider)AuthState).NotifyStateChanged();
-        Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+        switch (await ((CookieAuthenticationStateProvider)AuthState).CompleteSignInAsync())
+        {
+            case SignInCheck.Accepted:
+                Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+                return;
+            case SignInCheck.ForeignAudience:
+                await AuthApi.LogoutAsync();
+                _error = "This account can't sign in here.";
+                break;
+            case SignInCheck.Unavailable:
+                _error = "We couldn't reach the server. Check your connection and try again.";
+                break;
+        }
+
+        _submitting = false;
     }
 
     private string SafeReturnUrl()
