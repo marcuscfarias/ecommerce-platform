@@ -16,6 +16,10 @@ internal sealed class CookieAuthenticationStateProvider(AuthApiClient authApi) :
     private static readonly AuthenticationState Anonymous =
         new(new ClaimsPrincipal(new ClaimsIdentity()));
 
+    // Both SPAs share one cookie pair on the API host, so the latest sign-in in either one
+    // replaces the session here; an identity outside the backoffice audience is no session.
+    private static readonly string[] AudienceRoles = ["Admin", "Owner", "Manager"];
+
     // Cache the in-flight state so concurrent callers on a single render (the cascading
     // state plus a page's OnInitializedAsync) share one /auth/me call instead of each
     // triggering its own request (and refresh-on-401). Invalidated on sign-in/out.
@@ -58,7 +62,7 @@ internal sealed class CookieAuthenticationStateProvider(AuthApiClient authApi) :
     private async Task<AuthenticationState> LoadStateAsync()
     {
         var me = await authApi.GetMeAsync();
-        if (me is null)
+        if (me is null || !me.Roles.Any(AudienceRoles.Contains))
         {
             return Anonymous;
         }
