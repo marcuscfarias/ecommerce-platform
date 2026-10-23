@@ -18,6 +18,7 @@ builder.Services.AddTransient<CookieAuthenticationHandler>();
 
 // Singleton rather than scoped: the handler chain runs in a scope of its own, and in
 // WebAssembly the two lifetimes coincide anyway.
+builder.Services.AddSingleton<AccessDeniedNotice>();
 builder.Services.AddSingleton<ColdStartNotice>();
 builder.Services.AddTransient<ColdStartHandler>();
 
