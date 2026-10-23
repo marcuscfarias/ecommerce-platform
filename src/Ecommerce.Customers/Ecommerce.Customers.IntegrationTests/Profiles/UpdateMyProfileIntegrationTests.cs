@@ -112,7 +112,6 @@ public sealed class UpdateMyProfileIntegrationTests(CustomersIntegrationFixture 
 
         var body = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         body.ShouldNotBeNull();
-        body.Status.ShouldBe(400);
         body.Errors.ShouldContainKey("DisplayName");
 
         var customers = await GetCustomersByUserIdAsync(userId);

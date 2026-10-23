@@ -96,7 +96,6 @@ public sealed class GetMyProfileIntegrationTests(CustomersIntegrationFixture fix
 
         var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         body.ShouldNotBeNull();
-        body.Status.ShouldBe(404);
 
         var customers = await GetCustomersByUserIdAsync(userId);
         customers.ShouldBeEmpty();

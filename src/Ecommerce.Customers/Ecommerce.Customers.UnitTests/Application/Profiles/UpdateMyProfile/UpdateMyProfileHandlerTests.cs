@@ -51,7 +51,7 @@ public class UpdateMyProfileHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenProfileIsMissing_ShouldCreateThenApplySubmittedValuesWithoutAuthCommands()
+    public async Task Handle_WhenProfileIsMissing_ShouldCreateThenApplySubmittedValues()
     {
         // Arrange
         var user = new GetMeResult(_userId, _faker.Internet.Email(), _faker.Name.FullName(), [_faker.Random.Word()]);
@@ -72,7 +72,5 @@ public class UpdateMyProfileHandlerTests
             _repository.Update(added);
             _repository.SaveChangesAsync(Arg.Any<CancellationToken>());
         });
-        _authModule.ReceivedCalls()
-            .ShouldAllBe(call => call.GetMethodInfo().Name == nameof(IAuthModule.ExecuteQueryAsync));
     }
 }

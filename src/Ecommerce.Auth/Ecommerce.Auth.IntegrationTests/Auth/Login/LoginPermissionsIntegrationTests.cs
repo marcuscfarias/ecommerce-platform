@@ -47,7 +47,7 @@ public sealed class LoginPermissionsIntegrationTests(AuthIntegrationFixture fixt
     {
         await ResetDatabaseAsync();
 
-        // Arrange — the scenario is the sequence: an admin creates the manager, who then logs in.
+        // Arrange
         await SeedAsync(db =>
         {
             db.Roles.Add(new Role(nameof(RoleName.Manager)));
