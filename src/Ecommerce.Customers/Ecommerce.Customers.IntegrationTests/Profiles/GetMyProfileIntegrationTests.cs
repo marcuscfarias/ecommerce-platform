@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Bogus;
 using Ecommerce.Customers.Api.Authorization;
 using Ecommerce.Customers.Api.Profiles.GetMyProfile;
@@ -32,10 +33,10 @@ public sealed class GetMyProfileIntegrationTests(CustomersIntegrationFixture fix
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<GetMyProfileResponse>();
-        body.ShouldNotBeNull();
-        body.DisplayName.ShouldBe(name);
-        body.Phone.ShouldBeNull();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.EnumerateObject().Select(p => p.Name).ShouldBe(["displayName", "phone"], ignoreOrder: true);
+        body.GetProperty("displayName").GetString().ShouldBe(name);
+        body.GetProperty("phone").ValueKind.ShouldBe(JsonValueKind.Null);
 
         var customers = await GetCustomersByUserIdAsync(userId);
         var customer = customers.ShouldHaveSingleItem();
