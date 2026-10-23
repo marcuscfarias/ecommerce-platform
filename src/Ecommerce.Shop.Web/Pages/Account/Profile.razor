@@ -1,0 +1,155 @@
+@page "/account"
+@using System.ComponentModel.DataAnnotations
+@inject AuthenticationStateProvider AuthState
+@inject ProfileState Profiles
+@inject CustomersApiClient CustomersApi
+
+<PageTitle>Your account · Ecommerce Store</PageTitle>
+
+<section class="account">
+    <AuthorizeView>
+        <Authorized Context="auth">
+            @if (_failed)
+            {
+                <div class="state--error">
+                    <StateBlock Title="We couldn't load your profile"
+                                Hint="The store is having trouble reaching your account.">
+                        <button type="button" class="cta" @onclick="LoadAsync">Try again</button>
+                    </StateBlock>
+                </div>
+            }
+            else if (!_loaded)
+            {
+                <StateBlock Title="Loading your account…" />
+            }
+            else
+            {
+                <div class="account__card">
+                    <h1 class="account__title">Your account</h1>
+                    <p class="account__subtitle">Tell the store how to address you.</p>
+
+                    @if (_saved)
+                    {
+                        <div class="account__notice" role="status">
+                            <span>Profile saved.</span>
+                        </div>
+                    }
+
+                    @if (_error is not null)
+                    {
+                        <div class="account__error" role="alert">
+                            <strong>There was a problem</strong>
+                            <span>@_error</span>
+                        </div>
+                    }
+
+                    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+                        <DataAnnotationsValidator />
+
+                        <div class="field">
+                            <label for="account-email">Email</label>
+                            <input id="account-email" class="field__input" type="email" readonly
+                                   value="@auth.User.FindFirst("email")?.Value" />
+                        </div>
+
+                        <div class="field">
+                            <label for="display-name">Display name</label>
+                            <InputText id="display-name" class="field__input" autocomplete="name"
+                                       @bind-Value="_model.DisplayName" placeholder="How the store greets you" />
+                            <ValidationMessage For="@(() => _model.DisplayName)" />
+                        </div>
+
+                        <div class="field">
+                            <label for="phone">Phone</label>
+                            <InputText id="phone" class="field__input" autocomplete="tel" type="tel"
+                                       @bind-Value="_model.Phone" placeholder="+5511999998888"
+                                       aria-describedby="phone-hint" />
+                            <span id="phone-hint" class="field__hint">
+                                Optional. International format with country code.
+                            </span>
+                            <ValidationMessage For="@(() => _model.Phone)" />
+                        </div>
+
+                        <button type="submit" class="cta" disabled="@_submitting">
+                            @(_submitting ? "Saving…" : "Save profile")
+                        </button>
+                    </EditForm>
+                </div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <RedirectToLogin />
+        </NotAuthorized>
+        <Authorizing>
+            <StateBlock Title="Loading your account…" />
+        </Authorizing>
+    </AuthorizeView>
+</section>
+
+@code {
+    private readonly ProfileFormModel _model = new();
+    private bool _loaded;
+    private bool _failed;
+    private bool _submitting;
+    private bool _saved;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _failed = false;
+        var profile = await Profiles.EnsureLoadedAsync();
+
+        if (profile is null)
+        {
+            _failed = true;
+            return;
+        }
+
+        _model.DisplayName = profile.DisplayName;
+        _model.Phone = profile.Phone ?? string.Empty;
+        _loaded = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        _saved = false;
+        _error = null;
+        _submitting = true;
+
+        var profile = new CustomerProfile(
+            _model.DisplayName.Trim(),
+            string.IsNullOrWhiteSpace(_model.Phone) ? null : _model.Phone.Trim());
+        var outcome = await CustomersApi.UpdateProfileAsync(new UpdateProfileRequest(profile.DisplayName, profile.Phone));
+
+        _submitting = false;
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            return;
+        }
+
+        Profiles.Set(profile);
+        _saved = true;
+    }
+
+    private sealed class ProfileFormModel
+    {
+        [Required(ErrorMessage = "Enter a display name.")]
+        [StringLength(200, ErrorMessage = "Display name must be 200 characters or fewer.")]
+        public string DisplayName { get; set; } = string.Empty;
+
+        [RegularExpression(
+            @"^(\s*|\+[1-9]\d{7,14})$",
+            ErrorMessage = "Phone must be in E.164 format, e.g. +5511999998888.")]
+        public string Phone { get; set; } = string.Empty;
+    }
+}
