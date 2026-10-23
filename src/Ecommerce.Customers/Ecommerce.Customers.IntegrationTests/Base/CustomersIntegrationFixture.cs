@@ -1,0 +1,39 @@
+using System.Net.Http.Headers;
+using Bogus;
+using Ecommerce.Auth.Application;
+using Ecommerce.Auth.Application.Users.CreateUser;
+using Ecommerce.Kernel.IntegrationTests;
+using Ecommerce.Kernel.IntegrationTests.Database;
+using Ecommerce.Kernel.IntegrationTests.JwtToken;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Ecommerce.Customers.IntegrationTests.Base;
+
+public sealed class CustomersIntegrationFixture : BaseIntegrationFixture<CustomersWebApplicationFactory>
+{
+    private readonly Faker _faker = new();
+
+    protected override string[] Schemas => ["customers"];
+
+    public async Task<int> SeedAuthUserAsync(string name)
+    {
+        using var scope = Factory.Services.CreateScope();
+        var authModule = scope.ServiceProvider.GetRequiredService<IAuthModule>();
+
+        var email = _faker.Internet.Email(uniqueSuffix: _faker.Random.Guid().ToString("N"));
+        var command = new CreateUserCommand(email, _faker.Internet.Password(), name);
+
+        return await authModule.ExecuteCommandAsync(command);
+    }
+
+    public HttpClient CreateCustomerClient(int userId, params string[] permissions)
+    {
+        var client = Factory.CreateClient();
+        var token = TestTokenFactory.Create(permissions, userId);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return client;
+    }
+
+    protected override CustomersWebApplicationFactory CreateFactory(DatabaseContainerFixture container)
+        => new(container);
+}
