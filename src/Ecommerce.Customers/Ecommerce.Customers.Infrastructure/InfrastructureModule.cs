@@ -1,4 +1,5 @@
 using Ecommerce.Customers.Application;
+using Ecommerce.Customers.Application.Profiles;
 using Ecommerce.Customers.Domain.Repositories;
 using Ecommerce.Customers.Infrastructure.Mediation;
 using Ecommerce.Customers.Infrastructure.Persistence;
@@ -21,6 +22,7 @@ public static class InfrastructureModule
 
         services.AddScoped<ICustomerModule, CustomerModule>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<CurrentCustomerProfile>();
 
         return services;
     }
