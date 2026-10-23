@@ -1,4 +1,5 @@
 using Ecommerce.Customers.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.Customers.IntegrationTests.Base;
 
@@ -23,6 +24,8 @@ public abstract class BaseCustomersIntegrationTest
         _fixture.CreateCustomerClient(userId, permissions);
 
     protected Task<int> SeedAuthUserAsync(string name) => _fixture.SeedAuthUserAsync(name);
+
+    protected IServiceScope CreateScope() => _fixture.CreateScope();
 
     internal Task SeedAsync(Func<CustomersDbContext, Task> seed) => _fixture.SeedAsync(seed);
 }

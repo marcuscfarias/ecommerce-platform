@@ -34,6 +34,8 @@ public sealed class CustomersIntegrationFixture : BaseIntegrationFixture<Custome
         return client;
     }
 
+    public IServiceScope CreateScope() => Factory.Services.CreateScope();
+
     protected override CustomersWebApplicationFactory CreateFactory(DatabaseContainerFixture container)
         => new(container);
 }

@@ -1,4 +1,6 @@
+using Ecommerce.Customers.Domain.Repositories;
 using Ecommerce.Customers.Infrastructure.Persistence;
+using Ecommerce.Customers.Infrastructure.Persistence.Repositories;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,8 @@ public static class InfrastructureModule
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<CustomersDbContext>(CustomersDbContext.Schema);
+
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
 
         return services;
     }
