@@ -1,3 +1,4 @@
+using Ecommerce.Customers.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -11,12 +12,14 @@ public static class CustomersModule
     {
         services.AddControllers().AddApplicationPart(typeof(CustomersModule).Assembly);
         services.AddValidatorsFromAssembly(typeof(CustomersModule).Assembly, includeInternalTypes: true);
+        services.AddInfrastructure(configuration);
 
         return services;
     }
 
     public static IApplicationBuilder UseCustomersModule(this IApplicationBuilder app, bool applyMigrations = false)
     {
+        app.UseInfrastructure(applyMigrations);
         return app;
     }
 }
