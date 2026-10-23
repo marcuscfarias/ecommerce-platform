@@ -1,0 +1,107 @@
+@page "/account/check-email"
+@using System.ComponentModel.DataAnnotations
+@inject AuthApiClient AuthApi
+@inject PendingConfirmation Pending
+
+<PageTitle>Check your email · Ecommerce Store</PageTitle>
+
+<section class="account">
+    <div class="account__card">
+        <h1 class="account__title">Check your email</h1>
+
+        @if (_pendingEmail is not null)
+        {
+            <p class="account__subtitle">
+                We sent a confirmation link to <strong>@_pendingEmail</strong>. Open it to activate your account.
+            </p>
+        }
+        else
+        {
+            <p class="account__subtitle">Open the confirmation link we emailed you to activate your account.</p>
+        }
+
+        @if (Link == "invalid")
+        {
+            <div class="account__notice account__notice--alert" role="alert">
+                <span>This link is invalid or has expired. Request a new one below.</span>
+            </div>
+        }
+
+        @if (_notice is not null)
+        {
+            <div class="account__notice" role="status">
+                <span>@_notice</span>
+            </div>
+        }
+
+        @if (_error is not null)
+        {
+            <div class="account__error" role="alert">
+                <strong>There was a problem</strong>
+                <span>@_error</span>
+            </div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+
+            <div class="field">
+                <label for="email">Didn't get it? Send a new link to</label>
+                <InputText id="email" class="field__input" autocomplete="email"
+                           @bind-Value="_model.Email" placeholder="you@example.com" />
+                <ValidationMessage For="@(() => _model.Email)" />
+            </div>
+
+            <button type="submit" class="cta" disabled="@_submitting">
+                @(_submitting ? "Sending…" : "Resend confirmation email")
+            </button>
+        </EditForm>
+
+        <p class="account__foot">
+            Already confirmed? <a href="account/login">Sign in</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    private readonly ResendFormModel _model = new();
+    private string? _pendingEmail;
+    private bool _submitting;
+    private string? _notice;
+    private string? _error;
+
+    [SupplyParameterFromQuery]
+    private string? Link { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _pendingEmail = Pending.Email;
+        _model.Email = _pendingEmail ?? string.Empty;
+    }
+
+    private async Task SubmitAsync()
+    {
+        _notice = null;
+        _error = null;
+        _submitting = true;
+
+        var outcome = await AuthApi.ResendConfirmationAsync(new ResendConfirmationRequest(_model.Email.Trim()));
+
+        _submitting = false;
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            return;
+        }
+
+        _notice = "If the account is pending, a new link is on its way.";
+    }
+
+    private sealed class ResendFormModel
+    {
+        [Required(ErrorMessage = "Enter your email.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+        [StringLength(256, ErrorMessage = "Email must be 256 characters or fewer.")]
+        public string Email { get; set; } = string.Empty;
+    }
+}
