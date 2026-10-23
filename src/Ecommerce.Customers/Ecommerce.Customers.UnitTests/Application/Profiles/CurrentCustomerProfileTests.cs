@@ -6,6 +6,7 @@ using Ecommerce.Customers.Domain.Entities;
 using Ecommerce.Customers.Domain.Repositories;
 using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Application.Security;
+using Ecommerce.Kernel.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 
@@ -70,18 +71,23 @@ public class CurrentCustomerProfileTests
     {
         // Arrange
         var user = ArrangeAuthUser();
+        var savedId = _faker.Random.Int(1);
+        _repository.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            AssignId(_added.Single(), savedId);
+            return 1;
+        });
 
         // Act
         await _profile.GetOrCreateAsync(CancellationToken.None);
 
         // Assert
-        var added = _added.ShouldHaveSingleItem();
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Information);
         record.Id.Id.ShouldBe(1);
         var state = record.StructuredState.ShouldNotBeNull();
         state.Select(e => e.Key).ShouldBe(["CustomerId", "UserId", "{OriginalFormat}"], ignoreOrder: true);
-        state.ShouldContain(new KeyValuePair<string, string?>("CustomerId", added.Id.ToString(CultureInfo.InvariantCulture)));
+        state.ShouldContain(new KeyValuePair<string, string?>("CustomerId", savedId.ToString(CultureInfo.InvariantCulture)));
         state.ShouldContain(new KeyValuePair<string, string?>("UserId", _userId.ToString(CultureInfo.InvariantCulture)));
         record.Message.ShouldNotContain(user.Name);
     }
@@ -106,4 +112,7 @@ public class CurrentCustomerProfileTests
         _authModule.ExecuteQueryAsync(Arg.Any<GetMeQuery>(), Arg.Any<CancellationToken>()).Returns(user);
         return user;
     }
+
+    private static void AssignId(Customer customer, int id) =>
+        typeof(Entity).GetProperty(nameof(Entity.Id))!.SetValue(customer, id);
 }
