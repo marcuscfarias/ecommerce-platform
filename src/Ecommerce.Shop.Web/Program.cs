@@ -47,6 +47,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<ProfileState>();
+builder.Services.AddScoped<PendingConfirmation>();
 
 builder.Services.AddMudServices();
 
