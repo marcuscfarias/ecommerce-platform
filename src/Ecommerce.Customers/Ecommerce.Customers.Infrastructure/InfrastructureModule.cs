@@ -1,4 +1,6 @@
+using Ecommerce.Customers.Application;
 using Ecommerce.Customers.Domain.Repositories;
+using Ecommerce.Customers.Infrastructure.Mediation;
 using Ecommerce.Customers.Infrastructure.Persistence;
 using Ecommerce.Customers.Infrastructure.Persistence.Repositories;
 using Ecommerce.Kernel.Infrastructure.Persistence;
@@ -15,6 +17,9 @@ public static class InfrastructureModule
     {
         services.AddModuleDbContext<CustomersDbContext>(CustomersDbContext.Schema);
 
+        services.AddMediationModule();
+
+        services.AddScoped<ICustomerModule, CustomerModule>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
 
         return services;
