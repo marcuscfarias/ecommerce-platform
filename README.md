@@ -167,6 +167,8 @@ The customer-facing shop, built on top of the backoffice backbone.
 | Module        | Feature                   |  Status  |
 |:--------------|:--------------------------|:--------:|
 | Catalog       | Product browsing & search | 🟢 Done  |
+| Auth          | Customer registration     | 🟢 Done  |
+| Customers     | Customer profile          | 🟢 Done  |
 | Shop Web      | Blazor WASM SPA           | 🟢 Done  |
 | Orders        | Cart & checkout           | 🔴 To do |
 | Orders        | Order management          | 🔴 To do |
@@ -217,7 +219,7 @@ Functionalities above.
 
 ### 5.2 Architecture
 
-`Ecommerce.AppHost` is the composition root. Each bounded context is a **module** (Catalog, Auth) split into
+`Ecommerce.AppHost` is the composition root. Each bounded context is a **module** (Catalog, Auth, Customers) split into
 Domain / Application / Infrastructure / Api layers and registered uniformly through `Add{Module}Module` /
 `Use{Module}Module` via `ModulesRegistry`.
 
@@ -225,6 +227,12 @@ Modules never reference each other directly: cross-module calls go through `IMod
 (e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`), implemented by an internal mediator-backed adapter
 (`MediatorModuleBase`) so consumers see a typed contract instead of `ISender`. Domain invariants are enforced with a
 small `BusinessRule` abstraction in the Kernel.
+
+Each module owns its own Postgres **schema** (`catalog`, `auth`, `customers`). Customers is the first module to consume
+another module's contract: the store profile (display name, phone) lives in Customers, linked to the Auth user by
+`UserId`, because it never drives an authentication decision. The profile is created on demand on the first
+`GET`/`PUT /api/v1/customers/me`, seeded with the account name read through `IAuthModule`, so registration stays
+untouched and the dependency points from business data to identity.
 
 ### 5.3 Request pipeline
 
@@ -247,6 +255,11 @@ Authorization is **permission-based**: each module declares its own permissions 
 `RequireClaim("permission", …)` (no role checks). The `RolePermissionMap` lives in the composition root, so the Auth
 module never learns other modules' permissions. The API also sets **security headers** and **HSTS**, a **CORS
 allowlist** for the SPA origin, and honors **forwarded headers** behind the Azure ingress.
+
+Customers **self-register** and must **confirm their email** before the first login. Registration and resend answer
+`202` whether or not the email exists (no account enumeration) and share a dedicated rate-limit policy, which also
+protects the email provider's daily quota. The confirmation link is built from a base URL validated at boot, never from
+the request's `Host` header, so a forged header cannot poison a legitimate email.
 
 ### 5.5 Product images: storage & delivery
 
