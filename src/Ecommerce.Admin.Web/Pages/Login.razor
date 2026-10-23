@@ -168,7 +168,11 @@
 
     private string SafeReturnUrl()
     {
-        if (string.IsNullOrWhiteSpace(ReturnUrl) || !ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//"))
+        if (string.IsNullOrWhiteSpace(ReturnUrl)
+            || !ReturnUrl.StartsWith('/')
+            || ReturnUrl.StartsWith("//")
+            || ReturnUrl.Contains('\\')
+            || ReturnUrl.Any(char.IsControl))
         {
             return "/home";
         }
