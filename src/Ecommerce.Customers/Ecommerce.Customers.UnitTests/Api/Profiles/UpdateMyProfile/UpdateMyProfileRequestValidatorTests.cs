@@ -111,6 +111,7 @@ public class UpdateMyProfileRequestValidatorTests
     [InlineData("+1234567890123456")] // 16 digits, one over the E.164 maximum
     [InlineData("+55 11 99999-8888")] // formatted with spaces and a dash
     [InlineData("+55abc9999888")]     // contains letters
+    [InlineData("+5511999998888\n")]  // trailing line feed after a valid number
     public void Validate_WhenPhoneIsNotE164_ShouldHaveErrorForPhone(string phone)
     {
         // Arrange

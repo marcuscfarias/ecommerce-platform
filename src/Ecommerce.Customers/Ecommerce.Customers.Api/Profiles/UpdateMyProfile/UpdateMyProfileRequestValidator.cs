@@ -5,7 +5,7 @@ namespace Ecommerce.Customers.Api.Profiles.UpdateMyProfile;
 
 internal sealed class UpdateMyProfileRequestValidator : AbstractValidator<UpdateMyProfileRequest>
 {
-    private const string E164PhonePattern = @"^\+[1-9]\d{7,14}$";
+    private const string E164PhonePattern = @"^\+[1-9]\d{7,14}\z";
 
     public UpdateMyProfileRequestValidator()
     {
