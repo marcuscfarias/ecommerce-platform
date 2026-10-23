@@ -117,8 +117,16 @@
         }
     }
 
+    [SupplyParameterFromQuery(Name = "emailConfirmation")]
+    private string? EmailConfirmation { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        if (TryRouteEmailConfirmation())
+        {
+            return;
+        }
+
         Navigation.LocationChanged += OnLocationChanged;
         _query = StorefrontQuery.FromUri(Navigation.Uri);
         await LoadCategoriesAsync();
@@ -226,4 +234,22 @@
     private void Navigate(StorefrontQuery query) => Navigation.NavigateTo("/" + query.ToQueryString());
 
     private Task ScrollToBrowseAsync() => Js.InvokeVoidAsync("storefront.scrollToBrowse").AsTask();
+
+    private bool TryRouteEmailConfirmation()
+    {
+        var target = EmailConfirmation switch
+        {
+            "success" => "account/login?confirmed=1",
+            "invalid" => "account/check-email?link=invalid",
+            _ => null,
+        };
+
+        if (target is null)
+        {
+            return false;
+        }
+
+        Navigation.NavigateTo(target, replace: true);
+        return true;
+    }
 }
