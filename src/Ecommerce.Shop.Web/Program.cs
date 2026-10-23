@@ -35,6 +35,10 @@ builder.Services.AddHttpClient<AuthApiClient>(client => client.BaseAddress = api
     .AddHttpMessageHandler<ColdStartHandler>()
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
+builder.Services.AddHttpClient<CustomersApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<ColdStartHandler>()
+    .AddHttpMessageHandler<CookieAuthenticationHandler>();
+
 builder.Services.AddHttpClient(CookieAuthenticationHandler.RefreshClientName,
     client => client.BaseAddress = apiBaseAddress);
 
