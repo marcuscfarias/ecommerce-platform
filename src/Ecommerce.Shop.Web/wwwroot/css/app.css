@@ -149,8 +149,6 @@ img {
     min-width: 0;
 }
 
-/* Account and cart ship in their final shape but inert: no handler, aria-disabled.
-   Later slices swap the markup without touching this rule. */
 .store-action {
     display: flex;
     flex-direction: column;
