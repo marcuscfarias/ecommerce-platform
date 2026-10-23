@@ -71,6 +71,37 @@ public sealed class LoginPermissionsIntegrationTests(AuthIntegrationFixture fixt
             .ShouldNotContain(CustomersPermissions.ManageProfile);
     }
 
+    [Fact]
+    public async Task Login_WhenOwnerLogsIn_ShouldIssueTokenWithoutProfilePermission()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        const string email = "owner@example.com";
+        const string password = "Str0ngPass1";
+        await SeedAsync(async db =>
+        {
+            var owner = new Role(nameof(RoleName.Owner));
+            db.Roles.Add(owner);
+            await db.SaveChangesAsync();
+            var user = new User(email, BCrypt.Net.BCrypt.HashPassword(password, 4), "Jane Doe", emailConfirmed: true);
+            user.AssignRole(owner);
+            db.Users.Add(user);
+        });
+        var request = new { email, password };
+
+        // Act
+        var response = await Client.PostAsJsonAsync(Endpoint, request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var jwt = ReadAccessToken(response);
+        jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
+            .ShouldHaveSingleItem().ShouldBe(nameof(RoleName.Owner));
+        jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value)
+            .ShouldNotContain(CustomersPermissions.ManageProfile);
+    }
+
     private static JwtSecurityToken ReadAccessToken(HttpResponseMessage response)
     {
         var cookieName = AuthCookieNames.AccessToken;
