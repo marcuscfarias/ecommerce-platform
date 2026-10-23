@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ecommerce.Customers.Domain\Ecommerce.Customers.Domain.csproj" />
+    <ProjectReference Include="..\..\Ecommerce.Kernel\Ecommerce.Kernel.Application\Ecommerce.Kernel.Application.csproj" />
+    <ProjectReference Include="..\..\Ecommerce.Auth\Ecommerce.Auth.Application\Ecommerce.Auth.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ecommerce.Customers.Infrastructure" />
+    <InternalsVisibleTo Include="Ecommerce.Customers.UnitTests" />
+  </ItemGroup>
+
+</Project>
