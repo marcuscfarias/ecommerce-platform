@@ -1,0 +1,152 @@
+@page "/account/register"
+@implements IDisposable
+@using System.ComponentModel.DataAnnotations
+@inject AuthApiClient AuthApi
+@inject AuthenticationStateProvider AuthState
+@inject PendingConfirmation Pending
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Create account · Ecommerce Store</PageTitle>
+
+<section class="account">
+    <div class="account__card">
+        <h1 class="account__title">Create account</h1>
+        <p class="account__subtitle">We'll email you a link to confirm your address.</p>
+
+        @if (_error is not null)
+        {
+            <div class="account__error" role="alert">
+                <strong>There was a problem</strong>
+                <span>@_error</span>
+            </div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+
+            <div class="field">
+                <label for="name">Your name</label>
+                <InputText id="name" class="field__input" autocomplete="name"
+                           @bind-Value="_model.Name" placeholder="First and last name" />
+                <ValidationMessage For="@(() => _model.Name)" />
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <InputText id="email" class="field__input" autocomplete="email"
+                           @bind-Value="_model.Email" placeholder="you@example.com" />
+                <ValidationMessage For="@(() => _model.Email)" />
+            </div>
+
+            <div class="field">
+                <div class="field__label-row">
+                    <label for="password">Password</label>
+                    <button type="button" class="field__reveal" @onclick="ToggleReveal">
+                        @(_revealPassword ? "Hide" : "Show")
+                    </button>
+                </div>
+                <InputText id="password" class="field__input" autocomplete="new-password"
+                           type="@(_revealPassword ? "text" : "password")"
+                           @bind-Value="_model.Password" placeholder="At least 8 characters"
+                           aria-describedby="password-hint" />
+                <span id="password-hint" class="field__hint">
+                    At least 8 characters, with a lowercase letter, an uppercase letter and a digit.
+                </span>
+                <ValidationMessage For="@(() => _model.Password)" />
+            </div>
+
+            <button type="submit" class="cta" disabled="@_submitting">
+                @(_submitting ? "Creating account…" : "Create account")
+            </button>
+        </EditForm>
+
+        <p class="account__foot">
+            Already have an account? <a href="account/login">Sign in</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    private readonly RegisterFormModel _model = new();
+    private bool _revealPassword;
+    private bool _submitting;
+    private bool _authenticated;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        var state = await AuthState.GetAuthenticationStateAsync();
+        _authenticated = state.User.Identity?.IsAuthenticated == true;
+        if (_authenticated)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_authenticated)
+        {
+            await JS.InvokeVoidAsync("focusById", "name");
+        }
+    }
+
+    public void Dispose() => AuthState.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> state) =>
+        _ = RedirectIfAuthenticatedAsync(state);
+
+    private async Task RedirectIfAuthenticatedAsync(Task<AuthenticationState> state)
+    {
+        if ((await state).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        _authenticated = true;
+        await InvokeAsync(() => Navigation.NavigateTo("/", replace: true));
+    }
+
+    private void ToggleReveal() => _revealPassword = !_revealPassword;
+
+    private async Task SubmitAsync()
+    {
+        _error = null;
+        _submitting = true;
+
+        var email = _model.Email.Trim();
+        var outcome = await AuthApi.RegisterAsync(new RegisterRequest(_model.Name.Trim(), email, _model.Password));
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _submitting = false;
+            return;
+        }
+
+        Pending.Email = email;
+        Navigation.NavigateTo("account/check-email");
+    }
+
+    private sealed class RegisterFormModel
+    {
+        [Required(ErrorMessage = "Enter your name.")]
+        [StringLength(200, ErrorMessage = "Name must be 200 characters or fewer.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Enter your email.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+        [StringLength(256, ErrorMessage = "Email must be 256 characters or fewer.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Enter a password.")]
+        [StringLength(256, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 256 characters.")]
+        [RegularExpression(
+            "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$",
+            ErrorMessage = "Password must contain at least one lowercase letter, one uppercase letter, and one digit.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

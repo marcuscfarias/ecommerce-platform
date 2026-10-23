@@ -1,5 +1,8 @@
-@* Account and cart ship in their final shape but inert. Sign-in lands in the accounts
-   slice and the live counter in the cart slice; both replace this markup, not the CSS. *@
+@implements IDisposable
+@inject AuthApiClient AuthApi
+@inject AuthenticationStateProvider AuthState
+@inject ProfileState Profiles
+@inject NavigationManager Navigation
 
 <header class="store-header">
     <div class="store-header__inner">
@@ -9,10 +12,29 @@
         </a>
 
         <div class="store-header__actions">
-            <div class="store-action" aria-disabled="true" title="Accounts arrive in a later release">
-                <span class="store-action__hint">Hello, sign in</span>
-                <span class="store-action__label">Account &amp; Lists</span>
-            </div>
+            <AuthorizeView>
+                <Authorized>
+                    <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                        <ActivatorContent Context="menu">
+                            <button type="button" class="store-action store-action--live" aria-haspopup="menu"
+                                    @onclick="args => menu.ToggleAsync(args)">
+                                <span class="store-action__hint">@Greeting</span>
+                                <span class="store-action__label">Account &amp; Lists</span>
+                            </button>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem Href="account">Your account</MudMenuItem>
+                            <MudMenuItem OnClick="SignOutAsync">Sign out</MudMenuItem>
+                        </ChildContent>
+                    </MudMenu>
+                </Authorized>
+                <NotAuthorized>
+                    @SignInLink
+                </NotAuthorized>
+                <Authorizing>
+                    @SignInLink
+                </Authorizing>
+            </AuthorizeView>
 
             <div class="store-action store-action--cart" aria-disabled="true" title="The cart arrives in a later release">
                 <span class="cart-badge">0</span>
@@ -21,3 +43,46 @@
         </div>
     </div>
 </header>
+
+@code {
+    private string Greeting => Profiles.Current is { } profile ? $"Hello, {profile.DisplayName}" : "Hello";
+
+    private RenderFragment SignInLink =>
+        @<a class="store-action store-action--live" href="account/login">
+            <span class="store-action__hint">Hello, sign in</span>
+            <span class="store-action__label">Account &amp; Lists</span>
+        </a>;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Profiles.Changed += OnProfileChanged;
+        AuthState.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        await LoadProfileAsync(AuthState.GetAuthenticationStateAsync());
+    }
+
+    public void Dispose()
+    {
+        Profiles.Changed -= OnProfileChanged;
+        AuthState.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private void OnProfileChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> state) => _ = LoadProfileAsync(state);
+
+    private async Task LoadProfileAsync(Task<AuthenticationState> state)
+    {
+        if ((await state).User.Identity?.IsAuthenticated == true)
+        {
+            await Profiles.EnsureLoadedAsync();
+        }
+    }
+
+    private async Task SignOutAsync()
+    {
+        await AuthApi.LogoutAsync();
+        ((CookieAuthenticationStateProvider)AuthState).NotifyStateChanged();
+        Navigation.NavigateTo("/");
+    }
+}

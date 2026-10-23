@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Ecommerce.Admin.Web.Authentication;
 
-internal sealed class CookieAuthenticationHandler(IHttpClientFactory httpClientFactory) : DelegatingHandler
+internal sealed class CookieAuthenticationHandler(IHttpClientFactory httpClientFactory, AccessDeniedNotice notice)
+    : DelegatingHandler
 {
     // Bare HttpClient (no this handler) used for the refresh call, so a 401 on refresh
     // cannot re-enter the handler and loop.
@@ -18,20 +19,25 @@ internal sealed class CookieAuthenticationHandler(IHttpClientFactory httpClientF
         request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
 
         var response = await base.SendAsync(request, cancellationToken);
-        if (response.StatusCode != HttpStatusCode.Unauthorized || IsAuthEndpoint(request))
+        if (IsAuthEndpoint(request))
         {
             return response;
         }
 
-        if (!await TryRefreshAsync(cancellationToken))
+        if (response.StatusCode == HttpStatusCode.Unauthorized && await TryRefreshAsync(cancellationToken))
         {
-            return response;
+            response.Dispose();
+            var retry = await CloneAsync(request);
+            retry.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            response = await base.SendAsync(retry, cancellationToken);
         }
 
-        response.Dispose();
-        var retry = await CloneAsync(request);
-        retry.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-        return await base.SendAsync(retry, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            notice.Raise();
+        }
+
+        return response;
     }
 
     private async Task<bool> TryRefreshAsync(CancellationToken cancellationToken)
