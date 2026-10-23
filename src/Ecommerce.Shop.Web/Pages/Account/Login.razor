@@ -1,0 +1,209 @@
+@page "/account/login"
+@implements IDisposable
+@using System.ComponentModel.DataAnnotations
+@inject AuthApiClient AuthApi
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Sign in · Ecommerce Store</PageTitle>
+
+<section class="account">
+    <div class="account__card">
+        <h1 class="account__title">Sign in</h1>
+        <p class="account__subtitle">Use your store account to continue.</p>
+
+        @if (_notice is not null)
+        {
+            <div class="account__notice" role="status">
+                <span>@_notice</span>
+            </div>
+        }
+
+        @if (_error is not null)
+        {
+            <div class="account__error" role="alert">
+                <strong>There was a problem</strong>
+                <span>@_error</span>
+                @if (_unconfirmedEmail is not null)
+                {
+                    <button type="button" class="account__action" disabled="@_resending" @onclick="ResendAsync">
+                        @(_resending ? "Sending…" : "Resend confirmation email")
+                    </button>
+                }
+            </div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+
+            <div class="field">
+                <label for="email">Email</label>
+                <InputText id="email" class="field__input" autocomplete="username"
+                           @bind-Value="_model.Email" placeholder="you@example.com" />
+                <ValidationMessage For="@(() => _model.Email)" />
+            </div>
+
+            <div class="field">
+                <div class="field__label-row">
+                    <label for="password">Password</label>
+                    <button type="button" class="field__reveal" @onclick="ToggleReveal">
+                        @(_revealPassword ? "Hide" : "Show")
+                    </button>
+                </div>
+                <InputText id="password" class="field__input" autocomplete="current-password"
+                           type="@(_revealPassword ? "text" : "password")"
+                           @bind-Value="_model.Password" placeholder="Your password" />
+                <ValidationMessage For="@(() => _model.Password)" />
+            </div>
+
+            <button type="submit" class="cta" disabled="@_submitting">
+                @(_submitting ? "Signing in…" : "Sign in")
+            </button>
+        </EditForm>
+
+        <p class="account__foot">
+            New to the store? <a href="account/register">Create your account</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    private const string ConfirmedNotice = "Email confirmed. Sign in to continue.";
+    private const string ResentNotice = "If the account is pending, a new link is on its way.";
+
+    private readonly LoginFormModel _model = new();
+    private bool _revealPassword;
+    private bool _submitting;
+    private bool _resending;
+    private bool _authenticated;
+    private string? _notice;
+    private string? _error;
+    private string? _unconfirmedEmail;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Confirmed { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Confirmed == "1")
+        {
+            _notice = ConfirmedNotice;
+        }
+
+        AuthState.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        var state = await AuthState.GetAuthenticationStateAsync();
+        _authenticated = state.User.Identity?.IsAuthenticated == true;
+        if (_authenticated)
+        {
+            Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_authenticated)
+        {
+            await JS.InvokeVoidAsync("focusById", "email");
+        }
+    }
+
+    public void Dispose() => AuthState.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> state) =>
+        _ = RedirectIfAuthenticatedAsync(state);
+
+    private async Task RedirectIfAuthenticatedAsync(Task<AuthenticationState> state)
+    {
+        if ((await state).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        _authenticated = true;
+        await InvokeAsync(() => Navigation.NavigateTo(SafeReturnUrl(), replace: true));
+    }
+
+    private void ToggleReveal() => _revealPassword = !_revealPassword;
+
+    private async Task SubmitAsync()
+    {
+        _notice = null;
+        _error = null;
+        _unconfirmedEmail = null;
+        _submitting = true;
+
+        var email = _model.Email.Trim();
+        var outcome = await AuthApi.LoginAsync(new LoginRequest(email, _model.Password));
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            _unconfirmedEmail = outcome.EmailNotConfirmed ? email : null;
+            _submitting = false;
+            return;
+        }
+
+        switch (await ((CookieAuthenticationStateProvider)AuthState).CompleteSignInAsync())
+        {
+            case SignInCheck.Accepted:
+                Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+                return;
+            case SignInCheck.ForeignAudience:
+                await AuthApi.LogoutAsync();
+                _error = "This account can't sign in here.";
+                break;
+            case SignInCheck.Unavailable:
+                _error = "We couldn't reach the server. Check your connection and try again.";
+                break;
+        }
+
+        _submitting = false;
+    }
+
+    private async Task ResendAsync()
+    {
+        if (_unconfirmedEmail is null)
+        {
+            return;
+        }
+
+        _resending = true;
+        var outcome = await AuthApi.ResendConfirmationAsync(new ResendConfirmationRequest(_unconfirmedEmail));
+        _resending = false;
+
+        if (!outcome.Succeeded)
+        {
+            _error = outcome.Error;
+            return;
+        }
+
+        _error = null;
+        _unconfirmedEmail = null;
+        _notice = ResentNotice;
+    }
+
+    private string SafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl) || !ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//"))
+        {
+            return "/";
+        }
+
+        return ReturnUrl;
+    }
+
+    private sealed class LoginFormModel
+    {
+        [Required(ErrorMessage = "Enter your email.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Enter your password.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}
