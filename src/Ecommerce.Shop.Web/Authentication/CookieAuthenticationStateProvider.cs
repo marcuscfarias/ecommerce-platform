@@ -96,8 +96,14 @@ internal sealed class CookieAuthenticationStateProvider : AuthenticationStatePro
             return;
         }
 
-        var state = await LoadStateAsync();
-        if (state.User.Identity?.IsAuthenticated == true || _state != cached)
+        var me = await _authApi.GetMeAsync();
+        if (me is null || _state != cached)
+        {
+            return;
+        }
+
+        var state = ToState(me);
+        if (state.User.Identity?.IsAuthenticated == true)
         {
             return;
         }
