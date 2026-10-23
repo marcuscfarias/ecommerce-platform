@@ -832,6 +832,217 @@ img {
     color: var(--link-teal-hover);
 }
 
+.store-action--live {
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+}
+
+.store-action--live:hover {
+    border-color: #FFFFFF;
+}
+
+.store-action--live:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+}
+
+.account {
+    display: grid;
+    justify-items: center;
+    padding: clamp(2rem, 6vw, 4rem) var(--shell-pad);
+    background: var(--catalog-bg);
+}
+
+.account__card {
+    width: min(26rem, 100%);
+    padding: clamp(1.25rem, 4vw, 2rem);
+    background: var(--surface);
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius);
+}
+
+.account__title {
+    margin: 0 0 .35rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
+.account__subtitle {
+    margin: 0 0 1.5rem;
+    font-size: .95rem;
+    line-height: 1.5;
+    color: var(--slate-60);
+}
+
+.account__notice,
+.account__error {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    margin-bottom: 1.25rem;
+    padding: .8rem .9rem;
+    font-size: .9rem;
+    line-height: 1.45;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-gray);
+    border-left: 4px solid var(--success);
+    border-radius: calc(var(--radius) - 2px);
+}
+
+.account__notice--alert {
+    border-left-color: var(--orange);
+}
+
+.account__error {
+    border-left-color: var(--price-red);
+}
+
+.account__error strong {
+    font-size: .9rem;
+    color: var(--price-red);
+}
+
+.account__error span {
+    color: var(--slate-60);
+}
+
+.account__action {
+    align-self: flex-start;
+    margin-top: .3rem;
+    padding: 0;
+    font: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--link-teal);
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.account__action:hover:not(:disabled) {
+    color: var(--link-teal-hover);
+    text-decoration: underline;
+}
+
+.account__action:disabled {
+    color: var(--slate-60);
+    cursor: progress;
+}
+
+.account__action:focus-visible,
+.field__reveal:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+}
+
+.account .cta {
+    width: 100%;
+    margin-top: .35rem;
+}
+
+.account .cta:disabled {
+    cursor: progress;
+    opacity: .7;
+}
+
+.account__foot {
+    margin: 1.4rem 0 0;
+    padding-top: 1.1rem;
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--slate-60);
+    border-top: 1px solid var(--divider);
+}
+
+.account a {
+    color: var(--link-teal);
+}
+
+.account a:hover {
+    color: var(--link-teal-hover);
+}
+
+.field {
+    margin-bottom: 1.15rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: .4rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.field__label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.field__reveal {
+    padding: 0;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--link-teal);
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.field__reveal:hover {
+    color: var(--link-teal-hover);
+    text-decoration: underline;
+}
+
+.field__input {
+    width: 100%;
+    padding: .65rem .75rem;
+    font: inherit;
+    font-size: .95rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: calc(var(--radius) - 2px);
+    transition: border-color .12s var(--ease-out), box-shadow .12s var(--ease-out);
+}
+
+.field__input::placeholder {
+    color: var(--slate-60);
+}
+
+.field__input:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.field__input[readonly] {
+    color: var(--slate-60);
+    background: var(--surface-muted);
+    border-color: var(--border-gray);
+}
+
+.field__hint {
+    display: block;
+    margin-top: .35rem;
+    font-size: .8rem;
+    line-height: 1.4;
+    color: var(--slate-60);
+}
+
+.field .validation-message {
+    display: block;
+    margin-top: .35rem;
+    font-size: .82rem;
+    color: var(--price-red);
+}
+
 /* ============================ Responsive ============================= */
 @media (max-width: 720px) {
     :root {
@@ -861,6 +1072,14 @@ img {
 
     .dialog__panel {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account {
+        padding-block: 1.5rem 2.5rem;
+    }
+
+    .account__title {
+        font-size: 1.35rem;
     }
 }
 

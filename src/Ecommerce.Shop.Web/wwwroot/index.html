@@ -43,6 +43,8 @@
                 browse.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
             }
         };
+
+        window.focusById = id => document.getElementById(id)?.focus();
     </script>
 </body>
 
