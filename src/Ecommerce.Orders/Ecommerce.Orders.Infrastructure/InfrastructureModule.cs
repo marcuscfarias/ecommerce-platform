@@ -1,5 +1,7 @@
 using Ecommerce.Kernel.Infrastructure.Persistence;
+using Ecommerce.Orders.Domain.Repositories;
 using Ecommerce.Orders.Infrastructure.Persistence;
+using Ecommerce.Orders.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +14,8 @@ public static class InfrastructureModule
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<OrdersDbContext>(OrdersDbContext.Schema);
+
+        services.AddScoped<ICartRepository, CartRepository>();
 
         return services;
     }
