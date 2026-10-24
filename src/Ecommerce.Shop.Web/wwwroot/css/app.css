@@ -1054,6 +1054,46 @@ img {
     color: var(--price-red);
 }
 
+/* =============================== Cart ================================ */
+.dialog__buy {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-top: .25rem;
+}
+
+.dialog__buy .cta {
+    align-self: flex-start;
+}
+
+.dialog__buy .cta:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.dialog__added,
+.dialog__error {
+    margin: 0;
+    font-size: .9rem;
+    line-height: 1.45;
+}
+
+.dialog__added {
+    color: var(--success);
+}
+
+.dialog__added a {
+    color: var(--link-teal);
+}
+
+.dialog__added a:hover {
+    color: var(--link-teal-hover);
+}
+
+.dialog__error {
+    color: var(--price-red);
+}
+
 /* ============================ Responsive ============================= */
 @media (max-width: 720px) {
     :root {

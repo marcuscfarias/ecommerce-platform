@@ -2,6 +2,9 @@
    not-found and error states. The page behind it keeps its grid, its page and its scroll. *@
 
 @inject StorefrontApiClient Api
+@inject AuthenticationStateProvider AuthState
+@inject CartState Carts
+@inject NavigationManager Navigation
 
 <div class="dialog" role="presentation">
     <button type="button"
@@ -62,6 +65,24 @@
                 {
                     <p class="dialog__desc">@_product.Description</p>
                 }
+
+                <div class="dialog__buy">
+                    <button type="button" class="cta" disabled="@(!_product.InStock || _adding)" @onclick="AddToCartAsync">
+                        @(_adding ? "Adding…" : "Add to cart")
+                    </button>
+
+                    @if (_added)
+                    {
+                        <p class="dialog__added" role="status">
+                            Added to cart. <a href="cart">Go to cart</a>
+                        </p>
+                    }
+
+                    @if (_cartError is not null)
+                    {
+                        <p class="dialog__error" role="alert">@_cartError</p>
+                    }
+                </div>
             </div>
         }
     </div>
@@ -73,6 +94,9 @@
     private string? _categoryName;
     private int _loadedId;
     private bool _loading = true;
+    private bool _adding;
+    private bool _added;
+    private string? _cartError;
 
     [Parameter, EditorRequired]
     public int ProductId { get; set; }
@@ -98,6 +122,9 @@
         _loading = true;
         _product = null;
         _categoryName = null;
+        _adding = false;
+        _added = false;
+        _cartError = null;
         StateHasChanged();
 
         var result = await Api.GetProductAsync(requestedId);
@@ -135,6 +162,32 @@
 
         _categoryName = categories?.FirstOrDefault(category => category.Id == categoryId)?.Name;
         StateHasChanged();
+    }
+
+    private async Task AddToCartAsync()
+    {
+        var requestedId = ProductId;
+        var state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo(LoginRedirect.ForCurrentPage(Navigation));
+            return;
+        }
+
+        _adding = true;
+        _added = false;
+        _cartError = null;
+
+        var outcome = await Carts.AddItemAsync(new AddCartItemRequest(requestedId, 1));
+
+        if (requestedId != ProductId)
+        {
+            return;
+        }
+
+        _adding = false;
+        _added = outcome.Succeeded;
+        _cartError = outcome.Error;
     }
 
     private Task CloseAsync() => OnClose.InvokeAsync();
