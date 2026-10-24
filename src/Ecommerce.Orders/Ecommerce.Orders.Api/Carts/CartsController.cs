@@ -2,6 +2,7 @@ using Ecommerce.Orders.Api.Authorization;
 using Ecommerce.Orders.Api.Carts.AddCartItem;
 using Ecommerce.Orders.Api.Carts.ChangeCartItemQuantity;
 using Ecommerce.Orders.Api.Carts.GetMyCart;
+using Ecommerce.Orders.Api.Carts.RemoveCartItem;
 using Ecommerce.Orders.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -50,6 +51,16 @@ public sealed class CartsController(IOrderModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(productId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("me/items/{productId:int}")]
+    [EndpointDescription("Removes a product's line from the cart, whatever its status.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveCartItem(int productId, CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(RemoveCartItemRequest.ToCommand(productId), cancellationToken);
         return NoContent();
     }
 }
