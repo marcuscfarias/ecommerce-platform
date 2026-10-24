@@ -1,3 +1,4 @@
+using Ecommerce.Orders.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +12,7 @@ public static class OrdersModule
     {
         services.AddControllers().AddApplicationPart(typeof(OrdersModule).Assembly);
         services.AddValidatorsFromAssembly(typeof(OrdersModule).Assembly, includeInternalTypes: true);
+        services.AddInfrastructure(configuration);
 
         return services;
     }
