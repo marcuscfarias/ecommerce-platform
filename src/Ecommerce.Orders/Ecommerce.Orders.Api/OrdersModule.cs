@@ -1,3 +1,5 @@
+using Ecommerce.Kernel.Application.Security;
+using Ecommerce.Orders.Api.Authorization;
 using Ecommerce.Orders.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +15,10 @@ public static class OrdersModule
         services.AddControllers().AddApplicationPart(typeof(OrdersModule).Assembly);
         services.AddValidatorsFromAssembly(typeof(OrdersModule).Assembly, includeInternalTypes: true);
         services.AddInfrastructure(configuration);
+
+        services.AddAuthorizationBuilder()
+            .AddPolicy(OrdersPolicies.CanManageCart,
+                policy => policy.RequireClaim(AppClaimTypes.Permission, OrdersPermissions.ManageCart));
 
         return services;
     }
