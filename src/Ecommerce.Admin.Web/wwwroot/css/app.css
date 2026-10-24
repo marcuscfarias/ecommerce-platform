@@ -686,13 +686,31 @@ body {
     }
 
     .shell__bar-left {
-        gap: 1rem;
-        min-width: 0;
+        display: contents;
     }
 
     .shell__bar-right {
-        margin-left: auto;
+        flex: 1 1 0;
+        justify-content: flex-end;
         min-width: 0;
+    }
+
+    .shell__signout {
+        flex-shrink: 0;
+    }
+
+    .shell__nav {
+        order: 1;
+        flex: 1 1 100%;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .shell__nav-link {
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .shell__user {
