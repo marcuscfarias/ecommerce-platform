@@ -131,6 +131,9 @@ public class GetMyCartHandlerTests
         var item = result.Items.ShouldHaveSingleItem();
         item.ProductId.ShouldBe(productId);
         item.Quantity.ShouldBe(2);
+        item.Name.ShouldBeEmpty();
+        item.UnitPrice.ShouldBe(0m);
+        item.Subtotal.ShouldBe(0m);
         item.Status.ShouldBe(CartItemStatus.Unavailable);
         item.AvailableQuantity.ShouldBeNull();
         result.Total.ShouldBe(0m);
