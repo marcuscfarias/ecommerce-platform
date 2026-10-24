@@ -1,5 +1,7 @@
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using Ecommerce.Orders.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,5 +14,16 @@ public static class InfrastructureModule
         services.AddModuleDbContext<OrdersDbContext>(OrdersDbContext.Schema);
 
         return services;
+    }
+
+    public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app, bool applyMigrations = false)
+    {
+        if (!applyMigrations)
+            return app;
+
+        using var scope = app.ApplicationServices.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
+        context.Database.Migrate();
+        return app;
     }
 }

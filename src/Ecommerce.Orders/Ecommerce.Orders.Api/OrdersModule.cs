@@ -19,6 +19,7 @@ public static class OrdersModule
 
     public static IApplicationBuilder UseOrdersModule(this IApplicationBuilder app, bool applyMigrations = false)
     {
+        app.UseInfrastructure(applyMigrations);
         return app;
     }
 }
