@@ -1,4 +1,5 @@
 using Ecommerce.Orders.Api.Authorization;
+using Ecommerce.Orders.Api.Carts.AddCartItem;
 using Ecommerce.Orders.Api.Carts.GetMyCart;
 using Ecommerce.Orders.Application;
 using Microsoft.AspNetCore.Authorization;
@@ -20,5 +21,19 @@ public sealed class CartsController(IOrderModule module) : ControllerBase
     {
         var result = await module.ExecuteQueryAsync(GetMyCartRequest.ToQuery(), cancellationToken);
         return Ok(GetMyCartResponse.FromResult(result));
+    }
+
+    [HttpPost("me/items")]
+    [EndpointDescription("Adds a quantity of a product to the cart, summing into the existing line; creates the cart on first add.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AddCartItem(
+        [FromBody] AddCartItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+        return NoContent();
     }
 }
