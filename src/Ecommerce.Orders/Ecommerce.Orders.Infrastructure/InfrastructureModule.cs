@@ -1,5 +1,6 @@
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using Ecommerce.Orders.Application;
+using Ecommerce.Orders.Application.Carts;
 using Ecommerce.Orders.Domain.Repositories;
 using Ecommerce.Orders.Infrastructure.Mediation;
 using Ecommerce.Orders.Infrastructure.Persistence;
@@ -21,6 +22,7 @@ public static class InfrastructureModule
 
         services.AddScoped<IOrderModule, OrderModule>();
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<CurrentCart>();
 
         return services;
     }
