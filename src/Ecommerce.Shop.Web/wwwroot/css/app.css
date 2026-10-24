@@ -163,10 +163,6 @@ img {
     cursor: default;
 }
 
-.store-action[aria-disabled="true"] {
-    opacity: .72;
-}
-
 .store-action__hint {
     font-size: .68rem;
     color: #C6CDD3;
