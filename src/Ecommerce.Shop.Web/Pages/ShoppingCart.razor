@@ -1,0 +1,177 @@
+@page "/cart"
+@implements IDisposable
+@inject AuthenticationStateProvider AuthState
+@inject CartState Carts
+
+<PageTitle>Your cart · Ecommerce Store</PageTitle>
+
+<section class="cart">
+    <AuthorizeView>
+        <Authorized>
+            @if (Carts.Current is { Items.Count: 0 })
+            {
+                <StateBlock Title="Your cart is empty" Hint="Products you add from the store show up here.">
+                    <a class="cta" href="/">Continue shopping</a>
+                </StateBlock>
+            }
+            else if (Carts.Current is { } cart)
+            {
+                <div class="cart__layout">
+                    <div class="cart__card">
+                        <h1 class="cart__title">Shopping cart</h1>
+
+                        <ul class="cart__lines">
+                            @foreach (var line in cart.Items)
+                            {
+                                <li @key="line.ProductId" class="cart-line">
+                                    <div class="cart-line__media">
+                                        <ProductImage ProductId="@line.ProductId" HasImage="@line.HasImage" Name="@line.Name" />
+                                    </div>
+
+                                    <div class="cart-line__body">
+                                        <p class="cart-line__name">@DisplayName(line)</p>
+                                        <p class="cart-line__price">@Money.Format(line.UnitPrice)</p>
+
+                                        @if (Warning(line) is { } warning)
+                                        {
+                                            <p class="cart-line__warning">@warning</p>
+                                        }
+
+                                        <div class="cart-line__actions">
+                                            @if (line.Status == CartLineStatus.Unavailable)
+                                            {
+                                                <span class="cart-line__qty">Qty: @line.Quantity</span>
+                                            }
+                                            else
+                                            {
+                                                <div class="stepper" role="group" aria-label="@($"Quantity of {DisplayName(line)}")">
+                                                    <button type="button" class="stepper__btn" aria-label="Decrease quantity"
+                                                            disabled="@(_busy || line.Quantity <= MinQuantity)"
+                                                            @onclick="() => ChangeQuantityAsync(line, line.Quantity - 1)">−</button>
+                                                    <span class="stepper__value" aria-live="polite">@line.Quantity</span>
+                                                    <button type="button" class="stepper__btn" aria-label="Increase quantity"
+                                                            disabled="@(_busy || line.Quantity >= MaxQuantity || line.Status != CartLineStatus.Available)"
+                                                            @onclick="() => ChangeQuantityAsync(line, line.Quantity + 1)">+</button>
+                                                </div>
+                                            }
+
+                                            @if (line is { Status: CartLineStatus.InsufficientStock, AvailableQuantity: int available })
+                                            {
+                                                <button type="button" class="cart-line__action" disabled="@_busy"
+                                                        @onclick="() => ChangeQuantityAsync(line, available)">Change to @available</button>
+                                            }
+
+                                            <button type="button" class="cart-line__action" disabled="@_busy"
+                                                    @onclick="() => RemoveAsync(line)">Remove</button>
+                                        </div>
+
+                                        @if (_errorProductId == line.ProductId && _error is not null)
+                                        {
+                                            <p class="cart-line__error" role="alert">@_error</p>
+                                        }
+                                    </div>
+
+                                    <p class="cart-line__subtotal">@Money.Format(line.Subtotal)</p>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <aside class="cart__summary">
+                        <p class="cart__total">
+                            Total <strong>@Money.Format(cart.Total)</strong>
+                        </p>
+
+                        @if (cart.Items.Any(line => line.Status != CartLineStatus.Available))
+                        {
+                            <p class="cart__note">Items with a warning are not included in the total.</p>
+                        }
+                    </aside>
+                </div>
+            }
+            else if (_failed)
+            {
+                <div class="state--error">
+                    <StateBlock Title="We couldn't load your cart"
+                                Hint="The store is having trouble reaching your cart.">
+                        <button type="button" class="cta" @onclick="LoadAsync">Try again</button>
+                    </StateBlock>
+                </div>
+            }
+            else
+            {
+                <StateBlock Title="Loading your cart…" />
+            }
+        </Authorized>
+        <NotAuthorized>
+            <RedirectToLogin />
+        </NotAuthorized>
+        <Authorizing>
+            <StateBlock Title="Loading your cart…" />
+        </Authorizing>
+    </AuthorizeView>
+</section>
+
+@code {
+    private const int MinQuantity = 1;
+    private const int MaxQuantity = 10;
+
+    private bool _failed;
+    private bool _busy;
+    private int? _errorProductId;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Carts.Changed += OnCartChanged;
+
+        var state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            await LoadAsync();
+        }
+    }
+
+    public void Dispose() => Carts.Changed -= OnCartChanged;
+
+    private void OnCartChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private async Task LoadAsync()
+    {
+        _failed = false;
+        _failed = await Carts.RefreshAsync() is null;
+    }
+
+    private Task ChangeQuantityAsync(CartLine line, int quantity) =>
+        ApplyAsync(line, () => Carts.ChangeItemQuantityAsync(line.ProductId, new ChangeCartItemQuantityRequest(quantity)));
+
+    private Task RemoveAsync(CartLine line) =>
+        ApplyAsync(line, () => Carts.RemoveItemAsync(line.ProductId));
+
+    private async Task ApplyAsync(CartLine line, Func<Task<CartOutcome>> change)
+    {
+        _busy = true;
+        _errorProductId = null;
+        _error = null;
+
+        var outcome = await change();
+
+        _busy = false;
+        if (!outcome.Succeeded)
+        {
+            _errorProductId = line.ProductId;
+            _error = outcome.Error;
+        }
+    }
+
+    private static string DisplayName(CartLine line) =>
+        string.IsNullOrWhiteSpace(line.Name) ? "Unavailable product" : line.Name;
+
+    private static string? Warning(CartLine line) => line.Status switch
+    {
+        CartLineStatus.OutOfStock => "Out of stock",
+        CartLineStatus.InsufficientStock => $"Only {line.AvailableQuantity} available",
+        CartLineStatus.Unavailable => "Unavailable",
+        _ => null,
+    };
+}
