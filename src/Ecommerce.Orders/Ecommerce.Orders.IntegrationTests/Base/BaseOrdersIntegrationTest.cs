@@ -1,4 +1,8 @@
+using Ecommerce.Customers.Application;
+using Ecommerce.Customers.Application.Profiles.GetCurrentCustomerId;
+using Ecommerce.Orders.Domain.Entities;
 using Ecommerce.Orders.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.Orders.IntegrationTests.Base;
@@ -32,6 +36,30 @@ public abstract class BaseOrdersIntegrationTest
 
     protected Task<T> ExecuteAsUserAsync<T>(int userId, Func<IServiceProvider, Task<T>> action) =>
         _fixture.ExecuteAsUserAsync(userId, action);
+
+    protected Task<int> GetCustomerIdAsync(int userId) =>
+        ExecuteAsUserAsync(userId, services =>
+            services.GetRequiredService<ICustomerModule>().ExecuteQueryAsync(new GetCurrentCustomerIdQuery()));
+
+    protected async Task SeedCartAsync(int userId, params (int ProductId, int Quantity)[] lines)
+    {
+        var cart = new Cart(await GetCustomerIdAsync(userId));
+        foreach (var (productId, quantity) in lines)
+            cart.AddItem(productId, quantity);
+
+        await SeedAsync(db =>
+        {
+            db.Carts.Add(cart);
+            return Task.CompletedTask;
+        });
+    }
+
+    protected async Task<List<Cart>> GetCartsAsync()
+    {
+        using var scope = CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
+        return await db.Carts.AsNoTracking().Include(c => c.Items).ToListAsync();
+    }
 
     protected IServiceScope CreateScope() => _fixture.CreateScope();
 
