@@ -20,6 +20,8 @@ public sealed class CatalogIntegrationFixture : BaseIntegrationFixture<CatalogWe
         return await storage.UploadAsync(stream, contentType);
     }
 
+    public IServiceScope CreateScope() => Factory.Services.CreateScope();
+
     public override async Task InitializeAsync()
     {
         await _blobStorage.InitializeAsync();
