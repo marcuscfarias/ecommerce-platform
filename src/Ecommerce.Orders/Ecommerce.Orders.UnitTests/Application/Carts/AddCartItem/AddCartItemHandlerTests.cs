@@ -82,6 +82,23 @@ public class AddCartItemHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenResultingQuantityExceedsMaximumAndStockIsZero_ShouldThrowMaximumMessage()
+    {
+        // Arrange
+        var product = NewProduct(stockQuantity: 0, isActive: true);
+        ArrangeCatalog(product);
+        ArrangeCart((product.Id, 8));
+        var command = new AddCartItemCommand(product.Id, 3);
+
+        // Act
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<BusinessRuleValidationException>();
+        exception.Message.ShouldBe("Maximum of 10 units per product.");
+    }
+
+    [Fact]
     public async Task Handle_WhenStockIsZero_ShouldThrowOutOfStockMessage()
     {
         // Arrange

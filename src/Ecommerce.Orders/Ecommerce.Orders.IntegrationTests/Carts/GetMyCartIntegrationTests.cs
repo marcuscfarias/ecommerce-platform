@@ -79,6 +79,33 @@ public sealed class GetMyCartIntegrationTests(OrdersIntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task Get_WhenStockRisesBackAboveQuantity_ShouldReturnTheLineAsAvailable()
+    {
+        await ResetDatabaseAsync();
+
+        // Arrange
+        var userId = await SeedAuthUserAsync(_faker.Name.FullName());
+        var productId = await SeedProductAsync(price: 10.00m, stockQuantity: 10);
+        await SeedCartAsync(userId, (productId, 3));
+        await UpdateProductAsync(productId, price: 10.00m, stockQuantity: 1);
+        await UpdateProductAsync(productId, price: 10.00m, stockQuantity: 5);
+        using var client = CreateCustomerClient(userId, OrdersPermissions.ManageCart);
+
+        // Act
+        var response = await client.GetAsync(Endpoint);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<GetMyCartResponse>();
+        body.ShouldNotBeNull();
+        var item = body.Items.ShouldHaveSingleItem();
+        item.Status.ShouldBe("available");
+        item.AvailableQuantity.ShouldBeNull();
+        body.Total.ShouldBe(30.00m);
+    }
+
+    [Fact]
     public async Task Get_WhenCartHasLine_ShouldReturnTheExactItemFieldSet()
     {
         await ResetDatabaseAsync();
