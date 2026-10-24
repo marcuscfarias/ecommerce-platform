@@ -23,6 +23,7 @@ public static class InfrastructureModule
         services.AddScoped<IOrderModule, OrderModule>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<CurrentCart>();
+        services.AddScoped<CatalogProducts>();
 
         return services;
     }
