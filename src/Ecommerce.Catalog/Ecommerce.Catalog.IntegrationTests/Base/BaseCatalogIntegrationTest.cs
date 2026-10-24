@@ -1,4 +1,5 @@
 using Ecommerce.Catalog.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.Catalog.IntegrationTests.Base;
 
@@ -18,6 +19,8 @@ public abstract class BaseCatalogIntegrationTest
 
     protected HttpClient CreateAuthenticatedClient(params string[] permissions) =>
         _fixture.CreateAuthenticatedClient(permissions);
+
+    protected IServiceScope CreateScope() => _fixture.CreateScope();
 
     internal Task SeedAsync(Func<CatalogDbContext, Task> seed) => _fixture.SeedAsync(seed);
 

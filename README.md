@@ -170,7 +170,8 @@ The customer-facing shop, built on top of the backoffice backbone.
 | Auth          | Customer registration     | 🟢 Done  |
 | Customers     | Customer profile          | 🟢 Done  |
 | Shop Web      | Blazor WASM SPA           | 🟢 Done  |
-| Orders        | Cart & checkout           | 🔴 To do |
+| Orders        | Cart (API)                | 🟢 Done  |
+| Orders        | Checkout                  | 🔴 To do |
 | Orders        | Order management          | 🔴 To do |
 | Payment       | Payment (microservice)    | 🔴 To do |
 | Shipping      | Shipping & fulfillment    | 🔴 To do |
@@ -219,7 +220,7 @@ Functionalities above.
 
 ### 5.2 Architecture
 
-`Ecommerce.AppHost` is the composition root. Each bounded context is a **module** (Catalog, Auth, Customers) split into
+`Ecommerce.AppHost` is the composition root. Each bounded context is a **module** (Catalog, Auth, Customers, Orders) split into
 Domain / Application / Infrastructure / Api layers and registered uniformly through `Add{Module}Module` /
 `Use{Module}Module` via `ModulesRegistry`.
 
@@ -228,11 +229,17 @@ Modules never reference each other directly: cross-module calls go through `IMod
 (`MediatorModuleBase`) so consumers see a typed contract instead of `ISender`. Domain invariants are enforced with a
 small `BusinessRule` abstraction in the Kernel.
 
-Each module owns its own Postgres **schema** (`catalog`, `auth`, `customers`). Customers is the first module to consume
-another module's contract: the store profile (display name, phone) lives in Customers, linked to the Auth user by
-`UserId`, because it never drives an authentication decision. The profile is created on demand on the first
+Each module owns its own Postgres **schema** (`catalog`, `auth`, `customers`, `orders`). Customers is the first module
+to consume another module's contract: the store profile (display name, phone) lives in Customers, linked to the Auth
+user by `UserId`, because it never drives an authentication decision. The profile is created on demand on the first
 `GET`/`PUT /api/v1/customers/me`, seeded with the account name read through `IAuthModule`, so registration stays
 untouched and the dependency points from business data to identity.
+
+Orders holds one **cart per customer**, keyed by the `CustomerId` it resolves through `ICustomerModule`. The cart stores
+only product ids and quantities: every read and change asks Catalog for current name, price, stock and status in one
+batched query through `ICatalogModule`, so prices are never stale and each line's status (`available`, `outOfStock`,
+`insufficientStock`, `unavailable`) is derived on read, never stored. There are no foreign keys across schemas; the
+module contracts are the only link.
 
 ### 5.3 Request pipeline
 

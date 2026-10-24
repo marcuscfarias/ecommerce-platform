@@ -1,6 +1,7 @@
 using Ecommerce.Auth.Api;
 using Ecommerce.Catalog.Api;
 using Ecommerce.Customers.Api;
+using Ecommerce.Orders.Api;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ internal static class ModulesRegistry
         services.AddCatalogModule(configuration);
         services.AddAuthModule(configuration);
         services.AddCustomersModule(configuration);
+        services.AddOrdersModule(configuration);
     }
 
     internal static void RegisterModules(this WebApplication app)
@@ -22,5 +24,6 @@ internal static class ModulesRegistry
         app.UseCatalogModule(applyMigrations);
         app.UseAuthModule(applyMigrations);
         app.UseCustomersModule(applyMigrations);
+        app.UseOrdersModule(applyMigrations);
     }
 }

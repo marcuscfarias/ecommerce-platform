@@ -27,6 +27,7 @@
       <ProjectReference Include="..\Ecommerce.Catalog\Ecommerce.Catalog.Api\Ecommerce.Catalog.Api.csproj" />
       <ProjectReference Include="..\Ecommerce.Auth\Ecommerce.Auth.Api\Ecommerce.Auth.Api.csproj" />
       <ProjectReference Include="..\Ecommerce.Customers\Ecommerce.Customers.Api\Ecommerce.Customers.Api.csproj" />
+      <ProjectReference Include="..\Ecommerce.Orders\Ecommerce.Orders.Api\Ecommerce.Orders.Api.csproj" />
       <ProjectReference Include="..\Ecommerce.Kernel\Ecommerce.Kernel.API\Ecommerce.Kernel.API.csproj" />
     </ItemGroup>
 

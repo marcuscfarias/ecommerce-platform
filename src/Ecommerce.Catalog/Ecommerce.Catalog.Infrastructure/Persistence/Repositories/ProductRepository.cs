@@ -30,6 +30,12 @@ internal sealed class ProductRepository(CatalogDbContext context, IOptions<Pagin
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, ct);
 
+    public async Task<IReadOnlyList<Product>> GetByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken ct = default) =>
+        await Context.Set<Product>()
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync(ct);
+
     public async Task<bool> CheckSkuExistsAsync(string sku, int? excludeProductId = null, CancellationToken ct = default)
     {
         var query = Context.Set<Product>().Where(p => p.Sku == sku);

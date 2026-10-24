@@ -13,6 +13,8 @@ public interface IProductRepository : IRepository<Product>
 
     Task<Product?> GetActiveByIdAsync(int id, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Product>> GetByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken ct = default);
+
     Task<bool> CheckSkuExistsAsync(string sku, int? excludeProductId = null, CancellationToken ct = default);
 
     Task<bool> CheckCategoryExistsAsync(int categoryId, CancellationToken ct = default);

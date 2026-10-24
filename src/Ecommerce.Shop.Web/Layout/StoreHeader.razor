@@ -16,10 +16,13 @@
                 <Authorized>
                     <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                         <ActivatorContent Context="menu">
-                            <button type="button" class="store-action store-action--live" aria-haspopup="menu"
+                            <button type="button" class="store-action store-action--live store-action--account" aria-haspopup="menu"
                                     @onclick="args => menu.ToggleAsync(args)">
-                                <span class="store-action__hint">@Greeting</span>
-                                <span class="store-action__label">Account &amp; Lists</span>
+                                <MudIcon Icon="@Icons.Material.Outlined.PersonOutline" Class="store-action__icon" />
+                                <span class="store-action__text">
+                                    <span class="store-action__hint">@Greeting</span>
+                                    <span class="store-action__label">Account &amp; Lists</span>
+                                </span>
                             </button>
                         </ActivatorContent>
                         <ChildContent>
@@ -48,9 +51,12 @@
     private string Greeting => Profiles.Current is { } profile ? $"Hello, {profile.DisplayName}" : "Hello";
 
     private RenderFragment SignInLink =>
-        @<a class="store-action store-action--live" href="account/login">
-            <span class="store-action__hint">Hello, sign in</span>
-            <span class="store-action__label">Account &amp; Lists</span>
+        @<a class="store-action store-action--live store-action--account" href="account/login">
+            <MudIcon Icon="@Icons.Material.Outlined.PersonOutline" Class="store-action__icon" />
+            <span class="store-action__text">
+                <span class="store-action__hint">Hello, sign in</span>
+                <span class="store-action__label">Account &amp; Lists</span>
+            </span>
         </a>;
 
     protected override async Task OnInitializedAsync()

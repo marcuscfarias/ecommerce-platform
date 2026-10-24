@@ -6,6 +6,7 @@ using Ecommerce.Auth.IntegrationTests.Base;
 using Ecommerce.Customers.Api.Authorization;
 using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.Application.Security;
+using Ecommerce.Orders.Api.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth.ConfirmEmail;
@@ -178,7 +179,7 @@ public sealed class ConfirmEmailIntegrationTests(AuthIntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task ConfirmEmail_WhenConfirmedCustomerLogsIn_ShouldReturn200WithCustomerRoleAndProfilePermission()
+    public async Task ConfirmEmail_WhenConfirmedCustomerLogsIn_ShouldReturn200WithCustomerRoleAndProfileAndCartPermissions()
     {
         await ResetDatabaseAsync();
 
@@ -198,7 +199,7 @@ public sealed class ConfirmEmailIntegrationTests(AuthIntegrationFixture fixture)
         jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
             .ShouldHaveSingleItem().ShouldBe(nameof(RoleName.Customer));
         jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value)
-            .ShouldHaveSingleItem().ShouldBe(CustomersPermissions.ManageProfile);
+            .ShouldBe([CustomersPermissions.ManageProfile, OrdersPermissions.ManageCart], ignoreOrder: true);
     }
 
     private Task SeedCustomerRoleAsync() => SeedAsync(db =>

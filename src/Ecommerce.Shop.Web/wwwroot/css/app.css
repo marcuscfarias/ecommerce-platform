@@ -177,6 +177,23 @@ img {
     font-weight: 600;
 }
 
+.store-action--account {
+    flex-direction: row;
+    align-items: center;
+    gap: .3rem;
+}
+
+.store-action .store-action__icon {
+    flex: 0 0 auto;
+    font-size: 1.6rem;
+}
+
+.store-action__text {
+    display: flex;
+    flex-direction: column;
+    gap: .05rem;
+}
+
 .store-action--cart {
     flex-direction: row;
     align-items: center;
@@ -1049,6 +1066,15 @@ img {
 
     .store-action__hint {
         display: none;
+    }
+
+    .store-action--account .store-action__text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
 
     .browse__row {

@@ -38,6 +38,14 @@
     <Project Path="Ecommerce.Customers/Ecommerce.Customers.IntegrationTests/Ecommerce.Customers.IntegrationTests.csproj" />
     <Project Path="Ecommerce.Customers/Ecommerce.Customers.UnitTests/Ecommerce.Customers.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/Ecommerce.Orders/">
+    <Project Path="Ecommerce.Orders/Ecommerce.Orders.Api/Ecommerce.Orders.Api.csproj" />
+    <Project Path="Ecommerce.Orders/Ecommerce.Orders.Application/Ecommerce.Orders.Application.csproj" />
+    <Project Path="Ecommerce.Orders/Ecommerce.Orders.Domain/Ecommerce.Orders.Domain.csproj" />
+    <Project Path="Ecommerce.Orders/Ecommerce.Orders.Infrastructure/Ecommerce.Orders.Infrastructure.csproj" />
+    <Project Path="Ecommerce.Orders/Ecommerce.Orders.IntegrationTests/Ecommerce.Orders.IntegrationTests.csproj" />
+    <Project Path="Ecommerce.Orders/Ecommerce.Orders.UnitTests/Ecommerce.Orders.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Ecommerce.Kernel/">
     <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Domain/Ecommerce.Kernel.Domain.csproj" />
     <Project Path="Ecommerce.Kernel/Ecommerce.Kernel.Application/Ecommerce.Kernel.Application.csproj" />

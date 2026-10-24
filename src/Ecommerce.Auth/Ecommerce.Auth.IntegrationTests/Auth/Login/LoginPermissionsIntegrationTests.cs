@@ -8,6 +8,7 @@ using Ecommerce.Auth.IntegrationTests.Base;
 using Ecommerce.Customers.Api.Authorization;
 using Ecommerce.Kernel.API.Security;
 using Ecommerce.Kernel.Application.Security;
+using Ecommerce.Orders.Api.Authorization;
 
 namespace Ecommerce.Auth.IntegrationTests.Auth.Login;
 
@@ -17,7 +18,7 @@ public sealed class LoginPermissionsIntegrationTests(AuthIntegrationFixture fixt
     private const string Endpoint = "/api/v1/auth/login";
 
     [Fact]
-    public async Task Login_WhenSeededAdminLogsIn_ShouldIssueTokenWithoutProfilePermission()
+    public async Task Login_WhenSeededAdminLogsIn_ShouldIssueTokenWithoutCustomerPermissions()
     {
         await ResetDatabaseAsync();
 
@@ -38,12 +39,13 @@ public sealed class LoginPermissionsIntegrationTests(AuthIntegrationFixture fixt
         var jwt = ReadAccessToken(response);
         jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
             .ShouldHaveSingleItem().ShouldBe(nameof(RoleName.Admin));
-        jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value)
-            .ShouldNotContain(CustomersPermissions.ManageProfile);
+        var permissions = jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value).ToList();
+        permissions.ShouldNotContain(CustomersPermissions.ManageProfile);
+        permissions.ShouldNotContain(OrdersPermissions.ManageCart);
     }
 
     [Fact]
-    public async Task Login_WhenCreatedManagerLogsIn_ShouldIssueTokenWithoutProfilePermission()
+    public async Task Login_WhenCreatedManagerLogsIn_ShouldIssueTokenWithoutCustomerPermissions()
     {
         await ResetDatabaseAsync();
 
@@ -67,12 +69,13 @@ public sealed class LoginPermissionsIntegrationTests(AuthIntegrationFixture fixt
         var jwt = ReadAccessToken(response);
         jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
             .ShouldHaveSingleItem().ShouldBe(nameof(RoleName.Manager));
-        jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value)
-            .ShouldNotContain(CustomersPermissions.ManageProfile);
+        var permissions = jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value).ToList();
+        permissions.ShouldNotContain(CustomersPermissions.ManageProfile);
+        permissions.ShouldNotContain(OrdersPermissions.ManageCart);
     }
 
     [Fact]
-    public async Task Login_WhenOwnerLogsIn_ShouldIssueTokenWithoutProfilePermission()
+    public async Task Login_WhenOwnerLogsIn_ShouldIssueTokenWithoutCustomerPermissions()
     {
         await ResetDatabaseAsync();
 
@@ -98,8 +101,9 @@ public sealed class LoginPermissionsIntegrationTests(AuthIntegrationFixture fixt
         var jwt = ReadAccessToken(response);
         jwt.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
             .ShouldHaveSingleItem().ShouldBe(nameof(RoleName.Owner));
-        jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value)
-            .ShouldNotContain(CustomersPermissions.ManageProfile);
+        var permissions = jwt.Claims.Where(c => c.Type == AppClaimTypes.Permission).Select(c => c.Value).ToList();
+        permissions.ShouldNotContain(CustomersPermissions.ManageProfile);
+        permissions.ShouldNotContain(OrdersPermissions.ManageCart);
     }
 
     private static JwtSecurityToken ReadAccessToken(HttpResponseMessage response)
