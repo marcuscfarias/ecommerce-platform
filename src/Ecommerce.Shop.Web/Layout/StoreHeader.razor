@@ -2,6 +2,7 @@
 @inject AuthApiClient AuthApi
 @inject AuthenticationStateProvider AuthState
 @inject ProfileState Profiles
+@inject CartState Carts
 @inject NavigationManager Navigation
 
 <header class="store-header">
@@ -39,16 +40,20 @@
                 </Authorizing>
             </AuthorizeView>
 
-            <div class="store-action store-action--cart" aria-disabled="true" title="The cart arrives in a later release">
-                <span class="cart-badge">0</span>
+            <a class="store-action store-action--live store-action--cart" href="cart" aria-label="@CartLabel">
+                <span class="cart-badge">@CartCount</span>
                 <span class="store-action__label">Cart</span>
-            </div>
+            </a>
         </div>
     </div>
 </header>
 
 @code {
     private string Greeting => Profiles.Current is { } profile ? $"Hello, {profile.DisplayName}" : "Hello";
+
+    private int CartCount => Carts.Current?.TotalQuantity ?? 0;
+
+    private string CartLabel => CartCount == 1 ? "Cart, 1 item" : $"Cart, {CartCount} items";
 
     private RenderFragment SignInLink =>
         @<a class="store-action store-action--live store-action--account" href="account/login">
@@ -61,27 +66,29 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Profiles.Changed += OnProfileChanged;
+        Profiles.Changed += OnStateChanged;
+        Carts.Changed += OnStateChanged;
         AuthState.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
-        await LoadProfileAsync(AuthState.GetAuthenticationStateAsync());
+        await LoadCustomerAsync(AuthState.GetAuthenticationStateAsync());
     }
 
     public void Dispose()
     {
-        Profiles.Changed -= OnProfileChanged;
+        Profiles.Changed -= OnStateChanged;
+        Carts.Changed -= OnStateChanged;
         AuthState.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
-    private void OnProfileChanged() => _ = InvokeAsync(StateHasChanged);
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
 
-    private void OnAuthenticationStateChanged(Task<AuthenticationState> state) => _ = LoadProfileAsync(state);
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> state) => _ = LoadCustomerAsync(state);
 
-    private async Task LoadProfileAsync(Task<AuthenticationState> state)
+    private async Task LoadCustomerAsync(Task<AuthenticationState> state)
     {
         if ((await state).User.Identity?.IsAuthenticated == true)
         {
-            await Profiles.EnsureLoadedAsync();
+            await Task.WhenAll(Profiles.EnsureLoadedAsync(), Carts.EnsureLoadedAsync());
         }
     }
 

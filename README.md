@@ -35,8 +35,8 @@ slice with its own tests — so the architectural decisions stay visible in the 
 
 The first milestone, the **backoffice**, is complete: catalog management (categories and products, including image
 upload and delivery) and user management (authentication, authorization, roles and account lifecycle). The
-customer-facing **storefront** is now building on that backbone: anonymous browsing, search and product pages are live,
-with the cart and checkout next.
+customer-facing **storefront** is now building on that backbone: anonymous browsing, search and product pages, customer
+accounts and a per-customer cart are live, with checkout next.
 
 ## 2. Screenshots or Demo
 
@@ -130,7 +130,8 @@ dotnet run --project Ecommerce.Shop.Web
 
 Both Blazor WebAssembly apps talk to the API on port `8081`. The backoffice opens at
 [`https://localhost:7777`](https://localhost:7777) — sign in with any of the [Demo logins](#demo-logins) — and the
-storefront at [`https://localhost:7778`](https://localhost:7778), which needs no sign-in.
+storefront at [`https://localhost:7778`](https://localhost:7778), which needs no sign-in to browse. Adding to the cart
+needs a customer account: register at `/account/register` and open the confirmation link the API logs to the console.
 
 ### Run tests
 
@@ -170,7 +171,7 @@ The customer-facing shop, built on top of the backoffice backbone.
 | Auth          | Customer registration     | 🟢 Done  |
 | Customers     | Customer profile          | 🟢 Done  |
 | Shop Web      | Blazor WASM SPA           | 🟢 Done  |
-| Orders        | Cart (API)                | 🟢 Done  |
+| Orders        | Cart                      | 🟢 Done  |
 | Orders        | Checkout                  | 🔴 To do |
 | Orders        | Order management          | 🔴 To do |
 | Payment       | Payment (microservice)    | 🔴 To do |

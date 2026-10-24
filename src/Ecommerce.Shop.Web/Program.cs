@@ -39,6 +39,10 @@ builder.Services.AddHttpClient<CustomersApiClient>(client => client.BaseAddress 
     .AddHttpMessageHandler<ColdStartHandler>()
     .AddHttpMessageHandler<CookieAuthenticationHandler>();
 
+builder.Services.AddHttpClient<CartApiClient>(client => client.BaseAddress = apiBaseAddress)
+    .AddHttpMessageHandler<ColdStartHandler>()
+    .AddHttpMessageHandler<CookieAuthenticationHandler>();
+
 builder.Services.AddHttpClient(CookieAuthenticationHandler.RefreshClientName,
     client => client.BaseAddress = apiBaseAddress);
 
@@ -48,6 +52,7 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<ProfileState>();
 builder.Services.AddScoped<PendingConfirmation>();
+builder.Services.AddScoped<CartState>();
 
 builder.Services.AddMudServices();
 
