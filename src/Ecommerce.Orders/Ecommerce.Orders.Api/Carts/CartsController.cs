@@ -1,5 +1,6 @@
 using Ecommerce.Orders.Api.Authorization;
 using Ecommerce.Orders.Api.Carts.AddCartItem;
+using Ecommerce.Orders.Api.Carts.ChangeCartItemQuantity;
 using Ecommerce.Orders.Api.Carts.GetMyCart;
 using Ecommerce.Orders.Application;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +35,21 @@ public sealed class CartsController(IOrderModule module) : ControllerBase
         CancellationToken cancellationToken)
     {
         await module.ExecuteCommandAsync(request.ToCommand(), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("me/items/{productId:int}")]
+    [EndpointDescription("Replaces the quantity of a product already in the cart.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ChangeCartItemQuantity(
+        int productId,
+        [FromBody] ChangeCartItemQuantityRequest request,
+        CancellationToken cancellationToken)
+    {
+        await module.ExecuteCommandAsync(request.ToCommand(productId), cancellationToken);
         return NoContent();
     }
 }
