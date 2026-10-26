@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using Bogus;
 using Ecommerce.Auth.Application;
 using Ecommerce.Auth.Application.Users.CreateUser;
@@ -13,9 +12,7 @@ using Ecommerce.Catalog.Application.Products.UpdateProduct;
 using Ecommerce.Kernel.IntegrationTests;
 using Ecommerce.Kernel.IntegrationTests.Database;
 using Ecommerce.Kernel.IntegrationTests.JwtToken;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Ecommerce.Orders.IntegrationTests.Base;
 
@@ -23,7 +20,7 @@ public sealed class OrdersIntegrationFixture : BaseIntegrationFixture<OrdersWebA
 {
     private readonly Faker _faker = new();
 
-    protected override string[] Schemas => ["orders", "customers", "catalog"];
+    protected override string[] Schemas => ["orders", "catalog"];
 
     public async Task<int> SeedAuthUserAsync(string name)
     {
@@ -84,33 +81,6 @@ public sealed class OrdersIntegrationFixture : BaseIntegrationFixture<OrdersWebA
         var catalogModule = scope.ServiceProvider.GetRequiredService<ICatalogModule>();
 
         await catalogModule.ExecuteCommandAsync(new SetProductStatusCommand(productId, IsActive: false));
-    }
-
-    public async Task<T> ExecuteAsUserAsync<T>(int userId, Func<IServiceProvider, Task<T>> action)
-    {
-        using var scope = Factory.Services.CreateScope();
-        var accessor = scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
-        var identity = new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
-                new Claim(JwtRegisteredClaimNames.Name, _faker.Name.FullName()),
-            ],
-            authenticationType: "Test");
-
-        accessor.HttpContext = new DefaultHttpContext
-        {
-            User = new ClaimsPrincipal(identity),
-            RequestServices = scope.ServiceProvider,
-        };
-
-        try
-        {
-            return await action(scope.ServiceProvider);
-        }
-        finally
-        {
-            accessor.HttpContext = null;
-        }
     }
 
     public IServiceScope CreateScope() => Factory.Services.CreateScope();

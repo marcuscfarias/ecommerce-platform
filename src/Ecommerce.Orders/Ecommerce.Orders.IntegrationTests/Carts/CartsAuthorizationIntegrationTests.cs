@@ -94,7 +94,6 @@ public sealed class CartsAuthorizationIntegrationTests(OrdersIntegrationFixture 
         var othersProduct = await SeedProductAsync();
         await SeedCartAsync(callerId);
         await SeedCartAsync(otherId, (othersProduct, 2));
-        var otherCustomerId = await GetCustomerIdAsync(otherId);
         using var client = CreateCustomerClient(callerId, OrdersPermissions.ManageCart);
 
         // Act
@@ -108,7 +107,7 @@ public sealed class CartsAuthorizationIntegrationTests(OrdersIntegrationFixture 
         body.ShouldNotBeNull();
         body.Status.ShouldBe(404);
 
-        var othersCart = (await GetCartsAsync()).Single(c => c.CustomerId == otherCustomerId);
+        var othersCart = (await GetCartsAsync()).Single(c => c.UserId == otherId);
         var item = othersCart.Items.ShouldHaveSingleItem();
         item.ProductId.ShouldBe(othersProduct);
         item.Quantity.ShouldBe(2);

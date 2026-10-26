@@ -10,8 +10,8 @@ namespace Ecommerce.Orders.Infrastructure.Persistence.Repositories;
 internal sealed class CartRepository(OrdersDbContext context, IOptions<PaginationSettings> paginationSettings)
     : Repository<Cart, OrdersDbContext>(context, paginationSettings), ICartRepository
 {
-    public async Task<Cart?> GetByCustomerIdAsync(int customerId, CancellationToken ct = default) =>
+    public async Task<Cart?> GetByUserIdAsync(int userId, CancellationToken ct = default) =>
         await Context.Set<Cart>()
             .Include(c => c.Items)
-            .FirstOrDefaultAsync(c => c.CustomerId == customerId, ct);
+            .FirstOrDefaultAsync(c => c.UserId == userId, ct);
 }

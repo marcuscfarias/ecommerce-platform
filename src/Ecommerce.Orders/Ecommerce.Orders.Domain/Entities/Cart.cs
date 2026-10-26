@@ -4,11 +4,11 @@ using Ecommerce.Orders.Domain.Rules;
 
 namespace Ecommerce.Orders.Domain.Entities;
 
-public sealed class Cart(int customerId) : Entity
+public sealed class Cart(int userId) : Entity
 {
     private readonly List<CartItem> _items = [];
 
-    public int CustomerId { get; private set; } = customerId;
+    public int UserId { get; private set; } = userId;
     public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
 
     public void AddItem(int productId, int quantity)

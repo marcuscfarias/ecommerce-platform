@@ -1,5 +1,3 @@
-using Ecommerce.Customers.Application;
-using Ecommerce.Customers.Application.Profiles.GetCurrentCustomerId;
 using Ecommerce.Orders.Domain.Entities;
 using Ecommerce.Orders.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -34,16 +32,9 @@ public abstract class BaseOrdersIntegrationTest
 
     protected Task DeactivateProductAsync(int productId) => _fixture.DeactivateProductAsync(productId);
 
-    protected Task<T> ExecuteAsUserAsync<T>(int userId, Func<IServiceProvider, Task<T>> action) =>
-        _fixture.ExecuteAsUserAsync(userId, action);
-
-    protected Task<int> GetCustomerIdAsync(int userId) =>
-        ExecuteAsUserAsync(userId, services =>
-            services.GetRequiredService<ICustomerModule>().ExecuteQueryAsync(new GetCurrentCustomerIdQuery()));
-
     protected async Task SeedCartAsync(int userId, params (int ProductId, int Quantity)[] lines)
     {
-        var cart = new Cart(await GetCustomerIdAsync(userId));
+        var cart = new Cart(userId);
         foreach (var (productId, quantity) in lines)
             cart.AddItem(productId, quantity);
 

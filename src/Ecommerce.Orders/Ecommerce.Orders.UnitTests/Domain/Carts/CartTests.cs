@@ -8,16 +8,16 @@ public class CartTests
     private readonly Faker _faker = new();
 
     [Fact]
-    public void Constructor_WithCustomerId_ShouldSetItAndStartWithNoItems()
+    public void Constructor_WithUserId_ShouldSetItAndStartWithNoItems()
     {
         // Arrange
-        var customerId = _faker.Random.Int(1);
+        var userId = _faker.Random.Int(1);
 
         // Act
-        var cart = new Cart(customerId);
+        var cart = new Cart(userId);
 
         // Assert
-        cart.CustomerId.ShouldBe(customerId);
+        cart.UserId.ShouldBe(userId);
         cart.Items.ShouldBeEmpty();
     }
 

@@ -12,7 +12,7 @@ internal sealed class CartConfiguration : IEntityTypeConfiguration<Cart>
 
         builder.HasKey(c => c.Id);
 
-        builder.HasIndex(c => c.CustomerId)
+        builder.HasIndex(c => c.UserId)
             .IsUnique();
 
         builder.HasMany(c => c.Items)
