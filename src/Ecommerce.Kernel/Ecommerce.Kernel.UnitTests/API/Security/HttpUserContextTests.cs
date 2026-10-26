@@ -27,6 +27,20 @@ public class HttpUserContextTests
     }
 
     [Fact]
+    public void Name_WhenOnlyNameClaimExists_ShouldReturnIt()
+    {
+        // Arrange
+        var name = _faker.Name.FullName();
+        var sut = CreateSut(new Claim(JwtRegisteredClaimNames.Name, name));
+
+        // Act
+        var result = sut.Name;
+
+        // Assert
+        result.ShouldBe(name);
+    }
+
+    [Fact]
     public void Name_WhenNameClaimIsMissing_ShouldReturnTheEmailLocalPart()
     {
         // Arrange

@@ -99,6 +99,7 @@ public class CurrentCartTests
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Information);
         record.Id.Id.ShouldBe(1);
+        record.Message.ShouldBe($"Cart {savedId} created for user {_userId}");
         var state = record.StructuredState.ShouldNotBeNull();
         state.Select(e => e.Key).ShouldBe(["CartId", "UserId", "{OriginalFormat}"], ignoreOrder: true);
         state.ShouldContain(new KeyValuePair<string, string?>("CartId", savedId.ToString(CultureInfo.InvariantCulture)));
