@@ -1,5 +1,3 @@
-using Ecommerce.Auth.Application;
-using Ecommerce.Auth.Application.Auth.GetMe;
 using Ecommerce.Customers.Application.Profiles;
 using Ecommerce.Customers.Application.Profiles.GetMyProfile;
 using Ecommerce.Customers.Domain.Entities;
@@ -13,7 +11,6 @@ public class GetMyProfileHandlerTests
 {
     private readonly ICustomerRepository _repository = Substitute.For<ICustomerRepository>();
     private readonly IUserContext _userContext = Substitute.For<IUserContext>();
-    private readonly IAuthModule _authModule = Substitute.For<IAuthModule>();
     private readonly Faker _faker = new();
     private readonly int _userId;
     private readonly GetMyProfileHandler _handler;
@@ -24,7 +21,7 @@ public class GetMyProfileHandlerTests
         _userContext.UserId.Returns(_userId);
 
         var currentProfile = new CurrentCustomerProfile(
-            _repository, _userContext, _authModule, new FakeLogger<CurrentCustomerProfile>());
+            _repository, _userContext, new FakeLogger<CurrentCustomerProfile>());
 
         _handler = new GetMyProfileHandler(currentProfile);
     }
@@ -45,16 +42,16 @@ public class GetMyProfileHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenProfileIsMissing_ShouldReturnAuthNameAndNullPhone()
+    public async Task Handle_WhenProfileIsMissing_ShouldReturnTokenNameAndNullPhone()
     {
         // Arrange
-        var user = new GetMeResult(_userId, _faker.Internet.Email(), _faker.Name.FullName(), [_faker.Random.Word()]);
-        _authModule.ExecuteQueryAsync(Arg.Any<GetMeQuery>(), Arg.Any<CancellationToken>()).Returns(user);
+        var name = _faker.Name.FullName();
+        _userContext.Name.Returns(name);
 
         // Act
         var result = await _handler.Handle(new GetMyProfileQuery(), CancellationToken.None);
 
         // Assert
-        result.ShouldBe(new GetMyProfileResult(user.Name, null));
+        result.ShouldBe(new GetMyProfileResult(name, null));
     }
 }

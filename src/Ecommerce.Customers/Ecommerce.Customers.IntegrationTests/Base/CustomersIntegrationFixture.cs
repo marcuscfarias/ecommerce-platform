@@ -26,10 +26,13 @@ public sealed class CustomersIntegrationFixture : BaseIntegrationFixture<Custome
         return await authModule.ExecuteCommandAsync(command);
     }
 
-    public HttpClient CreateCustomerClient(int userId, params string[] permissions)
+    public HttpClient CreateCustomerClient(int userId, params string[] permissions) =>
+        CreateNamedCustomerClient(userId, null, permissions);
+
+    public HttpClient CreateNamedCustomerClient(int userId, string? name, params string[] permissions)
     {
         var client = Factory.CreateClient();
-        var token = TestTokenFactory.Create(permissions, userId);
+        var token = TestTokenFactory.Create(permissions, userId, name);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
     }

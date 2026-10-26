@@ -100,7 +100,7 @@ public class LoginHandlerTests
         _timeProvider.SetUtcNow(now);
         _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
         _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(true);
-        _jwtTokenGenerator.Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>()).Returns(accessToken);
+        _jwtTokenGenerator.Generate(user.Id, user.Email, user.Name, Arg.Any<IEnumerable<RoleName>>()).Returns(accessToken);
         _refreshTokenFactory.Lifetime.Returns(lifetime);
         _refreshTokenFactory.Create().Returns(refreshPair);
 
@@ -168,7 +168,7 @@ public class LoginHandlerTests
         _timeProvider.SetUtcNow(now);
         _repository.GetByEmailWithRolesAsync(command.Email, Arg.Any<CancellationToken>()).Returns(user);
         _passwordHasher.Verify(command.Password, user.PasswordHash).Returns(true);
-        _jwtTokenGenerator.Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>())
+        _jwtTokenGenerator.Generate(user.Id, user.Email, user.Name, Arg.Any<IEnumerable<RoleName>>())
             .Returns(new JwtAccessToken(_faker.Random.AlphaNumeric(32), _faker.Random.Int(1, 900)));
         _refreshTokenFactory.Lifetime.Returns(TimeSpan.FromDays(7));
         _refreshTokenFactory.Create().Returns(new RefreshTokenPair(_faker.Random.AlphaNumeric(43), _faker.Random.Hash()));

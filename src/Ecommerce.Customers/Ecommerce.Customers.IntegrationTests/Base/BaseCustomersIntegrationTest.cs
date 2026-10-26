@@ -23,6 +23,9 @@ public abstract class BaseCustomersIntegrationTest
     protected HttpClient CreateCustomerClient(int userId, params string[] permissions) =>
         _fixture.CreateCustomerClient(userId, permissions);
 
+    protected HttpClient CreateNamedCustomerClient(int userId, string name, params string[] permissions) =>
+        _fixture.CreateNamedCustomerClient(userId, name, permissions);
+
     protected Task<int> SeedAuthUserAsync(string name) => _fixture.SeedAuthUserAsync(name);
 
     protected IServiceScope CreateScope() => _fixture.CreateScope();

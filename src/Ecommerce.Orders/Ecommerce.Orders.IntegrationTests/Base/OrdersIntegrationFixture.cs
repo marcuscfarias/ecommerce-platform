@@ -91,7 +91,10 @@ public sealed class OrdersIntegrationFixture : BaseIntegrationFixture<OrdersWebA
         using var scope = Factory.Services.CreateScope();
         var accessor = scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
         var identity = new ClaimsIdentity(
-            [new Claim(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture))],
+            [
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
+                new Claim(JwtRegisteredClaimNames.Name, _faker.Name.FullName()),
+            ],
             authenticationType: "Test");
 
         accessor.HttpContext = new DefaultHttpContext

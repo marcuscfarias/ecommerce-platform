@@ -25,7 +25,7 @@ public class JwtTokenGeneratorTests
         var sut = CreateSut().Sut;
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         result.ShouldNotBeNull();
@@ -41,7 +41,7 @@ public class JwtTokenGeneratorTests
         var (sut, settings, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         result.ShouldNotBeNull();
@@ -57,7 +57,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -74,12 +74,30 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
         var emailClaim = jwt.Claims.First(c => c.Type == JwtRegisteredClaimNames.Email);
         emailClaim.Value.ShouldBe(email);
+    }
+
+    [Fact]
+    public void Generate_WhenCalled_ShouldEmitNameClaim()
+    {
+        // Arrange
+        var userId = Faker.Random.Int(1, int.MaxValue);
+        var email = Faker.Internet.Email();
+        var name = Faker.Name.FullName();
+        var (sut, _, _) = CreateSut();
+
+        // Act
+        var result = sut.Generate(userId, email, name, []);
+
+        // Assert
+        var jwt = ReadToken(result.Token);
+        var nameClaim = jwt.Claims.First(c => c.Type == JwtRegisteredClaimNames.Name);
+        nameClaim.Value.ShouldBe(name);
     }
 
     [Fact]
@@ -91,7 +109,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -108,8 +126,8 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var first = sut.Generate(userId, email, []);
-        var second = sut.Generate(userId, email, []);
+        var first = sut.Generate(userId, email, Faker.Name.FullName(), []);
+        var second = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var firstJti = ReadToken(first.Token).Claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
@@ -126,7 +144,7 @@ public class JwtTokenGeneratorTests
         var (sut, settings, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -143,7 +161,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, clock) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -159,7 +177,7 @@ public class JwtTokenGeneratorTests
         var (sut, settings, clock) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -175,7 +193,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -198,7 +216,7 @@ public class JwtTokenGeneratorTests
         };
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         Should.NotThrow(() => new JwtSecurityTokenHandler().ValidateToken(result.Token, validationParameters, out _));
@@ -214,7 +232,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, [RoleName.Admin, RoleName.Manager]);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), [RoleName.Admin, RoleName.Manager]);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -233,7 +251,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut();
 
         // Act
-        var result = sut.Generate(userId, email, []);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), []);
 
         // Assert
         var jwt = ReadToken(result.Token);
@@ -250,7 +268,7 @@ public class JwtTokenGeneratorTests
         var (sut, _, _) = CreateSut(permissions: ["users:view", "catalog:manage"]);
 
         // Act
-        var result = sut.Generate(userId, email, [RoleName.Admin]);
+        var result = sut.Generate(userId, email, Faker.Name.FullName(), [RoleName.Admin]);
 
         // Assert
         var jwt = ReadToken(result.Token);
