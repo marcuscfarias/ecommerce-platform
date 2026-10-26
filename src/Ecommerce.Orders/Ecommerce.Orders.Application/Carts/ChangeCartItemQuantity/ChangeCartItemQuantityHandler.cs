@@ -1,11 +1,12 @@
 using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Domain.BusinessRules;
+using Ecommerce.Orders.Domain.Catalog;
 using Ecommerce.Orders.Application.Carts.Rules;
 using MediatR;
 
 namespace Ecommerce.Orders.Application.Carts.ChangeCartItemQuantity;
 
-internal sealed class ChangeCartItemQuantityHandler(CurrentCart currentCart, CatalogProducts catalogProducts)
+internal sealed class ChangeCartItemQuantityHandler(CurrentCart currentCart, ICatalogProducts catalogProducts)
     : IRequestHandler<ChangeCartItemQuantityCommand>
 {
     public async Task Handle(ChangeCartItemQuantityCommand command, CancellationToken cancellationToken)

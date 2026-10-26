@@ -1,10 +1,10 @@
-using Ecommerce.Catalog.Application.Products.GetProductAvailability;
+using Ecommerce.Orders.Domain.Catalog;
 
 namespace Ecommerce.Orders.Application.Carts;
 
 internal static class CartItemStatusResolver
 {
-    public static CartItemStatus Resolve(ProductAvailability? product, int quantity)
+    public static CartItemStatus Resolve(CatalogProduct? product, int quantity)
     {
         if (product is not { IsActive: true })
             return CartItemStatus.Unavailable;

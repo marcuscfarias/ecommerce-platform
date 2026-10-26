@@ -1,11 +1,10 @@
-using Ecommerce.Catalog.Application;
-using Ecommerce.Catalog.Application.Products.GetProductAvailability;
 using Ecommerce.Customers.Application;
 using Ecommerce.Customers.Application.Profiles.GetCurrentCustomerId;
 using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Domain.Exceptions;
 using Ecommerce.Orders.Application.Carts;
 using Ecommerce.Orders.Application.Carts.ChangeCartItemQuantity;
+using Ecommerce.Orders.Domain.Catalog;
 using Ecommerce.Orders.Domain.Entities;
 using Ecommerce.Orders.Domain.Repositories;
 using Microsoft.Extensions.Logging.Testing;
@@ -16,7 +15,7 @@ public class ChangeCartItemQuantityHandlerTests
 {
     private readonly ICartRepository _repository = Substitute.For<ICartRepository>();
     private readonly ICustomerModule _customerModule = Substitute.For<ICustomerModule>();
-    private readonly ICatalogModule _catalogModule = Substitute.For<ICatalogModule>();
+    private readonly ICatalogProducts _catalogProducts = Substitute.For<ICatalogProducts>();
     private readonly Faker _faker = new();
     private readonly int _customerId;
     private readonly ChangeCartItemQuantityHandler _handler;
@@ -28,7 +27,7 @@ public class ChangeCartItemQuantityHandlerTests
             .Returns(_customerId);
 
         var currentCart = new CurrentCart(_repository, _customerModule, new FakeLogger<CurrentCart>());
-        _handler = new ChangeCartItemQuantityHandler(currentCart, new CatalogProducts(_catalogModule));
+        _handler = new ChangeCartItemQuantityHandler(currentCart, _catalogProducts);
     }
 
     [Fact]
@@ -170,11 +169,11 @@ public class ChangeCartItemQuantityHandlerTests
         return cart;
     }
 
-    private void ArrangeCatalog(params ProductAvailability[] products) =>
-        _catalogModule.ExecuteQueryAsync(Arg.Any<GetProductAvailabilityQuery>(), Arg.Any<CancellationToken>())
-            .Returns(new GetProductAvailabilityResult(products));
+    private void ArrangeCatalog(params CatalogProduct[] products) =>
+        _catalogProducts.GetAsync(Arg.Any<IReadOnlyCollection<int>>(), Arg.Any<CancellationToken>())
+            .Returns(products.ToDictionary(p => p.Id));
 
-    private ProductAvailability NewProduct(int stockQuantity, bool isActive) =>
+    private CatalogProduct NewProduct(int stockQuantity, bool isActive) =>
         new(_faker.Random.Int(1),
             _faker.Commerce.ProductName(),
             _faker.Random.Decimal(1, 1000),
