@@ -5,5 +5,5 @@ namespace Ecommerce.Orders.Domain.Repositories;
 
 public interface ICartRepository : IRepository<Cart>
 {
-    Task<Cart?> GetByCustomerIdAsync(int customerId, CancellationToken ct = default);
+    Task<Cart?> GetByUserIdAsync(int userId, CancellationToken ct = default);
 }

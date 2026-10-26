@@ -1,11 +1,12 @@
 using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Domain.BusinessRules;
+using Ecommerce.Orders.Domain.Catalog;
 using Ecommerce.Orders.Application.Carts.Rules;
 using MediatR;
 
 namespace Ecommerce.Orders.Application.Carts.AddCartItem;
 
-internal sealed class AddCartItemHandler(CurrentCart currentCart, CatalogProducts catalogProducts)
+internal sealed class AddCartItemHandler(CurrentCart currentCart, ICatalogProducts catalogProducts)
     : IRequestHandler<AddCartItemCommand>
 {
     public async Task Handle(AddCartItemCommand command, CancellationToken cancellationToken)

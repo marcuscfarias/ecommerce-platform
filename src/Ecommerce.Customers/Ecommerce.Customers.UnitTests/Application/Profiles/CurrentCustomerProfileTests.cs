@@ -1,10 +1,7 @@
 using System.Globalization;
-using Ecommerce.Auth.Application;
-using Ecommerce.Auth.Application.Auth.GetMe;
 using Ecommerce.Customers.Application.Profiles;
 using Ecommerce.Customers.Domain.Entities;
 using Ecommerce.Customers.Domain.Repositories;
-using Ecommerce.Kernel.Application.Exceptions;
 using Ecommerce.Kernel.Application.Security;
 using Ecommerce.Kernel.Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -16,7 +13,6 @@ public class CurrentCustomerProfileTests
 {
     private readonly ICustomerRepository _repository = Substitute.For<ICustomerRepository>();
     private readonly IUserContext _userContext = Substitute.For<IUserContext>();
-    private readonly IAuthModule _authModule = Substitute.For<IAuthModule>();
     private readonly FakeLogger<CurrentCustomerProfile> _logger = new();
     private readonly Faker _faker = new();
     private readonly List<Customer> _added = [];
@@ -29,7 +25,7 @@ public class CurrentCustomerProfileTests
         _userContext.UserId.Returns(_userId);
         _repository.Add(Arg.Do<Customer>(_added.Add));
 
-        _profile = new CurrentCustomerProfile(_repository, _userContext, _authModule, _logger);
+        _profile = new CurrentCustomerProfile(_repository, _userContext, _logger);
     }
 
     [Fact]
@@ -49,10 +45,10 @@ public class CurrentCustomerProfileTests
     }
 
     [Fact]
-    public async Task GetOrCreateAsync_WhenProfileIsMissing_ShouldAddCustomerWithAuthNameAndSaveOnce()
+    public async Task GetOrCreateAsync_WhenProfileIsMissing_ShouldAddCustomerWithTokenNameAndSaveOnce()
     {
         // Arrange
-        var user = ArrangeAuthUser();
+        var name = ArrangeTokenName();
 
         // Act
         var result = await _profile.GetOrCreateAsync(CancellationToken.None);
@@ -60,7 +56,7 @@ public class CurrentCustomerProfileTests
         // Assert
         var added = _added.ShouldHaveSingleItem();
         added.UserId.ShouldBe(_userId);
-        added.DisplayName.ShouldBe(user.Name);
+        added.DisplayName.ShouldBe(name);
         added.Phone.ShouldBeNull();
         result.ShouldBeSameAs(added);
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -70,7 +66,7 @@ public class CurrentCustomerProfileTests
     public async Task GetOrCreateAsync_WhenProfileIsMissing_ShouldLogProfileCreatedWithIdsAndNoName()
     {
         // Arrange
-        var user = ArrangeAuthUser();
+        var name = ArrangeTokenName();
         var savedId = _faker.Random.Int(1);
         _repository.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(_ =>
         {
@@ -89,28 +85,14 @@ public class CurrentCustomerProfileTests
         state.Select(e => e.Key).ShouldBe(["CustomerId", "UserId", "{OriginalFormat}"], ignoreOrder: true);
         state.ShouldContain(new KeyValuePair<string, string?>("CustomerId", savedId.ToString(CultureInfo.InvariantCulture)));
         state.ShouldContain(new KeyValuePair<string, string?>("UserId", _userId.ToString(CultureInfo.InvariantCulture)));
-        record.Message.ShouldNotContain(user.Name);
+        record.Message.ShouldNotContain(name);
     }
 
-    [Fact]
-    public async Task GetOrCreateAsync_WhenAuthUserDoesNotExist_ShouldThrowResourceNotFoundException()
+    private string ArrangeTokenName()
     {
-        // Arrange
-        _authModule.ExecuteQueryAsync(Arg.Any<GetMeQuery>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<GetMeResult>(new ResourceNotFoundException("User", _userId)));
-
-        // Act
-        var act = () => _profile.GetOrCreateAsync(CancellationToken.None);
-
-        // Assert
-        await act.ShouldThrowAsync<ResourceNotFoundException>();
-    }
-
-    private GetMeResult ArrangeAuthUser()
-    {
-        var user = new GetMeResult(_userId, _faker.Internet.Email(), _faker.Name.FullName(), [_faker.Random.Word()]);
-        _authModule.ExecuteQueryAsync(Arg.Any<GetMeQuery>(), Arg.Any<CancellationToken>()).Returns(user);
-        return user;
+        var name = _faker.Name.FullName();
+        _userContext.Name.Returns(name);
+        return name;
     }
 
     private static void AssignId(Customer customer, int id) =>

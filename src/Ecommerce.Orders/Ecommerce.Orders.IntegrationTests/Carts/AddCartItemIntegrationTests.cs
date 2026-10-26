@@ -29,7 +29,7 @@ public sealed class AddCartItemIntegrationTests(OrdersIntegrationFixture fixture
         (await response.Content.ReadAsStringAsync()).ShouldBeEmpty();
 
         var cart = (await GetCartsAsync()).ShouldHaveSingleItem();
-        cart.CustomerId.ShouldBe(await GetCustomerIdAsync(userId));
+        cart.UserId.ShouldBe(userId);
         var item = cart.Items.ShouldHaveSingleItem();
         item.ProductId.ShouldBe(productId);
         item.Quantity.ShouldBe(2);

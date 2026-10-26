@@ -43,7 +43,7 @@ public class RefreshHandlerTests
         _refreshTokenFactory.Hash(command.RefreshToken).Returns(hash);
         _repository.GetRefreshTokenByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(validToken);
         _repository.GetByIdWithRolesAsync(validToken.UserId, Arg.Any<CancellationToken>()).Returns(user);
-        _jwtTokenGenerator.Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>()).Returns(accessToken);
+        _jwtTokenGenerator.Generate(user.Id, user.Email, user.Name, Arg.Any<IEnumerable<RoleName>>()).Returns(accessToken);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -51,7 +51,7 @@ public class RefreshHandlerTests
         // Assert
         result.AccessToken.ShouldBe(accessToken.Token);
         result.AccessTokenExpiresInSeconds.ShouldBe(accessToken.ExpiresInSeconds);
-        _jwtTokenGenerator.Received(1).Generate(user.Id, user.Email, Arg.Any<IEnumerable<RoleName>>());
+        _jwtTokenGenerator.Received(1).Generate(user.Id, user.Email, user.Name, Arg.Any<IEnumerable<RoleName>>());
     }
 
     [Fact]

@@ -27,7 +27,7 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
         _timeProvider = timeProvider;
     }
 
-    public JwtAccessToken Generate(int userId, string email, IEnumerable<RoleName> roles)
+    public JwtAccessToken Generate(int userId, string email, string name, IEnumerable<RoleName> roles)
     {
         var now = _timeProvider.GetUtcNow();
         var expiration = now.AddMinutes(_settings.AccessTokenMinutes);
@@ -38,6 +38,7 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
             new(JwtRegisteredClaimNames.Email, email),
+            new(JwtRegisteredClaimNames.Name, name),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
 

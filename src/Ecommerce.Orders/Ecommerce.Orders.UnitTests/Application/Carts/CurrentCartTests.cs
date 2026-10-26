@@ -1,6 +1,5 @@
 using System.Globalization;
-using Ecommerce.Customers.Application;
-using Ecommerce.Customers.Application.Profiles.GetCurrentCustomerId;
+using Ecommerce.Kernel.Application.Security;
 using Ecommerce.Kernel.Domain.Entities;
 using Ecommerce.Orders.Application.Carts;
 using Ecommerce.Orders.Domain.Entities;
@@ -13,21 +12,20 @@ namespace Ecommerce.Orders.UnitTests.Application.Carts;
 public class CurrentCartTests
 {
     private readonly ICartRepository _repository = Substitute.For<ICartRepository>();
-    private readonly ICustomerModule _customerModule = Substitute.For<ICustomerModule>();
+    private readonly IUserContext _userContext = Substitute.For<IUserContext>();
     private readonly FakeLogger<CurrentCart> _logger = new();
     private readonly Faker _faker = new();
     private readonly List<Cart> _added = [];
-    private readonly int _customerId;
+    private readonly int _userId;
     private readonly CurrentCart _currentCart;
 
     public CurrentCartTests()
     {
-        _customerId = _faker.Random.Int(1);
-        _customerModule.ExecuteQueryAsync(Arg.Any<GetCurrentCustomerIdQuery>(), Arg.Any<CancellationToken>())
-            .Returns(_customerId);
+        _userId = _faker.Random.Int(1);
+        _userContext.UserId.Returns(_userId);
         _repository.Add(Arg.Do<Cart>(_added.Add));
 
-        _currentCart = new CurrentCart(_repository, _customerModule, _logger);
+        _currentCart = new CurrentCart(_repository, _userContext, _logger);
     }
 
     [Fact]
@@ -76,7 +74,7 @@ public class CurrentCartTests
 
         // Assert
         var added = _added.ShouldHaveSingleItem();
-        added.CustomerId.ShouldBe(_customerId);
+        added.UserId.ShouldBe(_userId);
         added.Items.ShouldBeEmpty();
         result.ShouldBeSameAs(added);
     }
@@ -101,10 +99,11 @@ public class CurrentCartTests
         var record = _logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Information);
         record.Id.Id.ShouldBe(1);
+        record.Message.ShouldBe($"Cart {savedId} created for user {_userId}");
         var state = record.StructuredState.ShouldNotBeNull();
-        state.Select(e => e.Key).ShouldBe(["CartId", "CustomerId", "{OriginalFormat}"], ignoreOrder: true);
+        state.Select(e => e.Key).ShouldBe(["CartId", "UserId", "{OriginalFormat}"], ignoreOrder: true);
         state.ShouldContain(new KeyValuePair<string, string?>("CartId", savedId.ToString(CultureInfo.InvariantCulture)));
-        state.ShouldContain(new KeyValuePair<string, string?>("CustomerId", _customerId.ToString(CultureInfo.InvariantCulture)));
+        state.ShouldContain(new KeyValuePair<string, string?>("UserId", _userId.ToString(CultureInfo.InvariantCulture)));
     }
 
     [Fact]
@@ -124,9 +123,9 @@ public class CurrentCartTests
 
     private Cart ArrangeExistingCart()
     {
-        var existing = new Cart(_customerId);
+        var existing = new Cart(_userId);
         existing.AddItem(_faker.Random.Int(1), _faker.Random.Int(1, 10));
-        _repository.GetByCustomerIdAsync(_customerId, Arg.Any<CancellationToken>()).Returns(existing);
+        _repository.GetByUserIdAsync(_userId, Arg.Any<CancellationToken>()).Returns(existing);
         return existing;
     }
 

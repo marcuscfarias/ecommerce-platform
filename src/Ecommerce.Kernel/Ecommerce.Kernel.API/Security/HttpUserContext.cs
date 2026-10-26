@@ -18,4 +18,21 @@ internal sealed class HttpUserContext(IHttpContextAccessor accessor) : IUserCont
             return int.Parse(sub, CultureInfo.InvariantCulture);
         }
     }
+
+    public string Name
+    {
+        get
+        {
+            var user = accessor.HttpContext?.User;
+
+            var name = user?.FindFirstValue(JwtRegisteredClaimNames.Name);
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            var email = user?.FindFirstValue(JwtRegisteredClaimNames.Email)
+                ?? throw new InvalidOperationException("No authenticated user in the current context.");
+
+            return email.Split('@')[0];
+        }
+    }
 }

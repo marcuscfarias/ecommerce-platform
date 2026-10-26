@@ -1,5 +1,3 @@
-using Ecommerce.Auth.Application;
-using Ecommerce.Auth.Application.Auth.GetMe;
 using Ecommerce.Customers.Domain.Entities;
 using Ecommerce.Customers.Domain.Repositories;
 using Ecommerce.Kernel.Application.Security;
@@ -10,7 +8,6 @@ namespace Ecommerce.Customers.Application.Profiles;
 internal sealed partial class CurrentCustomerProfile(
     ICustomerRepository repository,
     IUserContext userContext,
-    IAuthModule authModule,
     ILogger<CurrentCustomerProfile> logger)
 {
     public async Task<Customer> GetOrCreateAsync(CancellationToken cancellationToken)
@@ -21,9 +18,7 @@ internal sealed partial class CurrentCustomerProfile(
         if (existing is not null)
             return existing;
 
-        var user = await authModule.ExecuteQueryAsync(new GetMeQuery(), cancellationToken);
-
-        var customer = new Customer(userId, user.Name);
+        var customer = new Customer(userId, userContext.Name);
         repository.Add(customer);
         await repository.SaveChangesAsync(cancellationToken);
 

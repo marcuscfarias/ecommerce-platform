@@ -11,7 +11,7 @@ public sealed class CartRepositoryIntegrationTests(OrdersIntegrationFixture fixt
     : BaseOrdersIntegrationTest(fixture)
 {
     [Fact]
-    public async Task GetByCustomerIdAsync_WhenCartExists_ShouldReturnCartWithItsItems()
+    public async Task GetByUserIdAsync_WhenCartExists_ShouldReturnCartWithItsItems()
     {
         await ResetDatabaseAsync();
 
@@ -25,17 +25,17 @@ public sealed class CartRepositoryIntegrationTests(OrdersIntegrationFixture fixt
         var repository = scope.ServiceProvider.GetRequiredService<ICartRepository>();
 
         // Act
-        var cart = await repository.GetByCustomerIdAsync(42);
+        var cart = await repository.GetByUserIdAsync(42);
 
         // Assert
         cart.ShouldNotBeNull();
         cart.Id.ShouldBe(seeded.Id);
-        cart.CustomerId.ShouldBe(42);
+        cart.UserId.ShouldBe(42);
         cart.Items.Select(i => (i.ProductId, i.Quantity)).ShouldBe([(7, 3), (9, 1)], ignoreOrder: true);
     }
 
     [Fact]
-    public async Task GetByCustomerIdAsync_WhenCartDoesNotExist_ShouldReturnNull()
+    public async Task GetByUserIdAsync_WhenCartDoesNotExist_ShouldReturnNull()
     {
         await ResetDatabaseAsync();
 
@@ -46,14 +46,14 @@ public sealed class CartRepositoryIntegrationTests(OrdersIntegrationFixture fixt
         var repository = scope.ServiceProvider.GetRequiredService<ICartRepository>();
 
         // Act
-        var cart = await repository.GetByCustomerIdAsync(99);
+        var cart = await repository.GetByUserIdAsync(99);
 
         // Assert
         cart.ShouldBeNull();
     }
 
     [Fact]
-    public async Task SaveChangesAsync_WhenCustomerAlreadyHasCart_ShouldThrowDbUpdateException()
+    public async Task SaveChangesAsync_WhenUserAlreadyHasCart_ShouldThrowDbUpdateException()
     {
         await ResetDatabaseAsync();
 
@@ -70,7 +70,7 @@ public sealed class CartRepositoryIntegrationTests(OrdersIntegrationFixture fixt
         // Assert
         var postgresException = exception.InnerException.ShouldBeOfType<PostgresException>();
         postgresException.SqlState.ShouldBe(PostgresErrorCodes.UniqueViolation);
-        postgresException.ConstraintName.ShouldBe("IX_Carts_CustomerId");
+        postgresException.ConstraintName.ShouldBe("IX_Carts_UserId");
     }
 
     [Fact]
@@ -83,11 +83,11 @@ public sealed class CartRepositoryIntegrationTests(OrdersIntegrationFixture fixt
 
         using var firstScope = CreateScope();
         var firstRepository = firstScope.ServiceProvider.GetRequiredService<ICartRepository>();
-        var firstCopy = (await firstRepository.GetByCustomerIdAsync(42)).ShouldNotBeNull();
+        var firstCopy = (await firstRepository.GetByUserIdAsync(42)).ShouldNotBeNull();
 
         using var secondScope = CreateScope();
         var secondRepository = secondScope.ServiceProvider.GetRequiredService<ICartRepository>();
-        var secondCopy = (await secondRepository.GetByCustomerIdAsync(42)).ShouldNotBeNull();
+        var secondCopy = (await secondRepository.GetByUserIdAsync(42)).ShouldNotBeNull();
 
         firstCopy.AddItem(7, 1);
         await firstRepository.SaveChangesAsync();

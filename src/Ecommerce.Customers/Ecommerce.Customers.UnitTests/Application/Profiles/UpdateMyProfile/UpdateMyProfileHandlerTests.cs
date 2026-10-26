@@ -1,5 +1,3 @@
-using Ecommerce.Auth.Application;
-using Ecommerce.Auth.Application.Auth.GetMe;
 using Ecommerce.Customers.Application.Profiles;
 using Ecommerce.Customers.Application.Profiles.UpdateMyProfile;
 using Ecommerce.Customers.Domain.Entities;
@@ -13,7 +11,6 @@ public class UpdateMyProfileHandlerTests
 {
     private readonly ICustomerRepository _repository = Substitute.For<ICustomerRepository>();
     private readonly IUserContext _userContext = Substitute.For<IUserContext>();
-    private readonly IAuthModule _authModule = Substitute.For<IAuthModule>();
     private readonly Faker _faker = new();
     private readonly List<Customer> _added = [];
     private readonly int _userId;
@@ -28,7 +25,7 @@ public class UpdateMyProfileHandlerTests
         _command = new UpdateMyProfileCommand(_faker.Name.FullName(), $"+55{_faker.Random.ReplaceNumbers("###########")}");
 
         var currentProfile = new CurrentCustomerProfile(
-            _repository, _userContext, _authModule, new FakeLogger<CurrentCustomerProfile>());
+            _repository, _userContext, new FakeLogger<CurrentCustomerProfile>());
 
         _handler = new UpdateMyProfileHandler(currentProfile, _repository);
     }
@@ -54,8 +51,7 @@ public class UpdateMyProfileHandlerTests
     public async Task Handle_WhenProfileIsMissing_ShouldCreateThenApplySubmittedValues()
     {
         // Arrange
-        var user = new GetMeResult(_userId, _faker.Internet.Email(), _faker.Name.FullName(), [_faker.Random.Word()]);
-        _authModule.ExecuteQueryAsync(Arg.Any<GetMeQuery>(), Arg.Any<CancellationToken>()).Returns(user);
+        _userContext.Name.Returns(_faker.Name.FullName());
 
         // Act
         await _handler.Handle(_command, CancellationToken.None);

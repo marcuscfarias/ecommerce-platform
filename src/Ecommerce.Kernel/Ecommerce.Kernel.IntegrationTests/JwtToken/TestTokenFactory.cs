@@ -7,16 +7,18 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Ecommerce.Kernel.IntegrationTests.JwtToken;
 
-// Mints bearer tokens the test host will accept, carrying the given permission claims.
+// Mints bearer tokens the test host will accept, carrying the given permission claims and the
+// same identity claims (sub, name) a real access token carries.
 // Lives in the shared base so every module's tests can authenticate without referencing
 // another module — it only needs the token contract (signing key + permission claim type).
 public static class TestTokenFactory
 {
-    public static string Create(IEnumerable<string> permissions, int userId = 1)
+    public static string Create(IEnumerable<string> permissions, int userId = 1, string? name = null)
     {
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
+            new(JwtRegisteredClaimNames.Name, name ?? $"Test User {userId}"),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
 

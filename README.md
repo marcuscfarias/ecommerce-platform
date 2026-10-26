@@ -225,22 +225,23 @@ Functionalities above.
 Domain / Application / Infrastructure / Api layers and registered uniformly through `Add{Module}Module` /
 `Use{Module}Module` via `ModulesRegistry`.
 
-Modules never reference each other directly: cross-module calls go through `IModule` (Kernel) and per-module contracts
-(e.g. `ICatalogModule` in `Ecommerce.Catalog.Application`), implemented by an internal mediator-backed adapter
-(`MediatorModuleBase`) so consumers see a typed contract instead of `ISender`. Domain invariants are enforced with a
-small `BusinessRule` abstraction in the Kernel.
+Module projects never reference each other; they reference only their own layers and the Kernel. A module that needs
+another's data declares a **port in its own Domain** (e.g. `ICatalogProducts` in `Ecommerce.Orders.Domain`), and the
+AppHost implements it in `Integrations/<Consumer>/` by calling the provider's `I*Module` contract, the same shape as
+`IRolePermissionMap`. Each `I*Module` is implemented by an internal mediator-backed adapter (`MediatorModuleBase`) and is
+used only by its own controllers and by AppHost adapters. Identity never crosses modules: `IUserContext` reads `sub`
+and `name` from the token. Domain invariants are enforced with a small `BusinessRule` abstraction in the Kernel.
 
-Each module owns its own Postgres **schema** (`catalog`, `auth`, `customers`, `orders`). Customers is the first module
-to consume another module's contract: the store profile (display name, phone) lives in Customers, linked to the Auth
-user by `UserId`, because it never drives an authentication decision. The profile is created on demand on the first
-`GET`/`PUT /api/v1/customers/me`, seeded with the account name read through `IAuthModule`, so registration stays
-untouched and the dependency points from business data to identity.
+Each module owns its own Postgres **schema** (`catalog`, `auth`, `customers`, `orders`). The store profile (display
+name, phone) lives in Customers, linked to the Auth user by `UserId`, because it never drives an authentication
+decision. The profile is created on demand on the first `GET`/`PUT /api/v1/customers/me`, seeded with the `name` claim
+of the access token, so registration stays untouched and Customers never calls Auth.
 
-Orders holds one **cart per customer**, keyed by the `CustomerId` it resolves through `ICustomerModule`. The cart stores
-only product ids and quantities: every read and change asks Catalog for current name, price, stock and status in one
-batched query through `ICatalogModule`, so prices are never stale and each line's status (`available`, `outOfStock`,
+Orders holds one **cart per user**, keyed by the token's `UserId`. The cart stores only product ids and quantities:
+every read and change asks Catalog for current name, price, stock and status in one batched call through the
+`ICatalogProducts` port, so prices are never stale and each line's status (`available`, `outOfStock`,
 `insufficientStock`, `unavailable`) is derived on read, never stored. There are no foreign keys across schemas; the
-module contracts are the only link.
+AppHost adapters are the only link.
 
 ### 5.3 Request pipeline
 

@@ -1,10 +1,10 @@
-using Ecommerce.Catalog.Application.Products.GetProductAvailability;
+using Ecommerce.Orders.Domain.Catalog;
 using Ecommerce.Orders.Domain.Entities;
 using MediatR;
 
 namespace Ecommerce.Orders.Application.Carts.GetMyCart;
 
-internal sealed class GetMyCartHandler(CurrentCart currentCart, CatalogProducts catalogProducts)
+internal sealed class GetMyCartHandler(CurrentCart currentCart, ICatalogProducts catalogProducts)
     : IRequestHandler<GetMyCartQuery, GetMyCartResult>
 {
     public async Task<GetMyCartResult> Handle(GetMyCartQuery query, CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ internal sealed class GetMyCartHandler(CurrentCart currentCart, CatalogProducts 
             items.Where(i => i.Status == CartItemStatus.Available).Sum(i => i.Subtotal));
     }
 
-    private static GetMyCartItemResult ToItemResult(CartItem line, ProductAvailability? product)
+    private static GetMyCartItemResult ToItemResult(CartItem line, CatalogProduct? product)
     {
         var status = CartItemStatusResolver.Resolve(product, line.Quantity);
         var unitPrice = product?.Price ?? 0m;

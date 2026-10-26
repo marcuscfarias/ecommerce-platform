@@ -33,7 +33,7 @@ internal sealed partial class RefreshHandler(
             throw new InvalidRefreshTokenException();
 
         var roles = user.Roles.Select(r => Enum.Parse<RoleName>(r.Name));
-        var accessToken = jwtTokenGenerator.Generate(user.Id, user.Email, roles);
+        var accessToken = jwtTokenGenerator.Generate(user.Id, user.Email, user.Name, roles);
 
         LogTokenRefreshed(logger, user.Id);
 

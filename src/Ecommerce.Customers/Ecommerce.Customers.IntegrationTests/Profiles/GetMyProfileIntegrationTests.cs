@@ -5,7 +5,6 @@ using Ecommerce.Customers.Api.Profiles.GetMyProfile;
 using Ecommerce.Customers.Domain.Entities;
 using Ecommerce.Customers.Infrastructure.Persistence;
 using Ecommerce.Customers.IntegrationTests.Base;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,14 +17,14 @@ public sealed class GetMyProfileIntegrationTests(CustomersIntegrationFixture fix
     private readonly Faker _faker = new();
 
     [Fact]
-    public async Task Get_WhenCustomerHasNoProfile_ShouldReturn200WithAuthNameAndPersistOneProfile()
+    public async Task Get_WhenCustomerHasNoProfile_ShouldReturn200WithTokenNameAndPersistOneProfile()
     {
         await ResetDatabaseAsync();
 
         // Arrange
         var name = _faker.Name.FullName();
         var userId = await SeedAuthUserAsync(name);
-        using var client = CreateCustomerClient(userId, CustomersPermissions.ManageProfile);
+        using var client = CreateNamedCustomerClient(userId, name, CustomersPermissions.ManageProfile);
 
         // Act
         var response = await client.GetAsync(Endpoint);
@@ -78,28 +77,6 @@ public sealed class GetMyProfileIntegrationTests(CustomersIntegrationFixture fix
         customers.ShouldHaveSingleItem().Id.ShouldBe(seeded.Id);
     }
 
-    [Fact]
-    public async Task Get_WhenAuthUserDoesNotExist_ShouldReturn404WithProblemDetailsAndPersistNothing()
-    {
-        await ResetDatabaseAsync();
-
-        // Arrange
-        var userId = _faker.Random.Int(1_000_000, int.MaxValue);
-        using var client = CreateCustomerClient(userId, CustomersPermissions.ManageProfile);
-
-        // Act
-        var response = await client.GetAsync(Endpoint);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        body.ShouldNotBeNull();
-
-        var customers = await GetCustomersByUserIdAsync(userId);
-        customers.ShouldBeEmpty();
-    }
 
     private async Task<List<Customer>> GetCustomersByUserIdAsync(int userId)
     {

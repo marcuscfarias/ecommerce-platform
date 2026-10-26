@@ -5,7 +5,7 @@
 ## Architecture
 
 **Modular Monolith** — Independent modules inside a single deployable unit. Each module follows Clean Architecture
-layers (Domain, Application, Infrastructure, Api). Modules are decoupled and communicate through shared contracts.
+layers (Domain, Application, Infrastructure, Api). Modules never reference each other; the AppHost wires them together.
 `Ecommerce.AppHost` is the composition root: it owns cross-cutting configuration (authentication, authorization map,
 CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 
@@ -13,7 +13,7 @@ CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 
 | Phase | Description |
 | --- | --- |
-| **1. Modular Monolith** | Logical module boundaries, separate DbContexts/schemas, synchronous cross-module communication via shared contracts. *(current)* |
+| **1. Modular Monolith** | Logical module boundaries, separate DbContexts/schemas, synchronous cross-module communication through consumer-owned ports wired in the AppHost. *(current)* |
 | **2. DDD** | Tactical patterns within modules — aggregates, value objects, domain events, bounded contexts formalized. Well-defined boundaries set the stage for async communication. |
 | **3. Event-Driven** | Message broker (RabbitMQ + MassTransit) for async inter-module communication via integration events, replacing synchronous cross-module calls. Eventual consistency between modules. |
 | **4. Microservice Extraction** | Extract the **Payment** module into an independent deployable. Own database, CI pipeline, and API. Communicates with the monolith exclusively through integration events. |
@@ -92,9 +92,18 @@ CORS, rate limiting, Scalar, Key Vault) and registers every module uniformly.
 
 ## Cross-Module Communication
 
-Modules never reference each other directly. The Kernel defines `IModule` (`ExecuteCommandAsync` / `ExecuteQueryAsync`),
-and each module publishes a typed contract in its Application layer (`ICatalogModule`, `IAuthModule`). The owning module
-implements it with an internal MediatR-backed adapter, so consumers depend on the contract instead of `ISender`.
+Module projects reference only their own layers and `Kernel.*`, never another module.
+
+- **Consumer-owned ports.** A module that needs data from another declares a port in its own Domain, shaped for its own
+  use (`Orders.Domain/Catalog/ICatalogProducts`). The AppHost implements it in `Integrations/<Consumer>/`
+  (`CatalogProductsAdapter`) by calling the provider's `I*Module` and mapping the result. The provider never learns who
+  consumes it, and swapping the adapter (for HTTP, when a module is extracted) touches no module. Same shape as
+  `IRolePermissionMap`, which Auth declares and `AppHost/Authorization` implements.
+- **Identity comes from the token.** `IUserContext` exposes `UserId` (`sub`) and `Name` (`name`); no module asks Auth who
+  the caller is. The user id is the identifier shared across modules (`Cart.UserId`, `Customer.UserId`).
+- **`I*Module` is the module's own entry point.** The Kernel defines `IModule` (`ExecuteCommandAsync` /
+  `ExecuteQueryAsync`); each module implements its `I*Module` with an internal MediatR-backed adapter used by its own
+  controllers and by AppHost adapters, never by another module's code.
 
 ---
 
@@ -105,6 +114,7 @@ src/
 ├── Ecommerce.AppHost/                                # Host — composition root
 │   ├── Program.cs                                    # Pipeline, middleware, module registration
 │   ├── Authorization/                                # AuthorizationRegistry, RolePermissionMap
+│   ├── Integrations/                                 # Adapters for consumer-owned ports, one folder per consumer
 │   ├── Modules/                                      # ModulesRegistry
 │   ├── Scalar/                                       # OpenAPI document transformers
 │   └── Security/                                     # CORS policy and settings

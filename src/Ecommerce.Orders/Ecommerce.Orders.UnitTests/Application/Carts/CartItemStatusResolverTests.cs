@@ -1,5 +1,5 @@
-using Ecommerce.Catalog.Application.Products.GetProductAvailability;
 using Ecommerce.Orders.Application.Carts;
+using Ecommerce.Orders.Domain.Catalog;
 
 namespace Ecommerce.Orders.UnitTests.Application.Carts;
 
@@ -84,7 +84,7 @@ public class CartItemStatusResolverTests
         status.ShouldBe(CartItemStatus.Available);
     }
 
-    private ProductAvailability NewProduct(int stockQuantity, bool isActive) =>
+    private CatalogProduct NewProduct(int stockQuantity, bool isActive) =>
         new(_faker.Random.Int(1),
             _faker.Commerce.ProductName(),
             _faker.Random.Decimal(1, 1000),

@@ -1,11 +1,9 @@
-using Ecommerce.Catalog.Application;
-using Ecommerce.Catalog.Application.Products.GetProductAvailability;
-using Ecommerce.Customers.Application;
-using Ecommerce.Customers.Application.Profiles.GetCurrentCustomerId;
 using Ecommerce.Kernel.Application.Exceptions;
+using Ecommerce.Kernel.Application.Security;
 using Ecommerce.Kernel.Domain.Exceptions;
 using Ecommerce.Orders.Application.Carts;
 using Ecommerce.Orders.Application.Carts.AddCartItem;
+using Ecommerce.Orders.Domain.Catalog;
 using Ecommerce.Orders.Domain.Entities;
 using Ecommerce.Orders.Domain.Repositories;
 using Microsoft.Extensions.Logging.Testing;
@@ -15,22 +13,21 @@ namespace Ecommerce.Orders.UnitTests.Application.Carts.AddCartItem;
 public class AddCartItemHandlerTests
 {
     private readonly ICartRepository _repository = Substitute.For<ICartRepository>();
-    private readonly ICustomerModule _customerModule = Substitute.For<ICustomerModule>();
-    private readonly ICatalogModule _catalogModule = Substitute.For<ICatalogModule>();
+    private readonly IUserContext _userContext = Substitute.For<IUserContext>();
+    private readonly ICatalogProducts _catalogProducts = Substitute.For<ICatalogProducts>();
     private readonly Faker _faker = new();
     private readonly List<Cart> _added = [];
-    private readonly int _customerId;
+    private readonly int _userId;
     private readonly AddCartItemHandler _handler;
 
     public AddCartItemHandlerTests()
     {
-        _customerId = _faker.Random.Int(1);
-        _customerModule.ExecuteQueryAsync(Arg.Any<GetCurrentCustomerIdQuery>(), Arg.Any<CancellationToken>())
-            .Returns(_customerId);
+        _userId = _faker.Random.Int(1);
+        _userContext.UserId.Returns(_userId);
         _repository.Add(Arg.Do<Cart>(_added.Add));
 
-        var currentCart = new CurrentCart(_repository, _customerModule, new FakeLogger<CurrentCart>());
-        _handler = new AddCartItemHandler(currentCart, new CatalogProducts(_catalogModule));
+        var currentCart = new CurrentCart(_repository, _userContext, new FakeLogger<CurrentCart>());
+        _handler = new AddCartItemHandler(currentCart, _catalogProducts);
     }
 
     [Fact]
@@ -144,7 +141,7 @@ public class AddCartItemHandlerTests
 
         // Assert
         var cart = _added.ShouldHaveSingleItem();
-        cart.CustomerId.ShouldBe(_customerId);
+        cart.UserId.ShouldBe(_userId);
         var item = cart.Items.ShouldHaveSingleItem();
         item.ProductId.ShouldBe(product.Id);
         item.Quantity.ShouldBe(2);
@@ -171,19 +168,19 @@ public class AddCartItemHandlerTests
 
     private Cart ArrangeCart(params (int ProductId, int Quantity)[] lines)
     {
-        var cart = new Cart(_customerId);
+        var cart = new Cart(_userId);
         foreach (var (productId, quantity) in lines)
             cart.AddItem(productId, quantity);
 
-        _repository.GetByCustomerIdAsync(_customerId, Arg.Any<CancellationToken>()).Returns(cart);
+        _repository.GetByUserIdAsync(_userId, Arg.Any<CancellationToken>()).Returns(cart);
         return cart;
     }
 
-    private void ArrangeCatalog(params ProductAvailability[] products) =>
-        _catalogModule.ExecuteQueryAsync(Arg.Any<GetProductAvailabilityQuery>(), Arg.Any<CancellationToken>())
-            .Returns(new GetProductAvailabilityResult(products));
+    private void ArrangeCatalog(params CatalogProduct[] products) =>
+        _catalogProducts.GetAsync(Arg.Any<IReadOnlyCollection<int>>(), Arg.Any<CancellationToken>())
+            .Returns(products.ToDictionary(p => p.Id));
 
-    private ProductAvailability NewProduct(int stockQuantity, bool isActive) =>
+    private CatalogProduct NewProduct(int stockQuantity, bool isActive) =>
         new(_faker.Random.Int(1),
             _faker.Commerce.ProductName(),
             _faker.Random.Decimal(1, 1000),

@@ -1,3 +1,4 @@
+using Ecommerce.AppHost.Integrations;
 using Ecommerce.Auth.Api;
 using Ecommerce.Catalog.Api;
 using Ecommerce.Customers.Api;
@@ -16,6 +17,7 @@ internal static class ModulesRegistry
         services.AddAuthModule(configuration);
         services.AddCustomersModule(configuration);
         services.AddOrdersModule(configuration);
+        services.AddModuleIntegrations();
     }
 
     internal static void RegisterModules(this WebApplication app)

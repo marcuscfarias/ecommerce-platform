@@ -56,7 +56,7 @@ internal sealed partial class LoginHandler(
         user.ResetAccessFailedCount();
 
         var roles = user.Roles.Select(r => Enum.Parse<RoleName>(r.Name));
-        var accessToken = jwtTokenGenerator.Generate(user.Id, user.Email, roles);
+        var accessToken = jwtTokenGenerator.Generate(user.Id, user.Email, user.Name, roles);
 
         var lifetime = refreshTokenFactory.Lifetime;
         var refresh = refreshTokenFactory.Create();
