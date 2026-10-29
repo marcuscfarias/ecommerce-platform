@@ -16,6 +16,11 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.11" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="WolverineFx" Version="6.50.2" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="6.50.2" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="6.50.2" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="6.50.2" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.50.2" />
   </ItemGroup>
 
 </Project>
