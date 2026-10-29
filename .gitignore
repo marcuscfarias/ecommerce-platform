@@ -487,6 +487,7 @@ $RECYCLE.BIN/
 # Claude code files
 .claude/
 .specs/
+.agents/
 
 # Local-only personal backlog
 BACKLOG.md
