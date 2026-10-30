@@ -5,7 +5,7 @@ namespace Ecommerce.Admin.Web.Services;
 // out, the generic error would go back to looking like a defect.
 public sealed class ColdStartNotice
 {
-    public static readonly TimeSpan Threshold = TimeSpan.FromSeconds(3);
+    public static readonly TimeSpan Threshold = TimeSpan.FromSeconds(10);
 
     public event Action? Changed;
 
