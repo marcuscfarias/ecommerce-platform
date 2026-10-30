@@ -1,12 +1,12 @@
 using Ecommerce.AppHost;
 using Ecommerce.Kernel.IntegrationTests.Database;
 using Ecommerce.Kernel.IntegrationTests.JwtToken;
+using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace Ecommerce.Kernel.IntegrationTests;
 
@@ -17,21 +17,13 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
     {
         builder.UseEnvironment("Development");
 
-        // Container connection string, visible to Program.Main where Wolverine reads it
+        // Container connection string, visible to Program.Main where the host reads it
         foreach (var (key, value) in databaseConfiguration.GetConfigurationEntries())
         {
             builder.UseSetting(key, value);
         }
 
-        // Placeholder broker address that only satisfies the boot validation
-        builder.UseSetting("ConnectionStrings:RabbitMq", "amqp://localhost");
-        builder.ConfigureServices(services =>
-        {
-            // No RabbitMQ in module suites: messages stay in process
-            services.DisableAllExternalWolverineTransports();
-            // Single node, no leader election, faster startup
-            services.RunWolverineInSoloMode();
-        });
+        ConfigureMessaging(builder);
 
         builder.ConfigureLogging(logging => logging.ClearProviders());
         builder.ConfigureAppConfiguration(cfg =>
@@ -62,5 +54,13 @@ public abstract class EcommerceWebApplicationFactory(IDatabaseConfiguration data
                 ["RateLimiting:Enabled"] = "false",
             });
         });
+    }
+
+    protected virtual void ConfigureMessaging(IWebHostBuilder builder)
+    {
+        // Placeholder broker address that only satisfies the boot validation
+        builder.UseSetting("ConnectionStrings:RabbitMq", "amqp://localhost");
+        // No RabbitMQ in module suites: the bus runs on the in-memory transport
+        builder.ConfigureServices(services => services.AddMassTransitTestHarness());
     }
 }

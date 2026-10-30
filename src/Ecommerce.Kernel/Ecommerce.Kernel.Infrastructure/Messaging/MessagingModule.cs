@@ -1,66 +1,47 @@
+using Ecommerce.Kernel.Domain.Exceptions;
+using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Wolverine;
-using Wolverine.EntityFrameworkCore;
-using Wolverine.Postgresql;
-using Wolverine.RabbitMQ;
-using Wolverine.Transports;
 
 namespace Ecommerce.Kernel.Infrastructure.Messaging;
 
 public static class MessagingModule
 {
-    private const string DatabaseConnectionStringName = "EcommerceDb";
-    private const string EnvelopeSchema = "wolverine";
-    private const string DeadLetterQueueSuffix = "-dlq";
-
-    public static IHostApplicationBuilder AddMessaging(this IHostApplicationBuilder builder)
+    public static IHostApplicationBuilder AddMessaging(
+        this IHostApplicationBuilder builder,
+        Action<IBusRegistrationConfigurator>? configureConsumers = null)
     {
         builder.Services.AddMessagingOptions();
-        builder.Services.AddWolverineExtension<MessagingPolicies>();
 
-        var databaseConnectionString = builder.Configuration.GetConnectionString(DatabaseConnectionStringName);
-        if (string.IsNullOrWhiteSpace(databaseConnectionString))
+        builder.Services.AddMassTransit(bus =>
         {
-            throw new InvalidOperationException(
-                $"Connection string '{DatabaseConnectionStringName}' is not configured.");
-        }
+            configureConsumers?.Invoke(bus);
 
-        builder.UseWolverine(wolverine =>
-        {
-            // Only IWolverineHandler types are consumers, so MediatR *Handler classes are never picked up
-            wolverine.Discovery
-                .DisableConventionalDiscovery()
-                .CustomizeHandlerDiscovery(query => query.Includes.Implements<IWolverineHandler>());
+            // Namespace in the queue name keeps same-named consumers of two modules on separate queues
+            bus.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter(includeNamespace: true));
 
-            // Each consumer of the same event runs on its own queue, isolated from the others
-            wolverine.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
-            // Inbox dedup key is message id + queue, so one event reaching two modules is not a duplicate
-            wolverine.Durability.MessageIdentity = MessageIdentity.IdAndDestination;
+            bus.AddConfigureEndpointsCallback((context, _, endpoint) =>
+            {
+                var options = context.GetRequiredService<IOptions<MessagingOptions>>().Value;
 
-            // Outbox and inbox tables live in the "wolverine" schema of the shared database
-            wolverine.PersistMessagesWithPostgresql(databaseConnectionString, EnvelopeSchema);
-            // Consumers run inside an EF Core transaction that also holds the inbox mark
-            wolverine.UseEntityFrameworkCoreTransactions();
-            wolverine.Policies.AutoApplyTransactions();
-            // Every received message goes through the inbox before it is handled
-            wolverine.Policies.UseDurableInboxOnAllListeners();
-            // Every sent message goes through the outbox, so a broker outage only delays it
-            wolverine.Policies.UseDurableOutboxOnAllSendingEndpoints();
+                endpoint.UseMessageRetry(retry =>
+                {
+                    // A broken business rule fails the same way on every attempt, so it skips retries
+                    retry.Ignore<BusinessRuleValidationException>();
+                    retry.Intervals([.. options.RetryCooldowns]);
+                });
+            });
 
-            // Broker address is read from ConnectionStrings:RabbitMq when the host starts
-            wolverine.UseRabbitMqUsingNamedConnection(MessagingOptions.ConnectionStringName)
-                // Exchanges and queues are created on startup
-                .AutoProvision()
-                // One exchange per event type, one queue per consumer
-                .UseConventionalRouting(NamingSource.FromHandlerType, routing => routing
-                    // Queue named after the consumer class
-                    .IdentifierForListener(QueueName)
-                    // Each queue parks its failed messages in its own <queue>-dlq
-                    .ConfigureListeners((listener, context) => listener.DeadLetterQueueing(
-                        new DeadLetterQueue(QueueName(context.MessageType) + DeadLetterQueueSuffix))));
+            // The bus connects in the background, so the host starts even when the broker is down
+            bus.UsingRabbitMq((context, rabbit) =>
+            {
+                var options = context.GetRequiredService<IOptions<MessagingOptions>>().Value;
+
+                rabbit.Host(new Uri(options.RabbitMqConnectionString));
+                rabbit.ConfigureEndpoints(context);
+            });
         });
 
         return builder;
@@ -87,6 +68,4 @@ public static class MessagingModule
 
         return services;
     }
-
-    private static string QueueName(Type handlerType) => handlerType.FullName!.ToLowerInvariant();
 }
