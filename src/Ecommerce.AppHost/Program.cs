@@ -10,6 +10,7 @@ using Ecommerce.Kernel.Infrastructure.Messaging;
 using Ecommerce.Kernel.Infrastructure.Notifications;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
 namespace Ecommerce.AppHost;
@@ -83,7 +84,8 @@ internal static class Program
         app.UseApiModule();
         app.RegisterModules();
         app.MapControllers();
-        app.MapHealthChecks("/health");
+        // Liveness only: a broker outage must not mark the API as down
+        app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = check => !check.Tags.Contains("ready") });
 
         app.Run();
     }
