@@ -17,6 +17,14 @@ internal sealed class ColdStartHandler(ColdStartNotice notice) : DelegatingHandl
             notice.Signal();
         }
 
-        return await send;
+        var response = await send;
+
+        // Anything short of a 5xx came from the app itself, which proves the container is awake.
+        if ((int)response.StatusCode < 500)
+        {
+            notice.Clear();
+        }
+
+        return response;
     }
 }

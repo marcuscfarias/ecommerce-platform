@@ -1,8 +1,8 @@
 namespace Ecommerce.Admin.Web.Services;
 
-// A one-way latch. Once the user has been told to wait and reload, taking the notice back
-// down would contradict the instruction — and on the path where the request finally times
-// out, the generic error would go back to looking like a defect.
+// Raised when a request outlives the threshold and lowered once the API answers, so a slow
+// but healthy request doesn't leave the user looking at a stale warning. A request that never
+// gets an answer keeps it up, so a final timeout still reads as a cold start, not a defect.
 public sealed class ColdStartNotice
 {
     public static readonly TimeSpan Threshold = TimeSpan.FromSeconds(10);
@@ -11,14 +11,18 @@ public sealed class ColdStartNotice
 
     public bool IsVisible { get; private set; }
 
-    public void Signal()
+    public void Signal() => SetVisible(true);
+
+    public void Clear() => SetVisible(false);
+
+    private void SetVisible(bool visible)
     {
-        if (IsVisible)
+        if (IsVisible == visible)
         {
             return;
         }
 
-        IsVisible = true;
+        IsVisible = visible;
         Changed?.Invoke();
     }
 }
