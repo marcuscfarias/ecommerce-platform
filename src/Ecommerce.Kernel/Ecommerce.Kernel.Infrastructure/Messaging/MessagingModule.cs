@@ -1,4 +1,6 @@
 using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
+using Ecommerce.Kernel.Infrastructure.Messaging.Outbox;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -37,6 +39,13 @@ public static class MessagingModule
         services.AddHealthChecks()
             .AddCheck<RabbitMqHealthCheck>(RabbitMqHealthCheck.Name, failureStatus: HealthStatus.Degraded);
 
+        return services;
+    }
+
+    public static IServiceCollection AddOutboxRelay<TDbContext>(this IServiceCollection services)
+        where TDbContext : DbContext
+    {
+        services.AddHostedService<OutboxRelay<TDbContext>>();
         return services;
     }
 
