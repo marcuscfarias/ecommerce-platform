@@ -9,6 +9,7 @@ public class IntegrationEventConsumerFailureIntegrationTests(IntegrationEventCon
     : IClassFixture<IntegrationEventConsumerFixture>
 {
     private const int AttemptsWithFiveRetries = 6;
+    private const int HeldBelowPrefetch = 9;
 
     private static readonly TimeSpan ConsumeDeadline = TimeSpan.FromSeconds(15);
 
@@ -116,6 +117,42 @@ public class IntegrationEventConsumerFailureIntegrationTests(IntegrationEventCon
         finally
         {
             fixture.Gate.Release(held.EntityId);
+        }
+    }
+
+    [Fact]
+    public async Task Consume_FewerThanPrefetchInRetry_ShouldKeepProcessingOtherMessages()
+    {
+        await fixture.ResetDatabaseAsync();
+
+        // Arrange
+        await using var probe = await BrokerProbe.ConnectAsync(fixture.Broker.ConnectionString);
+        var held = Enumerable.Range(0, HeldBelowPrefetch).Select(_ => new GatedEvent(Guid.NewGuid(), Held: true)).ToList();
+        var other = new GatedEvent(Guid.NewGuid(), Held: false);
+        foreach (var @event in held)
+        {
+            await probe.PublishAsync(nameof(GatedEvent), Guid.CreateVersion7().ToString(), Serialize(@event));
+        }
+
+        try
+        {
+            await Poll.UntilAsync(
+                () => Task.FromResult(held.Count(@event => fixture.Attempts.Get(@event.EntityId) >= 2)),
+                inRetry => inRetry == HeldBelowPrefetch,
+                ConsumeDeadline);
+
+            // Act
+            await probe.PublishAsync(nameof(GatedEvent), Guid.CreateVersion7().ToString(), Serialize(other));
+            var handled = await Poll.UntilAsync(
+                () => fixture.HandledMessagesForAsync(other.EntityId), rows => rows.Count > 0, ConsumeDeadline);
+
+            // Assert
+            handled.ShouldHaveSingleItem();
+            held.ShouldAllBe(@event => fixture.Attempts.Get(@event.EntityId) == 2);
+        }
+        finally
+        {
+            held.ForEach(@event => fixture.Gate.Release(@event.EntityId));
         }
     }
 
