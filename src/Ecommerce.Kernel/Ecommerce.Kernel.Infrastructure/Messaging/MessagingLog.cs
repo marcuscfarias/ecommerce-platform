@@ -15,4 +15,16 @@ internal static partial class MessagingLog
         Level = LogLevel.Warning,
         Message = "Could not connect to the message broker; retrying in {RetryDelay}")]
     public static partial void BrokerConnectFailed(ILogger logger, Exception exception, TimeSpan retryDelay);
+
+    [LoggerMessage(
+        EventId = 3,
+        Level = LogLevel.Warning,
+        Message = "Could not publish outbox message {MessageId} ({EventName}); it stays in the outbox")]
+    public static partial void RelayPublishFailed(ILogger logger, Exception exception, Guid messageId, string eventName);
+
+    [LoggerMessage(
+        EventId = 4,
+        Level = LogLevel.Error,
+        Message = "Outbox relay tick failed for {DbContext}")]
+    public static partial void RelayTickFailed(ILogger logger, Exception exception, string dbContext);
 }

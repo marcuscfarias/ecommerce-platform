@@ -1,8 +1,6 @@
 using System.Text.Json;
 using Ecommerce.Kernel.Infrastructure.Messaging.Outbox;
 using Ecommerce.Kernel.IntegrationTests.Messaging.TestModule;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 
 namespace Ecommerce.Kernel.IntegrationTests.Messaging;
@@ -25,7 +23,7 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         var @event = new RecordedEvent(Guid.NewGuid(), "committed");
 
         // Act
-        await WriteEventAsync(@event);
+        await fixture.WriteEventAsync(@event);
         var received = await probe.ReceiveUntilAsync(
             queue, messages => messages.Any(message => Carries(message, @event)), PublishDeadline);
 
@@ -44,9 +42,9 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         var queue = await probe.BindTemporaryQueueAsync(row.EventName);
 
         // Act
-        await InsertRowsAsync(row);
+        await fixture.InsertOutboxRowsAsync(row);
         await probe.WaitForMessagesAsync(queue, 1, PublishDeadline);
-        var rowExists = await Poll.UntilAsync(() => RowExistsAsync(row.Id), exists => !exists, PublishDeadline);
+        var rowExists = await Poll.UntilAsync(() => fixture.OutboxRowExistsAsync(row.Id), exists => !exists, PublishDeadline);
 
         // Assert
         rowExists.ShouldBeFalse();
@@ -67,7 +65,7 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         var newest = NewRow(exchange, now.AddSeconds(-1));
 
         // Act
-        await InsertRowsAsync(newest, oldest, middle);
+        await fixture.InsertOutboxRowsAsync(newest, oldest, middle);
         var received = await probe.WaitForMessagesAsync(queue, 3, PublishDeadline);
 
         // Assert
@@ -86,7 +84,7 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         var queue = await probe.BindTemporaryQueueAsync(row.EventName);
 
         // Act
-        await InsertRowsAsync(row);
+        await fixture.InsertOutboxRowsAsync(row);
         var received = await probe.WaitForMessagesAsync(queue, 1, PublishDeadline);
 
         // Assert
@@ -105,8 +103,8 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         var marker = new RecordedEvent(Guid.NewGuid(), "committed-after");
 
         // Act
-        await WriteEventAndRollBackAsync(rolledBack);
-        await WriteEventAsync(marker);
+        await fixture.WriteEventAndRollBackAsync(rolledBack);
+        await fixture.WriteEventAsync(marker);
         var received = await probe.ReceiveUntilAsync(
             queue, messages => messages.Any(message => Carries(message, marker)), PublishDeadline);
 
@@ -126,46 +124,12 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         (await probe.ExchangeExistsAsync(row.EventName)).ShouldBeFalse();
 
         // Act
-        await InsertRowsAsync(row);
-        var rowExists = await Poll.UntilAsync(() => RowExistsAsync(row.Id), exists => !exists, PublishDeadline);
+        await fixture.InsertOutboxRowsAsync(row);
+        var rowExists = await Poll.UntilAsync(() => fixture.OutboxRowExistsAsync(row.Id), exists => !exists, PublishDeadline);
 
         // Assert
         rowExists.ShouldBeFalse();
         (await probe.ExchangeExistsAsync(row.EventName)).ShouldBeTrue();
-    }
-
-    private async Task WriteEventAsync(RecordedEvent @event)
-    {
-        await using var scope = fixture.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
-        db.TestEntities.Add(new TestEntity { Id = @event.EntityId, Name = @event.Name });
-        db.AddIntegrationEvent(@event);
-        await db.SaveChangesAsync();
-    }
-
-    private async Task WriteEventAndRollBackAsync(RecordedEvent @event)
-    {
-        await using var scope = fixture.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
-        await using var transaction = await db.Database.BeginTransactionAsync();
-        db.TestEntities.Add(new TestEntity { Id = @event.EntityId, Name = @event.Name });
-        db.AddIntegrationEvent(@event);
-        await db.SaveChangesAsync();
-        await transaction.RollbackAsync();
-    }
-
-    private Task InsertRowsAsync(params OutboxMessage[] rows) =>
-        fixture.SeedAsync<MessagingTestDbContext>(db =>
-        {
-            db.Set<OutboxMessage>().AddRange(rows);
-            return Task.CompletedTask;
-        });
-
-    private async Task<bool> RowExistsAsync(Guid id)
-    {
-        await using var scope = fixture.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
-        return await db.Set<OutboxMessage>().AnyAsync(row => row.Id == id);
     }
 
     private static OutboxMessage NewRow(string exchange, DateTimeOffset occurredOnUtc) => new()

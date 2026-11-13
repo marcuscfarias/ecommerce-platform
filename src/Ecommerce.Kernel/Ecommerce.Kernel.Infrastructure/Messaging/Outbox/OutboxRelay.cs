@@ -3,6 +3,7 @@ using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
@@ -11,7 +12,8 @@ namespace Ecommerce.Kernel.Infrastructure.Messaging.Outbox;
 internal sealed class OutboxRelay<TDbContext>(
     RabbitMqConnection rabbitMqConnection,
     IServiceScopeFactory scopeFactory,
-    IOptions<MessagingOptions> options) : BackgroundService
+    IOptions<MessagingOptions> options,
+    ILogger<OutboxRelay<TDbContext>> logger) : BackgroundService
     where TDbContext : DbContext
 {
     private const string JsonContentType = "application/json";
@@ -33,14 +35,29 @@ internal sealed class OutboxRelay<TDbContext>(
                 publisherConfirmationTrackingEnabled: true),
             stoppingToken);
 
+        var delay = outbox.PollingInterval;
         while (!stoppingToken.IsCancellationRequested)
         {
-            await RelayBatchAsync(channel, outbox, stoppingToken);
-            await Task.Delay(outbox.PollingInterval, stoppingToken);
+            var succeeded = await TryRelayBatchAsync(channel, outbox, stoppingToken);
+            delay = RelayBackoff.Next(delay, succeeded, outbox);
+            await Task.Delay(delay, stoppingToken);
         }
     }
 
-    private async Task RelayBatchAsync(IChannel channel, OutboxOptions outbox, CancellationToken stoppingToken)
+    private async Task<bool> TryRelayBatchAsync(IChannel channel, OutboxOptions outbox, CancellationToken stoppingToken)
+    {
+        try
+        {
+            return await RelayBatchAsync(channel, outbox, stoppingToken);
+        }
+        catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
+        {
+            MessagingLog.RelayTickFailed(logger, exception, typeof(TDbContext).Name);
+            return false;
+        }
+    }
+
+    private async Task<bool> RelayBatchAsync(IChannel channel, OutboxOptions outbox, CancellationToken stoppingToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<TDbContext>();
@@ -54,12 +71,22 @@ internal sealed class OutboxRelay<TDbContext>(
 
         foreach (var message in batch)
         {
-            await PublishAsync(channel, message, outbox.PublishTimeout, stoppingToken);
+            try
+            {
+                await PublishAsync(channel, message, outbox.PublishTimeout, stoppingToken);
+            }
+            catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
+            {
+                MessagingLog.RelayPublishFailed(logger, exception, message.Id, message.EventName);
+                return false;
+            }
 
             await db.Set<OutboxMessage>()
                 .Where(row => row.Id == message.Id)
                 .ExecuteDeleteAsync(stoppingToken);
         }
+
+        return true;
     }
 
     private async Task PublishAsync(
@@ -78,6 +105,9 @@ internal sealed class OutboxRelay<TDbContext>(
                 ExchangeType.Fanout,
                 durable: true,
                 autoDelete: false,
+                arguments: null,
+                passive: false,
+                noWait: true,
                 cancellationToken: timeout.Token);
             _declaredExchanges.Add(message.EventName);
         }
