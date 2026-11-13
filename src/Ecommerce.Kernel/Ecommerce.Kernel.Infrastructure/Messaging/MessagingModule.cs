@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+using Polly;
 
 namespace Ecommerce.Kernel.Infrastructure.Messaging;
 
@@ -38,6 +40,11 @@ public static class MessagingModule
 
         services.AddSingleton<RabbitMqConnection>();
         services.AddHostedService<BrokerConnectionService>();
+        services.AddResiliencePipeline(MessagingResilience.ConsumerPipeline, (pipeline, context) =>
+        {
+            var consumer = context.ServiceProvider.GetRequiredService<IOptions<MessagingOptions>>().Value.Consumer;
+            pipeline.AddRetry(MessagingResilience.CreateRetryOptions(consumer));
+        });
         services.AddHealthChecks()
             .AddCheck<RabbitMqHealthCheck>(RabbitMqHealthCheck.Name, failureStatus: HealthStatus.Degraded);
 
