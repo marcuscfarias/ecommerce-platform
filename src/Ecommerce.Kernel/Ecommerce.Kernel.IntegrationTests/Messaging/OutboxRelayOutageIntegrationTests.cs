@@ -100,6 +100,28 @@ public class OutboxRelayOutageIntegrationTests(OutboxRelayFixture fixture) : ICl
         }
     }
 
+    [Fact]
+    public async Task Relay_ConnectionDropped_ShouldPublishAfterRecovery()
+    {
+        await fixture.ResetDatabaseAsync();
+
+        // Arrange
+        await fixture.Broker.CloseAllConnectionsAsync();
+        await using var probe = await BrokerProbe.ConnectAsync(fixture.Broker.ConnectionString);
+        var row = NewRow("{}");
+        var queue = await probe.BindTemporaryQueueAsync(row.EventName);
+
+        // Act
+        await fixture.InsertOutboxRowsAsync(row);
+        var received = await probe.ReceiveUntilAsync(
+            queue,
+            messages => messages.Any(message => message.BasicProperties.MessageId == row.Id.ToString()),
+            RecoveryDeadline);
+
+        // Assert
+        received.ShouldContain(message => message.BasicProperties.MessageId == row.Id.ToString());
+    }
+
     private List<FakeLogRecord> PublishWarningsFor(OutboxMessage row) =>
         fixture.Logs.GetSnapshot()
             .Where(record => record.Level == LogLevel.Warning && record.Message.Contains(row.Id.ToString()))

@@ -11,6 +11,7 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
     private const string EmptyPayload = "{}";
 
     private static readonly TimeSpan PublishDeadline = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan HoldBackWindow = TimeSpan.FromSeconds(3);
 
     [Fact]
     public async Task Relay_CommittedRow_ShouldPublishWithin10Seconds()
@@ -130,6 +131,56 @@ public class OutboxRelayIntegrationTests(OutboxRelayFixture fixture) : IClassFix
         // Assert
         rowExists.ShouldBeFalse();
         (await probe.ExchangeExistsAsync(row.EventName)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Relay_OlderRowFailing_ShouldHoldBackNewerRows()
+    {
+        await fixture.ResetDatabaseAsync();
+
+        // Arrange
+        await using var probe = await BrokerProbe.ConnectAsync(fixture.Broker.ConnectionString);
+        var now = DateTimeOffset.UtcNow;
+        var older = NewRow(UniqueExchange(), now.AddSeconds(-2));
+        var newer = NewRow(UniqueExchange(), now.AddSeconds(-1));
+        var rejectingQueue = await probe.BindRejectingQueueAsync(older.EventName);
+        var newerQueue = await probe.BindTemporaryQueueAsync(newer.EventName);
+        await fixture.InsertOutboxRowsAsync(older, newer);
+        var heldBack = await probe.ReceiveUntilAsync(newerQueue, messages => messages.Count > 0, HoldBackWindow);
+        var olderKept = await fixture.OutboxRowExistsAsync(older.Id);
+
+        // Act
+        await probe.DeleteQueueAsync(rejectingQueue);
+        var released = await probe.WaitForMessagesAsync(newerQueue, 1, PublishDeadline);
+
+        // Assert
+        olderKept.ShouldBeTrue();
+        heldBack.ShouldBeEmpty();
+        released.ShouldHaveSingleItem().BasicProperties.MessageId.ShouldBe(newer.Id.ToString());
+    }
+
+    [Fact]
+    public async Task Relay_CachedExchangeDeleted_ShouldRedeclareAndPublish()
+    {
+        await fixture.ResetDatabaseAsync();
+
+        // Arrange
+        await using var probe = await BrokerProbe.ConnectAsync(fixture.Broker.ConnectionString);
+        var exchange = UniqueExchange();
+        var queue = await probe.BindTemporaryQueueAsync(exchange);
+        await fixture.InsertOutboxRowsAsync(NewRow(exchange, DateTimeOffset.UtcNow));
+        await probe.WaitForMessagesAsync(queue, 1, PublishDeadline);
+        await probe.DeleteExchangeAsync(exchange);
+        var row = NewRow(exchange, DateTimeOffset.UtcNow);
+
+        // Act
+        await fixture.InsertOutboxRowsAsync(row);
+        var rowExists = await Poll.UntilAsync(
+            () => fixture.OutboxRowExistsAsync(row.Id), exists => !exists, PublishDeadline);
+
+        // Assert
+        rowExists.ShouldBeFalse();
+        (await probe.ExchangeExistsAsync(exchange)).ShouldBeTrue();
     }
 
     private static OutboxMessage NewRow(string exchange, DateTimeOffset occurredOnUtc) => new()

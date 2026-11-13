@@ -18,7 +18,12 @@ internal sealed class OutboxRelay<TDbContext>(
 {
     private const string JsonContentType = "application/json";
 
+    private static readonly CreateChannelOptions ConfirmedChannel = new(
+        publisherConfirmationsEnabled: true,
+        publisherConfirmationTrackingEnabled: true);
+
     private readonly HashSet<string> _declaredExchanges = [];
+    private IChannel? _channel;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -29,25 +34,31 @@ internal sealed class OutboxRelay<TDbContext>(
 
         var outbox = options.Value.Outbox;
         var connection = await rabbitMqConnection.GetConnectionAsync(stoppingToken);
-        await using var channel = await connection.CreateChannelAsync(
-            new CreateChannelOptions(
-                publisherConfirmationsEnabled: true,
-                publisherConfirmationTrackingEnabled: true),
-            stoppingToken);
 
-        var delay = outbox.PollingInterval;
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            var succeeded = await TryRelayBatchAsync(channel, outbox, stoppingToken);
-            delay = RelayBackoff.Next(delay, succeeded, outbox);
-            await Task.Delay(delay, stoppingToken);
+            var delay = outbox.PollingInterval;
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var succeeded = await TryRelayBatchAsync(connection, outbox, stoppingToken);
+                delay = RelayBackoff.Next(delay, succeeded, outbox);
+                await Task.Delay(delay, stoppingToken);
+            }
+        }
+        finally
+        {
+            if (_channel is not null)
+            {
+                await _channel.DisposeAsync();
+            }
         }
     }
 
-    private async Task<bool> TryRelayBatchAsync(IChannel channel, OutboxOptions outbox, CancellationToken stoppingToken)
+    private async Task<bool> TryRelayBatchAsync(IConnection connection, OutboxOptions outbox, CancellationToken stoppingToken)
     {
         try
         {
+            var channel = await EnsureChannelAsync(connection, stoppingToken);
             return await RelayBatchAsync(channel, outbox, stoppingToken);
         }
         catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
@@ -55,6 +66,23 @@ internal sealed class OutboxRelay<TDbContext>(
             MessagingLog.RelayTickFailed(logger, exception, typeof(TDbContext).Name);
             return false;
         }
+    }
+
+    private async Task<IChannel> EnsureChannelAsync(IConnection connection, CancellationToken stoppingToken)
+    {
+        if (_channel is not null && (_channel.IsOpen || !connection.IsOpen))
+        {
+            return _channel;
+        }
+
+        if (_channel is not null)
+        {
+            await _channel.DisposeAsync();
+        }
+
+        _declaredExchanges.Clear();
+        _channel = await connection.CreateChannelAsync(ConfirmedChannel, stoppingToken);
+        return _channel;
     }
 
     private async Task<bool> RelayBatchAsync(IChannel channel, OutboxOptions outbox, CancellationToken stoppingToken)

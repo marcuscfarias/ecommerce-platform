@@ -31,6 +31,23 @@ internal sealed class BrokerProbe : IAsyncDisposable
         return queue.QueueName;
     }
 
+    public async Task<string> BindRejectingQueueAsync(string exchange)
+    {
+        await _channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout, durable: true, autoDelete: false);
+        var queue = await _channel.QueueDeclareAsync(
+            string.Empty,
+            durable: false,
+            exclusive: true,
+            autoDelete: true,
+            arguments: new Dictionary<string, object?> { ["x-max-length"] = 0, ["x-overflow"] = "reject-publish" });
+        await _channel.QueueBindAsync(queue.QueueName, exchange, routingKey: string.Empty);
+        return queue.QueueName;
+    }
+
+    public Task DeleteQueueAsync(string queue) => _channel.QueueDeleteAsync(queue);
+
+    public Task DeleteExchangeAsync(string exchange) => _channel.ExchangeDeleteAsync(exchange);
+
     public async Task PublishAsync(string exchange, string? messageId, byte[] body)
     {
         await _channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout, durable: true, autoDelete: false);
