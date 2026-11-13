@@ -15,8 +15,12 @@ internal static class MessagingResilience
         MaxDelay = options.RetryMaxDelay,
         BackoffType = DelayBackoffType.Exponential,
         UseJitter = true,
-        ShouldHandle = new PredicateBuilder()
-            .Handle<Exception>(exception =>
-                exception is not BusinessRuleValidationException and not OperationCanceledException),
+        ShouldHandle = arguments => ValueTask.FromResult(arguments.Outcome.Exception switch
+        {
+            null => false,
+            BusinessRuleValidationException => false,
+            OperationCanceledException when arguments.Context.CancellationToken.IsCancellationRequested => false,
+            _ => true,
+        }),
     };
 }

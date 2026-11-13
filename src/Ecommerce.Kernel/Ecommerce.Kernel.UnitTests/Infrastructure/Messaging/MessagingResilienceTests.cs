@@ -77,16 +77,29 @@ public class MessagingResilienceTests
     }
 
     [Fact]
-    public async Task ShouldHandle_OperationCanceledException_ShouldNotRetry()
+    public async Task ShouldHandle_CancellationWhileHostStopping_ShouldNotRetry()
     {
         // Arrange
         var exception = new OperationCanceledException(_faker.Lorem.Sentence());
 
         // Act
-        var shouldRetry = await ShouldHandleAsync(exception);
+        var shouldRetry = await ShouldHandleAsync(exception, new CancellationToken(canceled: true));
 
         // Assert
         shouldRetry.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ShouldHandle_HandlerTimeoutWhileRunning_ShouldRetry()
+    {
+        // Arrange
+        var exception = new TaskCanceledException(_faker.Lorem.Sentence());
+
+        // Act
+        var shouldRetry = await ShouldHandleAsync(exception, CancellationToken.None);
+
+        // Assert
+        shouldRetry.ShouldBeTrue();
     }
 
     [Fact]
@@ -102,9 +115,11 @@ public class MessagingResilienceTests
         shouldRetry.ShouldBeTrue();
     }
 
-    private async Task<bool> ShouldHandleAsync(Exception exception)
+    private Task<bool> ShouldHandleAsync(Exception exception) => ShouldHandleAsync(exception, CancellationToken.None);
+
+    private async Task<bool> ShouldHandleAsync(Exception exception, CancellationToken cancellationToken)
     {
-        var context = ResilienceContextPool.Shared.Get();
+        var context = ResilienceContextPool.Shared.Get(cancellationToken);
         try
         {
             return await _options.ShouldHandle(
