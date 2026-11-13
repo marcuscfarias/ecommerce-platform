@@ -18,7 +18,8 @@ internal sealed class BrokerProbe : IAsyncDisposable
     {
         var factory = new ConnectionFactory { Uri = new Uri(connectionString) };
         var connection = await factory.CreateConnectionAsync();
-        var channel = await connection.CreateChannelAsync();
+        var channel = await connection.CreateChannelAsync(
+            new CreateChannelOptions(publisherConfirmationsEnabled: true, publisherConfirmationTrackingEnabled: true));
         return new BrokerProbe(connection, channel);
     }
 

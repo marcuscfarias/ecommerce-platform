@@ -20,6 +20,7 @@ public sealed class IntegrationEventConsumerFixture : MessagingFixture
 
     protected override void ConfigureTestServices(IServiceCollection services) =>
         services
+            .AddOutboxRelay<MessagingTestDbContext>()
             .AddIntegrationEventHandler<RecordedEvent, AlphaRecordedHandler, MessagingTestDbContext>(
                 AlphaRecordedHandler.Module)
             .AddIntegrationEventHandler<RecordedEvent, BetaRecordedHandler, MessagingTestDbContext>(

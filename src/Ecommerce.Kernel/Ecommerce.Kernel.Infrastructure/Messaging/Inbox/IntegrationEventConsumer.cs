@@ -136,6 +136,14 @@ internal sealed class IntegrationEventConsumer<TEvent, THandler, TDbContext>(
         var db = scope.ServiceProvider.GetRequiredService<TDbContext>();
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
+        var alreadyProcessed = await db.Set<InboxMessage>()
+            .AnyAsync(message => message.MessageId == messageId && message.Consumer == queueName, cancellationToken);
+        if (alreadyProcessed)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return;
+        }
+
         await scope.ServiceProvider.GetRequiredService<THandler>().HandleAsync(@event, cancellationToken);
 
         db.Set<InboxMessage>().Add(new InboxMessage
