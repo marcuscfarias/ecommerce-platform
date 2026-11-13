@@ -1,6 +1,7 @@
 using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Ecommerce.Kernel.Infrastructure.Messaging;
 
@@ -33,6 +34,8 @@ public static class MessagingModule
 
         services.AddSingleton<RabbitMqConnection>();
         services.AddHostedService<BrokerConnectionService>();
+        services.AddHealthChecks()
+            .AddCheck<RabbitMqHealthCheck>(RabbitMqHealthCheck.Name, failureStatus: HealthStatus.Degraded);
 
         return services;
     }
