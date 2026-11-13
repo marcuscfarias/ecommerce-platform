@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Ecommerce.Kernel.Infrastructure.Messaging.Inbox;
 using Ecommerce.Kernel.Infrastructure.Messaging.Outbox;
 using Ecommerce.Kernel.IntegrationTests.Messaging.TestModule;
 
@@ -62,11 +63,44 @@ public class InboxDeduplicationIntegrationTests(IntegrationEventConsumerFixture 
         await AssertAppliedOnceAsync(@event.EntityId, row.Id);
     }
 
+    [Fact]
+    public async Task Consume_MessageProcessedByOtherConsumer_ShouldStillRunHandler()
+    {
+        await fixture.ResetDatabaseAsync();
+
+        // Arrange
+        await using var probe = await BrokerProbe.ConnectAsync(fixture.Broker.ConnectionString);
+        var @event = new RecordedEvent(Guid.NewGuid(), "seen-by-alpha-only");
+        var messageId = Guid.CreateVersion7();
+        await fixture.InsertInboxRowsAsync(new InboxMessage
+        {
+            MessageId = messageId,
+            Consumer = Queue,
+            ProcessedOnUtc = DateTimeOffset.UtcNow,
+        });
+
+        // Act
+        await probe.PublishAsync(
+            nameof(RecordedEvent), messageId.ToString(), JsonSerializer.SerializeToUtf8Bytes(@event, JsonSerializerOptions.Web));
+        var handled = await Poll.UntilAsync(
+            () => fixture.HandledMessagesForAsync(@event.EntityId),
+            rows => rows.Any(row => row.Handler == BetaRecordedHandler.Module),
+            ConsumeDeadline);
+        await WaitForEmptyQueueAsync();
+
+        // Assert
+        handled.Where(row => row.Handler == BetaRecordedHandler.Module).ShouldHaveSingleItem();
+        (await fixture.HandledMessagesForAsync(@event.EntityId))
+            .ShouldNotContain(row => row.Handler == AlphaRecordedHandler.Module);
+        fixture.Attempts.Get(@event.EntityId).ShouldBe(0);
+    }
+
     private Task<int> WaitForEmptyQueueAsync() =>
         Poll.UntilAsync(() => fixture.Broker.CountMessagesAsync(Queue), count => count == 0, ConsumeDeadline);
 
     private async Task AssertAppliedOnceAsync(Guid entityId, Guid messageId)
     {
+        fixture.Attempts.Get(entityId).ShouldBe(1);
         var handled = await fixture.HandledMessagesForAsync(entityId);
         handled.Where(message => message.Handler == AlphaRecordedHandler.Module).ShouldHaveSingleItem();
         var inbox = await fixture.InboxMessagesForAsync(messageId);

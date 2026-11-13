@@ -78,6 +78,13 @@ public abstract class MessagingFixture : BaseIntegrationFixture<MessagingWebAppl
             return Task.CompletedTask;
         });
 
+    internal Task InsertInboxRowsAsync(params InboxMessage[] rows) =>
+        SeedAsync<MessagingTestDbContext>(db =>
+        {
+            db.Set<InboxMessage>().AddRange(rows);
+            return Task.CompletedTask;
+        });
+
     internal Task<bool> OutboxRowExistsAsync(Guid id) =>
         QueryAsync(db => db.Set<OutboxMessage>().AnyAsync(row => row.Id == id));
 

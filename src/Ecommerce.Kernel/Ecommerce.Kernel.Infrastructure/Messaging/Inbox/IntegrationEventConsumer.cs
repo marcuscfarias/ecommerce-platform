@@ -3,6 +3,9 @@ using System.Text.Json;
 using Ecommerce.Kernel.Application.Messaging;
 using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -141,9 +144,7 @@ internal sealed class IntegrationEventConsumer<TEvent, THandler, TDbContext>(
         var db = scope.ServiceProvider.GetRequiredService<TDbContext>();
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var alreadyProcessed = await db.Set<InboxMessage>()
-            .AnyAsync(message => message.MessageId == messageId && message.Consumer == queueName, cancellationToken);
-        if (alreadyProcessed)
+        if (!await TryClaimAsync(db, messageId, cancellationToken))
         {
             await transaction.CommitAsync(cancellationToken);
             return;
@@ -151,13 +152,26 @@ internal sealed class IntegrationEventConsumer<TEvent, THandler, TDbContext>(
 
         await scope.ServiceProvider.GetRequiredService<THandler>().HandleAsync(@event, cancellationToken);
 
-        db.Set<InboxMessage>().Add(new InboxMessage
-        {
-            MessageId = messageId,
-            Consumer = queueName,
-            ProcessedOnUtc = DateTimeOffset.UtcNow,
-        });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    private async Task<bool> TryClaimAsync(TDbContext db, Guid messageId, CancellationToken cancellationToken)
+    {
+        var inbox = db.Model.FindEntityType(typeof(InboxMessage))!;
+        var table = StoreObjectIdentifier.Table(inbox.GetTableName()!, inbox.GetSchema());
+        var sql = db.GetService<ISqlGenerationHelper>();
+        string Column(string property) =>
+            sql.DelimitIdentifier(inbox.FindProperty(property)!.GetColumnName(table)!);
+
+        var insert =
+            $"INSERT INTO {sql.DelimitIdentifier(table.Name, table.Schema)} " +
+            $"({Column(nameof(InboxMessage.MessageId))}, {Column(nameof(InboxMessage.Consumer))}, " +
+            $"{Column(nameof(InboxMessage.ProcessedOnUtc))}) " +
+            "VALUES ({0}, {1}, {2}) ON CONFLICT DO NOTHING";
+
+        var inserted = await db.Database.ExecuteSqlRawAsync(
+            insert, [messageId, queueName, DateTimeOffset.UtcNow], cancellationToken);
+        return inserted == 1;
     }
 }
