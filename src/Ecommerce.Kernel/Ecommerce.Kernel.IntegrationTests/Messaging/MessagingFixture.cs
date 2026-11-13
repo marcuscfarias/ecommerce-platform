@@ -28,6 +28,8 @@ public abstract class MessagingFixture : BaseIntegrationFixture<MessagingWebAppl
 
     protected virtual string[] ConsumerQueues => [];
 
+    protected virtual Dictionary<string, string?> Settings => MessagingTestSettings.Enabled(Broker.ConnectionString);
+
     public override async Task InitializeAsync()
     {
         await Broker.InitializeAsync();
@@ -102,7 +104,7 @@ public abstract class MessagingFixture : BaseIntegrationFixture<MessagingWebAppl
     protected sealed override MessagingWebApplicationFactory CreateFactory(DatabaseContainerFixture container) =>
         new(
             container,
-            MessagingTestSettings.Enabled(Broker.ConnectionString),
+            Settings,
             services =>
             {
                 services.AddFakeLogging().AddMessagingTestModule();

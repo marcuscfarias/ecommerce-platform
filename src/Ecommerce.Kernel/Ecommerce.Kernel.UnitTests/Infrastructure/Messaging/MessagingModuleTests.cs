@@ -22,7 +22,7 @@ public class MessagingModuleTests
         options.Enabled.ShouldBeFalse();
         options.Outbox.PollingInterval.ShouldBe(TimeSpan.FromSeconds(2));
         options.Outbox.BatchSize.ShouldBe(50);
-        options.Outbox.MaxBackoff.ShouldBe(TimeSpan.FromSeconds(60));
+        options.Outbox.MaxBackoff.ShouldBe(TimeSpan.FromSeconds(5));
         options.Outbox.PublishTimeout.ShouldBe(TimeSpan.FromSeconds(5));
         options.Consumer.RetryCount.ShouldBe(5);
         options.Consumer.RetryBaseDelay.ShouldBe(TimeSpan.FromSeconds(1));
