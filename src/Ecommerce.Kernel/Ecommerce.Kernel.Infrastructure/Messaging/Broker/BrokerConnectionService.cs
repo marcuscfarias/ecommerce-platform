@@ -62,10 +62,10 @@ internal sealed class BrokerConnectionService(
     {
         await base.StopAsync(cancellationToken);
 
-        if (_connection is not null)
+        var connection = Interlocked.Exchange(ref _connection, null);
+        if (connection is not null)
         {
-            await _connection.CloseAsync(cancellationToken);
-            await _connection.DisposeAsync();
+            await connection.DisposeAsync();
         }
     }
 }

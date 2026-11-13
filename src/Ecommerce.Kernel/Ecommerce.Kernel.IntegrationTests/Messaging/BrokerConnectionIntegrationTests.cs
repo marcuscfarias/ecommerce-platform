@@ -1,5 +1,7 @@
 using System.Net.Sockets;
 using Ecommerce.Kernel.IntegrationTests.Database;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Ecommerce.Kernel.IntegrationTests.Messaging;
 
@@ -84,6 +86,27 @@ public class BrokerConnectionIntegrationTests(DatabaseContainerFixture database,
 
         // Assert
         connections.ShouldContain(ClientName);
+    }
+
+    [Fact]
+    public async Task BrokerConnection_StoppedTwiceAfterConnecting_ShouldNotThrow()
+    {
+        // Arrange
+        await using var factory = CreateFactory(enabled: true, broker.ConnectionString);
+        await BootAndGetHealthAsync(factory);
+        await Poll.UntilAsync(
+            broker.ListConnectionsAsync,
+            output => output.Contains(ClientName, StringComparison.Ordinal),
+            ConnectDeadline);
+        var connectionService = factory.Services.GetServices<IHostedService>()
+            .Single(service => service.GetType().Name == "BrokerConnectionService");
+        await connectionService.StopAsync(CancellationToken.None);
+
+        // Act
+        var act = () => connectionService.StopAsync(CancellationToken.None);
+
+        // Assert
+        await Should.NotThrowAsync(act);
     }
 
     private MessagingWebApplicationFactory CreateFactory(bool enabled, string connectionString) =>
