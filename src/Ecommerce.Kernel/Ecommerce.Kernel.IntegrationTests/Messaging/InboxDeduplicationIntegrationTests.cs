@@ -93,6 +93,8 @@ public class InboxDeduplicationIntegrationTests(IntegrationEventConsumerFixture 
         (await fixture.HandledMessagesForAsync(@event.EntityId))
             .ShouldNotContain(row => row.Handler == AlphaRecordedHandler.Module);
         fixture.Attempts.Get(@event.EntityId).ShouldBe(0);
+        (await fixture.InboxMessagesForAsync(messageId)).Select(row => row.Consumer).Order()
+            .ShouldBe([Queue, IntegrationEventConsumerFixture.BetaRecordedQueue]);
     }
 
     private Task<int> WaitForEmptyQueueAsync() =>
