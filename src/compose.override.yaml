@@ -12,6 +12,8 @@ services:
       - "Email__FromName=Ecommerce (dev)"
       - Auth__EmailConfirmation__ApiBaseUrl=https://localhost:8081
       - Auth__EmailConfirmation__ShopBaseUrl=https://localhost:7778
+      - Messaging__Enabled=true
+      - ConnectionStrings__RabbitMq=amqp://${RABBITMQ_DEFAULT_USER:-ecommerce}:${RABBITMQ_DEFAULT_PASS:-ecommerce}@ecommerce-rabbitmq:5672/
       - "ProductImageStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
     depends_on:
       azurite:
@@ -33,6 +35,24 @@ services:
       - "10000:10000"
     volumes:
       - ecommerce-azurite-data:/data
+    networks:
+      - ecommerce-net
+
+  ecommerce-rabbitmq:
+    container_name: ecommerce-rabbitmq
+    image: rabbitmq:4-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-ecommerce}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-ecommerce}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - ecommerce-net
 
