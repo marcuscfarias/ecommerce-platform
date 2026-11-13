@@ -13,6 +13,7 @@ internal sealed class BrokerConnectionService(
     private const string ClientName = "ecommerce-api";
 
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan FirstRetryDelay = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan MaxRetryDelay = TimeSpan.FromSeconds(30);
 
@@ -33,6 +34,7 @@ internal sealed class BrokerConnectionService(
             ClientProvidedName = ClientName,
             RequestedConnectionTimeout = ConnectTimeout,
             HandshakeContinuationTimeout = ConnectTimeout,
+            RequestedHeartbeat = HeartbeatInterval,
         };
 
         var retryDelay = FirstRetryDelay;

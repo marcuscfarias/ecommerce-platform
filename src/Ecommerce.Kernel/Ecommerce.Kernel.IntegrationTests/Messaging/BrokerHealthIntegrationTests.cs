@@ -9,6 +9,7 @@ public class BrokerHealthIntegrationTests(DatabaseContainerFixture database, Rab
     private const string RabbitMqEntry = "rabbitmq";
 
     private static readonly TimeSpan ConnectDeadline = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan SilentBrokerDeadline = TimeSpan.FromSeconds(60);
 
     [Fact]
     public async Task Health_BrokerUnreachable_ShouldReportRabbitMqDegradedWith200()
@@ -41,6 +42,36 @@ public class BrokerHealthIntegrationTests(DatabaseContainerFixture database, Rab
         // Assert
         statusCode.ShouldBe(HttpStatusCode.OK);
         health.Entries[RabbitMqEntry].Status.ShouldBe("Healthy");
+    }
+
+    [Fact]
+    public async Task Health_BrokerSilentAfterConnecting_ShouldReportRabbitMqDegraded()
+    {
+        // Arrange
+        await using var factory = CreateFactory(enabled: true, broker.ConnectionString);
+        var client = factory.CreateClient();
+        await Poll.UntilAsync(
+            () => GetHealthAsync(client),
+            result => result.Health.Entries[RabbitMqEntry].Status == "Healthy",
+            ConnectDeadline);
+        await broker.PauseAsync();
+
+        try
+        {
+            // Act
+            var (statusCode, health) = await Poll.UntilAsync(
+                () => GetHealthAsync(client),
+                result => result.Health.Entries[RabbitMqEntry].Status == "Degraded",
+                SilentBrokerDeadline);
+
+            // Assert
+            statusCode.ShouldBe(HttpStatusCode.OK);
+            health.Entries[RabbitMqEntry].Status.ShouldBe("Degraded");
+        }
+        finally
+        {
+            await broker.UnpauseAsync();
+        }
     }
 
     [Fact]
