@@ -6,9 +6,11 @@ using Ecommerce.AppHost.Security;
 using Ecommerce.Kernel.API;
 using Ecommerce.Kernel.API.Observability;
 using Ecommerce.Kernel.API.Security;
+using Ecommerce.Kernel.Infrastructure.Messaging;
 using Ecommerce.Kernel.Infrastructure.Notifications;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
 namespace Ecommerce.AppHost;
@@ -34,6 +36,7 @@ internal static class Program
         builder.Services.AddEcommerceHttpLogging();
         builder.Services.AddKernelInfrastructure(builder.Configuration);
         builder.Services.AddEmailSender(builder.Configuration);
+        builder.Services.AddMessaging(builder.Configuration);
         builder.Services.AddApiModule(builder.Configuration);
         builder.Services.AddHostAuthorization();
         builder.Services.AddGlobalRateLimiting(builder.Configuration);
@@ -81,7 +84,10 @@ internal static class Program
         app.UseApiModule();
         app.RegisterModules();
         app.MapControllers();
-        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            ResponseWriter = HealthCheckResponseWriter.WriteAsync,
+        });
 
         app.Run();
     }
