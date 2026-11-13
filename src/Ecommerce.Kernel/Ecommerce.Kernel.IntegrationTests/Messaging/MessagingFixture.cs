@@ -4,6 +4,7 @@ using Ecommerce.Kernel.IntegrationTests.Database;
 using Ecommerce.Kernel.IntegrationTests.Messaging.TestModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace Ecommerce.Kernel.IntegrationTests.Messaging;
@@ -21,6 +22,9 @@ public abstract class MessagingFixture : BaseIntegrationFixture<MessagingWebAppl
     internal RetryGate Gate => Factory.Services.GetRequiredService<RetryGate>();
 
     protected override string[] Schemas => [MessagingTestDbContext.Schema];
+
+    internal void StopHost() =>
+        Factory.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
 
     protected virtual string[] ConsumerQueues => [];
 

@@ -16,6 +16,12 @@ public sealed class RabbitMqContainerFixture : IAsyncLifetime
 
     public Task UnpauseAsync() => _container.UnpauseAsync();
 
+    public async Task CloseAllConnectionsAsync()
+    {
+        var result = await _container.ExecAsync(["rabbitmqctl", "close_all_connections", "broker reset by test"]);
+        result.ExitCode.ShouldBe(0, result.Stderr);
+    }
+
     public async Task<string> ListConnectionsAsync()
     {
         var result = await _container.ExecAsync(

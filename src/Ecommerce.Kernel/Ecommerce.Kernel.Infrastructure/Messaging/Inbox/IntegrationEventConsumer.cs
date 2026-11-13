@@ -100,6 +100,11 @@ internal sealed class IntegrationEventConsumer<TEvent, THandler, TDbContext>(
                 },
                 stoppingToken);
         }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            MessagingLog.MessageLeftForRedelivery(logger, messageId, queueName);
+            return;
+        }
         catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
         {
             MessagingLog.MessageDeadLettered(logger, exception, messageId, _eventName, queueName, attempts);

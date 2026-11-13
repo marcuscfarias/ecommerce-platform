@@ -45,4 +45,10 @@ internal static partial class MessagingLog
         Level = LogLevel.Warning,
         Message = "Message {MessageId} on {Queue} was dead-lettered unread: missing id or unreadable body")]
     public static partial void MessageRejected(ILogger logger, string? messageId, string queue);
+
+    [LoggerMessage(
+        EventId = 7,
+        Level = LogLevel.Information,
+        Message = "Host stopping: message {MessageId} on {Queue} is left for redelivery")]
+    public static partial void MessageLeftForRedelivery(ILogger logger, Guid messageId, string queue);
 }
