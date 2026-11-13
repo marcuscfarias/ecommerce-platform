@@ -16,6 +16,11 @@ indent_size = 2
 # framework for fixture sharing. Suffix is mandated by xUnit, not a naming smell.
 dotnet_diagnostic.CA1711.severity = none
 
+[**/Ecommerce.Kernel.Application/Messaging/IIntegrationEventHandler.cs]
+# The integration-event entry point is a handler of integration events, not a .NET event
+# delegate; the name is the contract recorded in AD-013.
+dotnet_diagnostic.CA1711.severity = none
+
 [**/*Tests/**.cs]
 # Method_State_Should convention requires underscores (see feedback_test_naming).
 dotnet_diagnostic.CA1707.severity = none

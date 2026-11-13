@@ -1,3 +1,4 @@
+using Ecommerce.Kernel.Infrastructure.Messaging.Inbox;
 using Ecommerce.Kernel.Infrastructure.Messaging.Outbox;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,14 @@ public static class MessagingModelBuilderExtensions
             outbox.Property(message => message.Payload).HasColumnType("jsonb").IsRequired();
             outbox.Property(message => message.OccurredOnUtc).IsRequired();
             outbox.HasIndex(message => new { message.OccurredOnUtc, message.Id });
+        });
+
+        modelBuilder.Entity<InboxMessage>(inbox =>
+        {
+            inbox.ToTable("InboxMessages");
+            inbox.HasKey(message => new { message.MessageId, message.Consumer });
+            inbox.Property(message => message.Consumer).HasMaxLength(NameMaxLength);
+            inbox.Property(message => message.ProcessedOnUtc).IsRequired();
         });
 
         return modelBuilder;

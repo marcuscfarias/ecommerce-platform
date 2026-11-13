@@ -30,6 +30,18 @@ internal sealed class BrokerProbe : IAsyncDisposable
         return queue.QueueName;
     }
 
+    public async Task PublishAsync(string exchange, string? messageId, byte[] body)
+    {
+        await _channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout, durable: true, autoDelete: false);
+        var properties = new BasicProperties
+        {
+            MessageId = messageId,
+            ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent,
+        };
+        await _channel.BasicPublishAsync(exchange, routingKey: string.Empty, mandatory: false, properties, body);
+    }
+
     public Task<IReadOnlyList<BasicGetResult>> WaitForMessagesAsync(string queue, int count, TimeSpan timeout) =>
         ReceiveUntilAsync(queue, received => received.Count >= count, timeout);
 

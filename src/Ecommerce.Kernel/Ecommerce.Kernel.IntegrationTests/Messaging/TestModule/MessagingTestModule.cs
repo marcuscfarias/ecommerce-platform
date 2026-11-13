@@ -1,3 +1,4 @@
+using Ecommerce.Kernel.Infrastructure.Mediator;
 using Ecommerce.Kernel.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +10,7 @@ internal static class MessagingTestModule
     {
         services.AddModuleDbContext<MessagingTestDbContext>(MessagingTestDbContext.Schema);
         services.AddHostedService<MessagingTestTablesInitializer>();
+        services.AddMediator(typeof(MessagingTestModule).Assembly);
         return services;
     }
 }

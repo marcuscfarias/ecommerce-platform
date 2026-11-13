@@ -9,10 +9,13 @@ internal sealed class MessagingTestDbContext(DbContextOptions<MessagingTestDbCon
 
     public DbSet<TestEntity> TestEntities => Set<TestEntity>();
 
+    public DbSet<HandledMessage> HandledMessages => Set<HandledMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.Entity<TestEntity>().ToTable("TestEntities");
+        modelBuilder.Entity<HandledMessage>().ToTable("HandledMessages");
         modelBuilder.ApplyMessagingTables();
     }
 }

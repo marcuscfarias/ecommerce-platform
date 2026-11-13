@@ -1,4 +1,6 @@
+using Ecommerce.Kernel.Application.Messaging;
 using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
+using Ecommerce.Kernel.Infrastructure.Messaging.Inbox;
 using Ecommerce.Kernel.Infrastructure.Messaging.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -46,6 +48,22 @@ public static class MessagingModule
         where TDbContext : DbContext
     {
         services.AddHostedService<OutboxRelay<TDbContext>>();
+        return services;
+    }
+
+    public static IServiceCollection AddIntegrationEventHandler<TEvent, THandler, TDbContext>(
+        this IServiceCollection services,
+        string module)
+        where TEvent : IIntegrationEvent
+        where THandler : class, IIntegrationEventHandler<TEvent>
+        where TDbContext : DbContext
+    {
+        var queueName = QueueName.For(module, IntegrationEventName.Of<TEvent>());
+
+        services.AddScoped<THandler>();
+        services.AddHostedService(sp =>
+            ActivatorUtilities.CreateInstance<IntegrationEventConsumer<TEvent, THandler, TDbContext>>(sp, queueName));
+
         return services;
     }
 

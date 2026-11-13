@@ -27,4 +27,16 @@ internal static partial class MessagingLog
         Level = LogLevel.Error,
         Message = "Outbox relay tick failed for {DbContext}")]
     public static partial void RelayTickFailed(ILogger logger, Exception exception, string dbContext);
+
+    [LoggerMessage(
+        EventId = 5,
+        Level = LogLevel.Warning,
+        Message = "Message {MessageId} ({EventName}) on {Queue} was dead-lettered after {Attempts} attempt(s)")]
+    public static partial void MessageDeadLettered(
+        ILogger logger,
+        Exception exception,
+        Guid messageId,
+        string eventName,
+        string queue,
+        int attempts);
 }
