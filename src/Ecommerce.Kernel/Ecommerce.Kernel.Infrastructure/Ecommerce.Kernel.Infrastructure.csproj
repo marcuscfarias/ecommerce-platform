@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Ecommerce.Kernel.UnitTests" />
+    <InternalsVisibleTo Include="Ecommerce.Kernel.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>
