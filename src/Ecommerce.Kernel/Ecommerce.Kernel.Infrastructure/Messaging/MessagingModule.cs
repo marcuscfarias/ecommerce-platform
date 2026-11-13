@@ -1,3 +1,4 @@
+using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,9 @@ public static class MessagingModule
                 o => o.Consumer.RetryBaseDelay <= o.Consumer.RetryMaxDelay,
                 "Messaging:Consumer:RetryBaseDelay must not exceed Messaging:Consumer:RetryMaxDelay.")
             .ValidateOnStart();
+
+        services.AddSingleton<RabbitMqConnection>();
+        services.AddHostedService<BrokerConnectionService>();
 
         return services;
     }
