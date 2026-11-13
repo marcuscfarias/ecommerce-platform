@@ -39,4 +39,10 @@ internal static partial class MessagingLog
         string eventName,
         string queue,
         int attempts);
+
+    [LoggerMessage(
+        EventId = 6,
+        Level = LogLevel.Warning,
+        Message = "Message {MessageId} on {Queue} was dead-lettered unread: missing id or unreadable body")]
+    public static partial void MessageRejected(ILogger logger, string? messageId, string queue);
 }

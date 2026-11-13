@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Ecommerce.Kernel.Application.Messaging;
 using Ecommerce.Kernel.Infrastructure.Messaging.Broker;
@@ -6,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Registry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -16,12 +19,15 @@ internal sealed class IntegrationEventConsumer<TEvent, THandler, TDbContext>(
     RabbitMqConnection rabbitMqConnection,
     IServiceScopeFactory scopeFactory,
     IOptions<MessagingOptions> options,
+    ResiliencePipelineProvider<string> pipelineProvider,
     ILogger<IntegrationEventConsumer<TEvent, THandler, TDbContext>> logger) : BackgroundService
     where TEvent : IIntegrationEvent
     where THandler : IIntegrationEventHandler<TEvent>
     where TDbContext : DbContext
 {
     private readonly string _eventName = IntegrationEventName.Of<TEvent>();
+    private readonly ResiliencePipeline _retryPipeline =
+        pipelineProvider.GetPipeline(MessagingResilience.ConsumerPipeline);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -76,21 +82,52 @@ internal sealed class IntegrationEventConsumer<TEvent, THandler, TDbContext>(
         BasicDeliverEventArgs delivery,
         CancellationToken stoppingToken)
     {
-        var messageId = Guid.Parse(delivery.BasicProperties.MessageId!);
-        var @event = JsonSerializer.Deserialize<TEvent>(delivery.Body.Span, JsonSerializerOptions.Web)!;
+        if (!TryRead(delivery, out var messageId, out var @event))
+        {
+            MessagingLog.MessageRejected(logger, delivery.BasicProperties.MessageId, queueName);
+            await channel.BasicNackAsync(delivery.DeliveryTag, multiple: false, requeue: false, stoppingToken);
+            return;
+        }
 
+        var attempts = 0;
         try
         {
-            await ProcessOnceAsync(messageId, @event, stoppingToken);
+            await _retryPipeline.ExecuteAsync(
+                async cancellationToken =>
+                {
+                    attempts++;
+                    await ProcessOnceAsync(messageId, @event, cancellationToken);
+                },
+                stoppingToken);
         }
         catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
         {
-            MessagingLog.MessageDeadLettered(logger, exception, messageId, _eventName, queueName, attempts: 1);
+            MessagingLog.MessageDeadLettered(logger, exception, messageId, _eventName, queueName, attempts);
             await channel.BasicNackAsync(delivery.DeliveryTag, multiple: false, requeue: false, stoppingToken);
             return;
         }
 
         await channel.BasicAckAsync(delivery.DeliveryTag, multiple: false, stoppingToken);
+    }
+
+    private static bool TryRead(BasicDeliverEventArgs delivery, out Guid messageId, [NotNullWhen(true)] out TEvent? @event)
+    {
+        @event = default;
+        if (!Guid.TryParse(delivery.BasicProperties.MessageId, out messageId))
+        {
+            return false;
+        }
+
+        try
+        {
+            @event = JsonSerializer.Deserialize<TEvent>(delivery.Body.Span, JsonSerializerOptions.Web);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        return @event is not null;
     }
 
     private async Task ProcessOnceAsync(Guid messageId, TEvent @event, CancellationToken cancellationToken)

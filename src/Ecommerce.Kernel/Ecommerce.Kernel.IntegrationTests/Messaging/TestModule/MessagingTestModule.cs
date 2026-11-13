@@ -11,6 +11,8 @@ internal static class MessagingTestModule
         services.AddModuleDbContext<MessagingTestDbContext>(MessagingTestDbContext.Schema);
         services.AddHostedService<MessagingTestTablesInitializer>();
         services.AddMediator(typeof(MessagingTestModule).Assembly);
+        services.AddSingleton<AttemptCounter>();
+        services.AddSingleton<RetryGate>();
         return services;
     }
 }

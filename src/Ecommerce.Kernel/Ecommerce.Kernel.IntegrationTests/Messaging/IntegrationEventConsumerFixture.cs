@@ -13,13 +13,23 @@ public sealed class IntegrationEventConsumerFixture : BaseIntegrationFixture<Mes
     public const string AlphaRecordedQueue = "alpha.recorded-event";
     public const string BetaRecordedQueue = "beta.recorded-event";
     public const string WritesThenFailsQueue = "alpha.writes-then-fails-event";
+    public const string AlwaysFailsQueue = "alpha.always-fails-event";
+    public const string BusinessRuleQueue = "alpha.business-rule-event";
+    public const string GatedQueue = "alpha.gated-event";
 
-    private static readonly string[] Queues = [AlphaRecordedQueue, BetaRecordedQueue, WritesThenFailsQueue];
+    private static readonly string[] Queues =
+    [
+        AlphaRecordedQueue, BetaRecordedQueue, WritesThenFailsQueue, AlwaysFailsQueue, BusinessRuleQueue, GatedQueue,
+    ];
     private static readonly TimeSpan TopologyDeadline = TimeSpan.FromSeconds(30);
 
     public RabbitMqContainerFixture Broker { get; } = new();
 
     public FakeLogCollector Logs => Factory.Services.GetFakeLogCollector();
+
+    internal AttemptCounter Attempts => Factory.Services.GetRequiredService<AttemptCounter>();
+
+    internal RetryGate Gate => Factory.Services.GetRequiredService<RetryGate>();
 
     protected override string[] Schemas => [MessagingTestDbContext.Schema];
 
@@ -67,5 +77,10 @@ public sealed class IntegrationEventConsumerFixture : BaseIntegrationFixture<Mes
                 .AddIntegrationEventHandler<RecordedEvent, BetaRecordedHandler, MessagingTestDbContext>(
                     BetaRecordedHandler.Module)
                 .AddIntegrationEventHandler<WritesThenFailsEvent, WritesThenFailsHandler, MessagingTestDbContext>(
-                    WritesThenFailsHandler.Module));
+                    WritesThenFailsHandler.Module)
+                .AddIntegrationEventHandler<AlwaysFailsEvent, AlwaysFailsHandler, MessagingTestDbContext>(
+                    AlwaysFailsHandler.Module)
+                .AddIntegrationEventHandler<BusinessRuleEvent, BusinessRuleHandler, MessagingTestDbContext>(
+                    BusinessRuleHandler.Module)
+                .AddIntegrationEventHandler<GatedEvent, GatedHandler, MessagingTestDbContext>(GatedHandler.Module));
 }
